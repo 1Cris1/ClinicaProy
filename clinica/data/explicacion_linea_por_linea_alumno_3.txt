@@ -1,0 +1,138 @@
+===========================================================================
+GUIA DE EXPOSICION LINEA POR LINEA - ALUMNO 3: DIAGNOSTICO Y PACIENTE
+===========================================================================
+
+Este archivo contiene el desglose y la explicacion exacta de cada linea de 
+codigo para tus dos historias de usuario (HU 5: Solicitud de Ordenes de Laboratorio 
+y HU 6: Visualizacion de Resultados en PDF).
+
+---------------------------------------------------------------------------
+🔬 HISTORIA DE USUARIO 5: Solicitud de Ordenes de Laboratorio
+---------------------------------------------------------------------------
+
+Esta funcionalidad permite al medico revisar el panel de examenes de laboratorio
+solicitados a sus pacientes y gestionar las ordenes.
+
+1. EXPLICACION LINEA POR LINEA DEL BACKEND (Java)
+Ubicacion: MedicoController.java (Lineas 196-205)
+
+[Codigo fuente]:
+196:    @GetMapping("/laboratorio")
+197:    public String laboratorio(Model model, Principal principal) {
+198:        Medico medico = getMedicoAutenticado(principal);
+199:        if (medico == null) return "redirect:/login";
+200:
+201:        List<OrdenLaboratorio> ordenes = ordenRepository.findByMedicoIdOrderByFechaSolicitudDesc(medico.getId());
+202:        
+203:        if (!ordenes.isEmpty()) {
+204:            Paciente p = ordenes.get(0).getPaciente();
+205:            model.addAttribute("pacienteSeleccionado", p);
+206:        }
+207:        
+208:        model.addAttribute("medico", medico);
+209:        model.addAttribute("ordenes", ordenes);
+210:        model.addAttribute("pageTitle", "Laboratorio Clínico");
+211:        model.addAttribute("view", "doctores/laboratorio");
+212:        return LAYOUT;
+213:    }
+
+[Detalle linea por linea]:
+* Linea 196: [@GetMapping("/laboratorio")]
+  -> Indica que esta funcion se ejecuta cuando el medico hace clic en el menu 
+     "Laboratorio" y el navegador envia una peticion normal (GET) para cargar la pagina.
+* Linea 197: [public String laboratorio(Model model, Principal principal) {]
+  -> Inyecta el objeto "Model", que funciona como una caja de transporte: aqui 
+     meteremos los datos (ej. lista de ordenes) para mandarlos al Frontend HTML.
+* Lineas 198 y 199: [Medico medico = getMedicoAutenticado(principal);]
+  -> Verifica que el usuario que intenta entrar este realmente logueado y sea un medico. 
+     Si alguien sin permiso intenta entrar, la linea 199 lo patea a la pantalla de login.
+* Linea 201: [List<OrdenLaboratorio> ordenes = ordenRepository.findByMedicoIdOrderByFechaSolicitudDesc(medico.getId());]
+  -> La magia de Spring Data JPA. Llama a la base de datos usando el repositorio y extrae todas 
+     las ordenes generadas por este medico en especifico, ordenandolas automaticamente de la mas 
+     nueva a la mas vieja ("OrderByFechaSolicitudDesc"). No hizo falta escribir una sola linea de SQL.
+* Lineas 203 a 206: [if (!ordenes.isEmpty()) { Paciente p = ordenes.get(0)... ]
+  -> Esto es para que la interfaz se vea amigable. Si el medico tiene ordenes, el sistema 
+     precarga la informacion del paciente de la primera orden para mostrarla en pantalla.
+* Lineas 208 a 211: [model.addAttribute(...)]
+  -> Empaqueta toda la informacion (el medico, la lista de ordenes de lab, y el titulo) 
+     en la "caja de transporte" (Model) para que el codigo HTML pueda leerla e imprimirla en pantalla.
+* Linea 212: [return LAYOUT;]
+  -> Devuelve y renderiza la plantilla HTML maestra que envuelve la interfaz del medico.
+
+
+---------------------------------------------------------------------------
+📄 HISTORIA DE USUARIO 6: Visualizacion de Resultados en PDF
+---------------------------------------------------------------------------
+
+Esta funcionalidad permite al paciente ver la lista de sus examenes y descargar 
+el documento digital de su resultado de laboratorio desde casa.
+
+1. EXPLICACION LINEA POR LINEA DEL BACKEND (Java)
+Ubicacion: PacienteController.java (Lineas 179-189)
+
+[Codigo fuente]:
+179:    @GetMapping("/resultados")
+180:    public String resultados(Model model, Principal principal) {
+181:        Paciente paciente = getPacienteAutenticado(principal);
+182:        if (paciente == null) return "redirect:/login";
+183:
+184:        model.addAttribute("pacienteGlobal", paciente);
+185:        model.addAttribute("resultados", resultadoLaboratorioRepository.findByPacienteIdOrderByFechaExamenDesc(paciente.getId()));
+186:        model.addAttribute("pageTitle", "Mis Resultados");
+187:        model.addAttribute("view", "paciente/resultados");
+188:        return LAYOUT;
+189:    }
+
+[Detalle linea por linea]:
+* Linea 179: [@GetMapping("/resultados")]
+  -> Abre el endpoint web para que el paciente acceda a su portal de resultados.
+* Linea 180: [public String resultados(Model model, Principal principal) {]
+  -> Recibe el "Principal", que contiene la informacion encriptada del token/sesion de 
+     seguridad del paciente.
+* Lineas 181 y 182: [Paciente paciente = getPacienteAutenticado(principal);]
+  -> Busca en la base de datos de pacientes el registro especifico que coincida 
+     con la persona que hizo login. Si expiro la sesion, vuelve al login.
+* Linea 185: [model.addAttribute("resultados", resultadoLaboratorioRepository.findByPacienteId...)]
+  -> Aqui ocurre el procesamiento pesado: Busca en la tabla de Resultados de Laboratorio 
+     solo aquellos que le pertenecen a este paciente (privacidad absoluta) y los ordena del 
+     mas reciente al mas antiguo. Esto luego alimenta el boton de descarga PDF del Frontend.
+* Lineas 186 a 188: [model.addAttribute("view", "paciente/resultados"); return LAYOUT;]
+  -> Inyecta la vista especifica de resultados dentro del cascaron o layout general del paciente.
+
+2. EXPLICACION LINEA POR LINEA DEL FRONTEND (HTML / Vue.js)
+Ubicacion: resultados.html (Vista de paciente)
+
+[Codigo fuente - Vue.js Integrado]:
+41:    <tr v-for="res in filteredResults" :key="res.idResultado" class="result-row">
+50:        <p class="mb-0 fw-bold">{{ res.nombreExamen }}</p>
+60:        <span v-if="res.estado === 'Disponible'" class="app-badge"...>Disponible</span>
+64:        <button v-if="res.estado === 'Disponible'" @click="descargar(res)">
+65:            <i class="bi bi-download me-1"></i> PDF
+66:        </button>
+
+[Detalle linea por linea]:
+* Linea 41: [<tr v-for="res in filteredResults"...>]
+  -> En lugar de usar Thymeleaf (th:each), aqui se usa Vue.js (v-for) para crear 
+     una tabla super rapida y reactiva. Imprime una fila por cada examen.
+* Linea 50: [{{ res.nombreExamen }}]
+  -> Inyecta dinamicamente en pantalla el nombre del examen (ej. "Glucosa").
+* Linea 60: [<span v-if="res.estado === 'Disponible'">]
+  -> Condicional en el Frontend. Si el estado es disponible, muestra un globo 
+     verde; si no, muestra un globo amarillo de "En Proceso".
+* Linea 64: [<button @click="descargar(res)">]
+  -> Si el examen esta listo, muestra el boton. Al hacer clic (@click), llama 
+     al metodo que descarga el PDF usando el "ReportService".
+
+
+3. IMPACTO EN BASE DE DATOS (Las tablas afectadas)
+---------------------------------------------------------------------------
+Cuando este codigo se ejecuta, el sistema interactua con estas tablas:
+1. Tabla `orden_laboratorio`: Se usa para la HU 5. Guarda la peticion general del medico.
+2. Tabla `resultado_detalle`: Contiene los items individuales del examen.
+3. El Controller solo hace consultas (SELECT), protegiendo la base de datos 
+   ya que el medico/paciente no pueden borrar informacion clinica desde estas pantallas.
+
+===========================================================================
+¡Exitos en tu sustentacion! Esta guia te garantiza defender el codigo a nivel
+tecnico y de negocio de forma impecable.
+===========================================================================

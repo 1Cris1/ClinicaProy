@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Recepcionistas - ClinicX Admin</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="fw-bold mb-1">Gestion de Recepcionistas</h4>
+                <p class="text-muted small mb-0"><span th:text="${totalRecepcionistas}">0</span> recepcionistas registrados en el sistema.</p>
+            </div>
+            <div>
+                <button class="btn btn-primary rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#modalNuevoRecepcionista">
+                    <i class="bi bi-plus-lg me-2"></i> Crear Recepcionista
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${param.editado != null}" class="alert alert-success py-2 small fw-bold mb-3 rounded-3 border-0">
+            <i class="bi bi-check-circle-fill me-1"></i> Recepcionista actualizado correctamente.
+        </div>
+        <div th:if="${param.eliminado != null}" class="alert alert-warning py-2 small fw-bold mb-3 rounded-3 border-0">
+            <i class="bi bi-check-circle-fill me-1"></i> Recepcionista eliminado correctamente.
+        </div>
+        <div th:if="${param.exito != null}" class="alert alert-success py-2 small fw-bold mb-3 rounded-3 border-0">
+            <i class="bi bi-check-circle-fill me-1"></i> Recepcionista creado correctamente. Puede iniciar sesión con su DNI.
+        </div>
+        <div th:if="${param.nuevoError != null}" class="alert alert-danger py-2 small fw-bold mb-3 rounded-3 border-0">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> Error al crear recepcionista. Verifique que el DNI no exista ya.
+        </div>
+
+        <div class="ad-card">
+            <div class="ad-card-body p-0">
+                <table class="ad-table" th:if="${usuarios != null and !usuarios.isEmpty()}">
+                    <thead>
+                        <tr><th>Usuario (DNI)</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u : ${usuarios}">
+                            <!-- ID rem -->
+                            <td th:text="${u.username}">Username</td>
+                            <td class="text-muted" th:text="${u.email != null ? u.email : '-'}">-</td>
+                            <td>
+                                <span class="ad-badge-status" th:text="${u.rol}" style="background:#DBEAFE;color:#2563EB;">ROLE</span>
+                            </td>
+                            <td>
+                                <span class="ad-badge-status" style="background:#D1FAE5;color:#059669;">Activo</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary border-0" data-bs-toggle="modal" th:data-bs-target="'#modalEditar'+${u.id}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <a class="btn btn-sm btn-outline-danger border-0" th:href="@{/admin/recepcionistas/eliminar(id=${u.id})}" onclick="return confirm('Â¿Eliminar este recepcionista?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${usuarios == null or usuarios.isEmpty()}" class="text-center py-5">
+                    <i class="bi bi-people" style="font-size:3rem;color:#6B7280;"></i>
+                    <p class="text-muted mt-3">No hay recepcionistas registrados</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modales de Editar para cada usuario -->
+        <div th:each="u : ${usuarios}" class="modal fade" th:id="'modalEditar'+${u.id}" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:.875rem;border:none;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" th:text="'Editar Recepcionista: ' + ${u.username}">Editar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/recepcionistas/editar}" method="post">
+                        <input type="hidden" name="id_usuario" th:value="${u.id}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Usuario (DNI)</label>
+                                <input name="username" class="form-control" th:value="${u.username}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input name="email" type="email" class="form-control" th:value="${u.email}">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold">Nueva Contraseña (dejar en blanco para mantener)</label>
+                                <input name="nueva_password" type="password" class="form-control" placeholder="Nueva contraseña">
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#2563EB;color:#fff;">Guardar Cambios</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+        <!-- Modal Nuevo Recepcionista -->
+        <div class="modal fade" id="modalNuevoRecepcionista" tabindex="-1">
+            <div class="modal-dialog modal-md">
+                <div class="modal-content" style="border-radius:.875rem;border:none;">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold">Registrar Nuevo Recepcionista</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:action="@{/admin/recepcionistas/nuevo}" method="post">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold d-flex justify-content-between">
+                                        Usuario (DNI)
+                                        <span id="dniLoading" class="spinner-border spinner-border-sm text-primary d-none" role="status"></span>
+                                        <span id="dniSuccess" class="text-success d-none" style="font-size: 0.75rem;"><i class="bi bi-patch-check-fill"></i> Verificado (<span id="dniNombreVerificado" class="fw-bold"></span>)</span>
+                                    </label>
+                                    <input type="text" name="dni" id="recepcionistaDniInput" class="form-control" required placeholder="DNI (Sera su Usuario)" maxlength="8">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Email</label>
+                                    <input type="email" name="email" id="recepcionistaEmailInput" class="form-control" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Contrasena</label>
+                                    <input type="password" name="password" class="form-control" required placeholder="Contrasena temporal">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#2563EB;color:#fff;">Registrar</button>
+                    </div>
+                        </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <th:block th:fragment="scripts">
+        <script>
+            document.getElementById('recepcionistaDniInput').addEventListener('input', async function(e) {
+                const dni = e.target.value;
+                if (dni.length === 8) {
+                    const loading = document.getElementById('dniLoading');
+                    const success = document.getElementById('dniSuccess');
+                    const nameSpan = document.getElementById('dniNombreVerificado');
+                    const emailInput = document.getElementById('recepcionistaEmailInput');
+                    
+                    loading.classList.remove('d-none');
+                    success.classList.add('d-none');
+                    
+                    try {
+                        const response = await fetch(`/api/identidad/${dni}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.nombres) {
+                                nameSpan.textContent = data.nombres + ' ' + (data.apellido_paterno || '');
+                                if (!emailInput.value) {
+                                    emailInput.value = dni + '@clinicx.com';
+                                }
+                                success.classList.remove('d-none');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error al validar DNI:', error);
+                    } finally {
+                        loading.classList.add('d-none');
+                    }
+                } else {
+                    document.getElementById('dniSuccess').classList.add('d-none');
+                }
+            });
+        </script>
+    </th:block>
+</body>
+</html>
+
+

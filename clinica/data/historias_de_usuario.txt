@@ -1,0 +1,57 @@
+=============================================================================
+             HISTORIAS DE USUARIO - CLINICX (FORMATO ÁGIL)
+=============================================================================
+Estructura: "Como [Rol] quiero [Acción] para [Beneficio/Objetivo]"
+
+-----------------------------------------------------------------------------
+👤 INTEGRANTE 1: RHOMEL (Seguridad y Registro)
+-----------------------------------------------------------------------------
+* US 1: Inicio de Sesión (Login y Seguridad)
+  "Como usuario del sistema (Paciente, Médico o Recepcionista), quiero iniciar 
+  sesión utilizando mi DNI y contraseña encriptada, para acceder de forma 
+  segura al panel que me corresponde según mi rol."
+
+* US 2: Registro Autónomo de Pacientes
+  "Como nuevo paciente, quiero poder registrarme en el portal web ingresando 
+  mis datos personales básicos, para crear mi cuenta de forma autónoma sin 
+  necesidad de ir físicamente a la clínica."
+
+-----------------------------------------------------------------------------
+👤 INTEGRANTE 2: MIGUEL (Recepción y Agendamiento)
+-----------------------------------------------------------------------------
+* US 3: Agendamiento de Citas (Con Prevención de Cruces)
+  "Como recepcionista, quiero agendar una cita médica seleccionando al paciente, 
+  al médico, la fecha y la hora, para reservar el cupo garantizando que el 
+  sistema bloquee automáticamente cualquier cruce de horarios (Double Booking)."
+
+* US 23: Confirmación de Llegada (Check-in)
+  "Como recepcionista, quiero confirmar la llegada física del paciente a la 
+  clínica con un solo botón, para cambiar el estado de su cita a 'Confirmada' 
+  y que el médico sepa que ya está esperando en sala."
+
+-----------------------------------------------------------------------------
+👤 INTEGRANTE 3: CRISTIAN (Configuración Administrativa)
+-----------------------------------------------------------------------------
+* US 9: Gestión de Médicos
+  "Como administrador, quiero registrar a un nuevo médico en el sistema y 
+  asignarle una contraseña segura y un horario de atención base, para que 
+  pueda empezar a recibir citas de pacientes."
+
+* US 11: Gestión de Especialidades
+  "Como administrador, quiero crear y gestionar el catálogo de especialidades 
+  médicas (nombre, descripción, color), para mantener organizada la oferta 
+  de servicios que brinda la clínica."
+
+-----------------------------------------------------------------------------
+👤 INTEGRANTE 4: JHOAN (Consultorio y Receta Médica)
+-----------------------------------------------------------------------------
+* US 16: Agenda Diaria Cronológica
+  "Como médico, quiero visualizar en mi panel una lista de mis citas de hoy 
+  ordenadas estrictamente por hora, para llevar el control cronológico de 
+  los pacientes que debo atender."
+
+* US 17: Registro de Evolución y Receta Digital
+  "Como médico, quiero redactar la evolución clínica del paciente y agregar 
+  múltiples medicamentos en una receta digital durante la atención, para 
+  guardar toda la información clínica de forma unificada y segura en la BD."
+=============================================================================

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Consulta Activa - Médico</title></head>
+<body>
+<div th:fragment="cuerpo">
+    <style>
+        .med-table th {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748B;
+            padding-bottom: 12px;
+            border: none;
+        }
+        .med-row td {
+            padding: 8px 4px;
+            vertical-align: top;
+            border: none;
+        }
+        .med-input {
+            border-radius: 10px !important;
+            padding: 8px 12px !important;
+            font-size: 0.85rem !important;
+            border: 1px solid transparent !important;
+            transition: all 0.2s ease;
+            height: 42px;
+        }
+        .med-input:focus {
+            background: #fff !important;
+            border-color: var(--doc-primary) !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+        }
+        .product-results {
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 5px;
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .trash-btn {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: all 0.2s;
+            background: #f8fafc;
+            color: #94a3b8 !important;
+        }
+        .trash-btn:hover {
+            background: #fee2e2;
+            color: #ef4444 !important;
+        }
+    </style>
+    <template id="med-row-template">
+        <tr class="med-row">
+            <td>
+                <div class="position-relative">
+                    <input type="text" name="med_nombre" class="form-control med-input bg-light" 
+                           placeholder="Buscar medicamento..." required onkeyup="buscarProducto(this)">
+                    <div class="product-results list-group d-none" style="position: absolute; z-index: 1000; width: 100%;"></div>
+                </div>
+                <input type="text" name="med_instrucciones" class="form-control form-control-sm border-0 bg-transparent mt-1 text-muted" 
+                       style="font-size: 0.75rem;" placeholder="+ Agregar notas o instrucciones de uso">
+            </td>
+            <td><input type="text" name="med_dosis" class="form-control med-input bg-light" placeholder="ej. 500mg"></td>
+            <td><input type="text" name="med_frecuencia" class="form-control med-input bg-light" placeholder="ej. C/8h"></td>
+            <td><input type="text" name="med_duracion" class="form-control med-input bg-light" placeholder="5 días"></td>
+            <td class="text-end">
+                <button type="button" class="btn text-danger trash-btn border-0" onclick="this.closest('tr').remove(); checkEmptyMeds();">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </td>
+        </tr>
+    </template>
+
+    <!-- Sin paciente pendiente -->
+    <div th:if="${cita == null}" class="doc-card text-center py-5 shadow-sm">
+        <i class="bi bi-calendar-check text-muted" style="font-size:3rem;"></i>
+        <h5 class="mt-3 fw-bold">Sin consultas pendientes</h5>
+        <p class="text-muted">No hay pacientes en espera por ahora.</p>
+        <a th:href="@{/medico/inicio}" class="btn btn-sm rounded-pill px-4" style="background:var(--doc-primary);color:#fff;">
+            <i class="bi bi-arrow-left me-1"></i>Volver al Panel
+        </a>
+    </div>
+
+    <!-- HCE Single Screen Layout -->
+    <div th:if="${cita != null}" class="hce-container animate__animated animate__fadeIn">
+        <div class="row g-0 h-100">
+            <!-- Sidebar Izquierda: Antecedentes (Siempre Visible) -->
+            <div class="col-lg-3 hce-sidebar border-end bg-white">
+                <div class="p-4">
+                    <div class="text-center mb-4">
+                        <div class="mx-auto mb-3 hce-avatar shadow-sm">
+                            <span th:text="${#strings.substring(cita.paciente.nombres,0,1) + #strings.substring(cita.paciente.apellidos,0,1)}">P</span>
+                        </div>
+                        <h5 class="fw-bold mb-1" th:text="${cita.paciente.nombres + ' ' + cita.paciente.apellidos}">Paciente</h5>
+                        <p class="text-muted small mb-0" th:text="${cita.paciente.dni}">DNI</p>
+                        <span class="badge rounded-pill bg-success-subtle text-success mt-2 px-3 py-2" th:text="${cita.paciente.nombreIafas != null ? cita.paciente.nombreIafas : 'PARTICULAR'}">SIS</span>
+                    </div>
+
+                    <!-- Bloque de Alertas Críticas -->
+                    <div class="mb-4">
+                        <h6 class="hce-section-title text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Alertas Clínicas</h6>
+                        <div class="hce-card bg-danger-subtle border-danger-subtle p-3 mb-2">
+                            <label class="x-small fw-bold text-danger text-uppercase">Alergias</label>
+                            <p class="mb-0 fw-bold text-dark" th:text="${cita.paciente.alergias != null ? cita.paciente.alergias : 'Ninguna declarada'}">-</p>
+                        </div>
+                        <div class="hce-card bg-warning-subtle border-warning-subtle p-3">
+                            <label class="x-small fw-bold text-warning-emphasis text-uppercase">Enfermedades Crónicas</label>
+                            <p class="mb-0 fw-bold text-dark" th:text="${cita.paciente.enfermedadesCronicas != null ? cita.paciente.enfermedadesCronicas : 'Ninguna'}">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Datos Biométricos -->
+                    <div class="mb-4">
+                        <h6 class="hce-section-title"><i class="bi bi-person-lines-fill me-2"></i>Perfil Fisiológico</h6>
+                        <div class="d-flex justify-content-between py-2 border-bottom border-light x-small">
+                            <span class="text-muted">Grupo Sanguíneo</span>
+                            <span class="fw-bold badge bg-dark" th:text="${cita.paciente.tipoSangre != null ? cita.paciente.tipoSangre : '-'}">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom border-light x-small">
+                            <span class="text-muted">Edad</span>
+                            <span class="fw-bold" th:text="${cita.paciente.fechaNacimiento != null ? #temporals.between(cita.paciente.fechaNacimiento, T(java.time.LocalDate).now(), T(java.time.temporal.ChronoUnit).YEARS) + ' años' : '-'}">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Historial de Evolución (Timeline Vertical) -->
+                    <div>
+                        <h6 class="hce-section-title"><i class="bi bi-clock-history me-2"></i>Línea de Evolución</h6>
+                        <div class="hce-timeline mt-3" id="evolution-timeline">
+                            <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Central: Consulta Activa -->
+            <div class="col-lg-9 hce-main bg-light">
+                <div class="p-4">
+                    <form th:action="@{/medico/consulta/completar}" method="post" id="formConsulta">
+                        <input type="hidden" name="idCita" th:value="${cita.idCita}">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="fw-bold mb-0 text-dark">Evolución Clínica Actual</h4>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill btn-sm px-3" onclick="window.history.back()">Descartar</button>
+                                <button type="submit" class="btn btn-primary rounded-pill btn-sm px-4 fw-bold">Finalizar Atención</button>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Columna 1: Registro y Diagnóstico -->
+                            <div class="col-md-7">
+                                <!-- Triaje Rápido -->
+                                <div class="hce-form-card mb-4 shadow-sm">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="x-small fw-bold text-muted text-uppercase">Peso (kg)</label>
+                                            <input type="number" step="0.1" name="peso" class="form-control hce-input" placeholder="0.0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="x-small fw-bold text-muted text-uppercase">Talla (cm)</label>
+                                            <input type="number" name="talla" class="form-control hce-input" placeholder="0">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="x-small fw-bold text-muted text-uppercase">Temp (°C)</label>
+                                            <input type="number" step="0.1" name="temperatura" class="form-control hce-input" placeholder="36.5">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="x-small fw-bold text-muted text-uppercase">P. Art.</label>
+                                            <input type="text" name="presion" class="form-control hce-input" placeholder="120/80">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Evolución y Notas -->
+                                <div class="hce-form-card mb-4 shadow-sm">
+                                    <label class="x-small fw-bold text-muted text-uppercase mb-2">Relato Cronológico / Notas de Evolución</label>
+                                    <textarea name="notasMedicas" class="form-control hce-textarea" rows="8"
+                                              placeholder="Escriba aquí la evolución del paciente..." required th:text="${cita.notasMedicas}"></textarea>
+                                </div>
+
+                                <!-- Diagnóstico CIE-11 -->
+                                <div class="hce-form-card shadow-sm">
+                                    <label class="x-small fw-bold text-muted text-uppercase mb-2">Diagnóstico (CIE-11 OMS)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text border-0 bg-light"><i class="bi bi-search text-primary"></i></span>
+                                        <input type="text" id="cie11-search" class="form-control hce-input" placeholder="Empiece a escribir el diagnóstico..." onkeyup="buscarCIE11(this.value)">
+                                    </div>
+                                    <div id="cie11-results" class="list-group shadow mt-1 d-none" style="position: absolute; z-index: 1000; width: 90%;"></div>
+                                    <input type="hidden" name="diagnostico_cie10" id="cie10-val">
+                                    <div id="diagnostico-selected" class="mt-3 d-none">
+                                        <div class="alert alert-primary d-flex align-items-center justify-content-between mb-0 py-2 border-0 shadow-sm" style="border-radius: 10px;">
+                                            <span class="small fw-bold"><i class="bi bi-check-circle-fill me-2"></i> <span id="diagnostico-text"></span></span>
+                                            <button type="button" class="btn-close" onclick="limpiarDiagnostico()"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Columna 2: Prescripción y Exámenes -->
+                            <div class="col-md-5">
+                                <!-- Receta Digital Inmediata -->
+                                <!-- EXPOSICIÓN JHOAN: (US 17) Con este botón agregamos dinámicamente inputs (JavaScript) para recetar múltiples medicamentos a la vez. -->
+                                <div class="hce-form-card mb-4 shadow-sm">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <label class="x-small fw-bold text-muted text-uppercase">Prescripción de Medicamentos</label>
+                                        <button type="button" class="btn btn-primary btn-sm rounded-circle shadow-sm" style="width:24px;height:24px;padding:0;" onclick="agregarMedicamento()">
+                                            <i class="bi bi-plus" style="font-size: 1rem;"></i>
+                                        </button>
+                                    </div>
+                                    <div class="med-list" id="med-body-container">
+                                        <!-- Medicamentos dinámicos -->
+                                    </div>
+                                    <div id="no-meds-msg" class="text-center py-4 text-muted small">
+                                        <i class="bi bi-capsule fs-2 mb-2 d-block opacity-25"></i>
+                                        No hay medicamentos en la receta.
+                                    </div>
+                                </div>
+
+                                <!-- Alerta OpenFDA / Contraindicaciones -->
+                                <div id="fda-alert-box" class="hce-form-card mb-4 shadow-sm d-none" style="border-left: 4px solid #F59E0B !important;">
+                                    <h6 class="x-small fw-bold text-warning-emphasis mb-2"><i class="bi bi-info-circle-fill me-2"></i>Información FDA</h6>
+                                    <div id="fda-content" class="x-small text-muted">
+                                        Cargando información del medicamento...
+                                    </div>
+                                </div>
+
+                                <!-- Solicitud de Laboratorio -->
+                                <div class="hce-form-card shadow-sm">
+                                    <label class="x-small fw-bold text-muted text-uppercase mb-3 d-block">Solicitud de Exámenes</label>
+                                    <div class="row g-2">
+                                        <div class="col-6"><div class="hce-check-card"><input type="checkbox" name="exam_lab" value="Hemograma"><span>Hemograma</span></div></div>
+                                        <div class="col-6"><div class="hce-check-card"><input type="checkbox" name="exam_lab" value="Glucosa"><span>Glucosa</span></div></div>
+                                        <div class="col-6"><div class="hce-check-card"><input type="checkbox" name="exam_img" value="Rayos X"><span>Rayos X</span></div></div>
+                                        <div class="col-6"><div class="hce-check-card"><input type="checkbox" name="exam_img" value="Eco"><span>Ecografía</span></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estilos Premium para HCE Single Screen -->
+    <style>
+        .hce-container { height: calc(100vh - 100px); background: #f8fafc; }
+        .hce-sidebar { height: 100%; overflow-y: auto; }
+        .hce-main { height: 100%; overflow-y: auto; }
+        .hce-avatar { width: 80px; height: 80px; border-radius: 24px; background: linear-gradient(135deg, #3B82F6, #60A5FA); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 800; }
+        .hce-section-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #64748B; margin-bottom: 1rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+        .hce-card { border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); transition: all 0.2s; }
+        .hce-form-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #edf2f7; }
+        .hce-input { border-radius: 10px; border: 1px solid #e2e8f0; padding: 10px 14px; font-size: 0.9rem; transition: all 0.2s; background: #f8fafc; }
+        .hce-input:focus { background: white; border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .hce-textarea { border-radius: 12px; border: 1px solid #e2e8f0; padding: 14px; font-size: 0.95rem; background: #f8fafc; transition: all 0.2s; }
+        .hce-textarea:focus { background: white; border-color: #3B82F6; }
+        .hce-timeline { position: relative; padding-left: 20px; }
+        .hce-timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: #e2e8f0; }
+        .timeline-item { position: relative; padding-bottom: 20px; cursor: pointer; }
+        .timeline-item::before { content: ''; position: absolute; left: -24px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #3B82F6; border: 2px solid white; box-shadow: 0 0 0 2px #3B82F6; }
+        .timeline-content { background: #f8fafc; border-radius: 10px; padding: 10px; border: 1px solid #e2e8f0; transition: all 0.2s; }
+        .timeline-item:hover .timeline-content { background: #EFF6FF; border-color: #3B82F6; }
+        .hce-check-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; }
+        .hce-check-card:hover { border-color: #3B82F6; background: white; }
+        .hce-check-card input { width: 16px; height: 16px; cursor: pointer; }
+        .hce-check-card span { font-size: 0.75rem; font-weight: 600; color: #475569; }
+        .med-item { background: #f8fafc; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; position: relative; margin-bottom: 10px; padding-right: 40px; }
+        .med-item .btn-remove { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); font-size: 1.2rem; color: #ef4444; border: none; background: #fee2e2; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; z-index: 10; transition: all 0.2s; }
+        .med-item .btn-remove:hover { background: #ef4444; color: white; }
+        .stock-alert { color: #ef4444; font-size: 0.65rem; font-weight: bold; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+    </style>
+
+    <template id="med-item-template">
+        <div class="med-item animate__animated animate__fadeIn">
+            <button type="button" class="btn-remove shadow-sm" onclick="this.closest('.med-item').remove(); checkEmptyMeds();" title="Eliminar medicamento">
+                <i class="bi bi-trash-fill" style="font-size: 0.9rem;"></i>
+            </button>
+            <div class="position-relative mb-2">
+                <input type="text" name="med_nombre" class="form-control form-control-sm border-0 bg-white shadow-sm" 
+                       placeholder="Nombre del medicamento..." required onkeyup="buscarProducto(this)">
+                <div class="product-results list-group d-none shadow" style="position: absolute; z-index: 1000; width: 100%;"></div>
+                <div class="stock-status"></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-4"><input type="text" name="med_dosis" class="form-control form-control-sm border-0 bg-white" placeholder="Dosis"></div>
+                <div class="col-4"><input type="text" name="med_frecuencia" class="form-control form-control-sm border-0 bg-white" placeholder="Frec."></div>
+                <div class="col-4"><input type="text" name="med_duracion" class="form-control form-control-sm border-0 bg-white" placeholder="Durac."></div>
+            </div>
+            <input type="text" name="med_instrucciones" class="form-control form-control-sm border-0 bg-transparent mt-1 x-small" placeholder="Instrucciones adicionales...">
+        </div>
+    </template>
+    </div>
+
+
+    <th:block th:fragment="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <input type="hidden" id="h-paciente-id" th:if="${cita != null}" th:value="${cita.paciente.id}">
+        <script>
+            const pidEl = document.getElementById('h-paciente-id');
+            const currentPacienteId = pidEl ? pidEl.value : 0;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                if (currentPacienteId) {
+                    loadEvolutionTimeline(currentPacienteId);
+                }
+                // Agregar una primera fila de medicamento por defecto
+                agregarMedicamento();
+            });
+
+            async function loadEvolutionTimeline(pacienteId) {
+                const timeline = document.getElementById('evolution-timeline');
+                try {
+                    const res = await fetch('/medico/api/paciente/historial?idPaciente=' + pacienteId);
+                    const data = await res.json();
+                    
+                    if (data.length === 0) {
+                        timeline.innerHTML = '<div class="text-center text-muted small py-3">Sin consultas previas</div>';
+                        return;
+                    }
+
+                    timeline.innerHTML = data.map(c => `
+                        <div class="timeline-item animate__animated animate__fadeInLeft" onclick="verDetalleEvolucion('${c.fecha}', \`${(c.notas || 'Sin notas registradas').replace(/`/g, '\\`').replace(/\n/g, '<br>')}\`, '${c.medico || 'Médico'}', '${c.diagnostico || 'Sin diagnóstico'}')">
+                            <div class="timeline-content">
+                                <p class="mb-0 fw-bold x-small text-primary">${new Date(c.fecha).toLocaleDateString('es-ES', {day:'2-digit', month:'short', year:'numeric'})}</p>
+                                <p class="mb-0 text-muted x-small text-truncate">${c.especialidad || 'Especialidad General'}</p>
+                                <p class="mb-0 x-small fw-medium text-dark text-truncate">${c.diagnostico || 'Sin diagnóstico registrado'}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (e) {
+                    console.error('Error cargando timeline:', e);
+                    timeline.innerHTML = '<div class="text-danger small py-3">Error al cargar historial</div>';
+                }
+            }
+
+            function verDetalleEvolucion(fecha, notas, medico, diag) {
+                // Podríamos usar un modal o un panel flotante. Por ahora un Swal para no recargar.
+                Swal.fire({
+                    title: '<span class="text-primary">Evolución del ' + fecha + '</span>',
+                    html: `
+                        <div class="text-start p-2" style="font-size: 0.9rem;">
+                            <p class="mb-2"><strong>Médico:</strong> ${medico}</p>
+                            <p class="mb-2"><strong>Diagnóstico:</strong> ${diag}</p>
+                            <hr>
+                            <p class="mb-0 text-muted" style="white-space: pre-wrap;">${notas}</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'Cerrar',
+                    confirmButtonColor: '#3B82F6',
+                    width: '600px'
+                });
+            }
+
+            function agregarMedicamento() {
+                const template = document.getElementById('med-item-template');
+                const container = document.getElementById('med-body-container');
+                const clone = template.content.cloneNode(true);
+                container.appendChild(clone);
+                checkEmptyMeds();
+            }
+
+            function checkEmptyMeds() {
+                const container = document.getElementById('med-body-container');
+                const msg = document.getElementById('no-meds-msg');
+                if (container.children.length > 0) {
+                    msg.classList.add('d-none');
+                } else {
+                    msg.classList.remove('d-none');
+                }
+            }
+
+            async function buscarCIE11(val) {
+                const results = document.getElementById('cie11-results');
+                if (val.length < 3) {
+                    results.classList.add('d-none');
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/v1/external/cie11/search?q=' + encodeURIComponent(val));
+                    const data = await res.json();
+                    
+                    if (data.destinationEntities && data.destinationEntities.length > 0) {
+                        results.innerHTML = data.destinationEntities.map(x => `
+                            <button type="button" class="list-group-item list-group-item-action py-2 small" onclick="seleccionarCIE11('${x.theCode || ''}', '${x.title.replace(/<[^>]*>?/gm, '')}')">
+                                <span class="fw-bold text-info">${x.theCode || 'N/A'}</span> - ${x.title}
+                            </button>
+                        `).join('');
+                        results.classList.remove('d-none');
+                    } else {
+                        results.innerHTML = '<div class="list-group-item small text-muted">No se encontraron resultados.</div>';
+                        results.classList.remove('d-none');
+                    }
+                } catch (e) {
+                    console.error('Error CIE-11:', e);
+                }
+            }
+
+            function seleccionarCIE11(cod, desc) {
+                document.getElementById('cie10-val').value = cod;
+                document.getElementById('diagnostico-text').textContent = 'CIE-11: ' + cod + ' - ' + desc;
+                document.getElementById('diagnostico-selected').classList.remove('d-none');
+                document.getElementById('cie11-results').classList.add('d-none');
+                document.getElementById('cie11-search').value = '';
+            }
+
+            function limpiarDiagnostico() {
+                document.getElementById('cie10-val').value = '';
+                document.getElementById('diagnostico-selected').classList.add('d-none');
+            }
+
+            async function buscarProducto(input) {
+                const container = input.nextElementSibling;
+                const val = input.value;
+                if (val.length < 2) {
+                    container.classList.add('d-none');
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/v1/farmacia/productos?q=' + encodeURIComponent(val));
+                    const localRes = await res.json();
+
+                    let html = '';
+                    if (localRes.length > 0) {
+                        html += localRes.map(p => `
+                            <button type="button" class="list-group-item list-group-item-action py-2 small d-flex justify-content-between align-items-center" onclick="seleccionarProducto(this, '${p.nombre}', ${p.stock})">
+                                <span><i class="bi bi-capsule me-2 text-primary"></i>${p.nombre}</span>
+                                <span class="badge ${p.stock > 5 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">${p.stock}</span>
+                            </button>
+                        `).join('');
+                    } else {
+                        html = '<div class="list-group-item small text-muted">No hay stock local. Busque genérico.</div>';
+                    }
+
+                    container.innerHTML = html;
+                    container.classList.remove('d-none');
+                } catch (e) {
+                    console.error('Error buscando productos:', e);
+                }
+            }
+
+            function seleccionarProducto(btn, nombre, stock) {
+                const item = btn.closest('.med-item');
+                const input = item.querySelector('input[name="med_nombre"]');
+                const status = item.querySelector('.stock-status');
+                
+                input.value = nombre;
+                btn.closest('.product-results').classList.add('d-none');
+
+                if (stock <= 0) {
+                    status.innerHTML = `<div class="stock-alert animate__animated animate__shakeX"><i class="bi bi-exclamation-triangle"></i> ¡SIN STOCK EN FARMACIA!</div>`;
+                } else if (stock < 5) {
+                    status.innerHTML = `<div class="stock-alert text-warning"><i class="bi bi-info-circle"></i> Stock Crítico: ${stock} unidades</div>`;
+                } else {
+                    status.innerHTML = `<div class="small text-success mt-1" style="font-size: 0.65rem;"><i class="bi bi-check-circle"></i> Disponible (${stock})</div>`;
+                }
+
+                fetchFdaInfo(nombre);
+            }
+
+            async function fetchFdaInfo(nombre) {
+                const box = document.getElementById('fda-alert-box');
+                const content = document.getElementById('fda-content');
+                
+                box.classList.remove('d-none');
+                content.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Consultando OpenFDA...';
+
+                try {
+                    const res = await fetch('/api/v1/external/medicamentos/info?q=' + encodeURIComponent(nombre.split(' ')[0]));
+                    const data = await res.json();
+                    
+                    if (data) {
+                        content.innerHTML = `
+                            <p class="mb-1"><strong>Indicaciones:</strong> ${data.indications_and_usage.substring(0, 150)}...</p>
+                            <p class="mb-1 text-danger"><strong>Contraindicaciones:</strong> ${data.contraindications.substring(0, 150)}...</p>
+                            <p class="mb-0"><strong>Dosis:</strong> ${data.dosage_and_administration.substring(0, 150)}...</p>
+                        `;
+                    } else {
+                        content.innerHTML = 'Información no encontrada en la FDA para este producto.';
+                    }
+                } catch (e) {
+                    content.innerHTML = 'Error al conectar con la base de datos de la FDA.';
+                }
+            }
+        </script>
+    </th:block>
+</div>
+</body>
+</html>

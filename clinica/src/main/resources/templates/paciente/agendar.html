@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Agendar Cita - ClinicX</title></head>
+<body>
+<div th:fragment="cuerpo">
+
+    <div class="mb-4">
+        <h4 class="fw-bold mb-1" th:text="${citaReagendar != null ? 'Re-agendar Cita' : 'Agendar Nueva Cita'}">Agendar Nueva Cita</h4>
+        <p class="text-muted small mb-0" th:text="${citaReagendar != null ? 'Selecciona los nuevos detalles para tu cita médica.' : 'Sigue los pasos para programar tu atención médica especializada.'}">Sigue los pasos para programar tu atención médica especializada.</p>
+    </div>
+
+    <!-- Alerta de Horario Ocupado -->
+    <div th:if="${param.error != null and param.error[0] == 'horario_ocupado'}" class="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-3 py-3 px-4 mb-4 rounded-4 animate__animated animate__shakeX">
+        <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+            <i class="bi bi-calendar-x fs-5"></i>
+        </div>
+        <div>
+            <h6 class="mb-0 fw-bold text-danger">Horario No Disponible</h6>
+            <p class="mb-0 small opacity-75">El médico ya tiene una cita reservada a la hora solicitada. Por favor, elige otro horario.</p>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="cx-stepper mb-5 px-md-5" id="agendarStepper">
+        <div class="cx-step active" data-step="1">
+            <div class="step-circle">1</div>
+            <p>Especialidad</p>
+        </div>
+        <div class="cx-step" data-step="2">
+            <div class="step-circle">2</div>
+            <p>Médico</p>
+        </div>
+        <div class="cx-step" data-step="3">
+            <div class="step-circle">3</div>
+            <p>Horario</p>
+        </div>
+        <div class="cx-step" data-step="4">
+            <div class="step-circle">4</div>
+            <p>Confirmar</p>
+        </div>
+    </div>
+
+    <div id="agendarContainer">
+        <!-- STEP 1: Especialidad -->
+        <div class="agendar-step animate-fade-in" data-agendar-step="1">
+            <div class="app-card border-0 shadow-sm">
+                <div class="app-card-body p-4">
+                    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-chevron-right text-primary me-2"></i>¿Qué atención necesitas?</h6>
+                    <div class="row g-4">
+                        <div class="col-md-4 col-sm-6" th:each="esp : ${especialidades}">
+                            <div class="app-card border-0 bg-light shadow-sm-hover transition-all text-center p-4 specialty-option cursor-pointer" th:data-specialty="${esp.nombre}" onclick="selectSpecialty(this)">
+                                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center mx-auto mb-3 shadow-sm" style="width:60px;height:60px;color:#8B5CF6;">
+                                    <i class="bi bi-heart-pulse-fill fs-3"></i>
+                                </div>
+                                <h6 class="fw-bold mb-1" th:text="${esp.nombre}">Especialidad</h6>
+                                <p class="text-muted small mb-0">Ver médicos disponibles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Médico -->
+        <div class="agendar-step animate-fade-in" data-agendar-step="2" style="display:none;">
+            <div class="app-card border-0 shadow-sm">
+                <div class="app-card-body p-4">
+                    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-chevron-right text-primary me-2"></i>Selecciona un especialista en <span id="selectedSpecialtyLabel" class="text-primary"></span></h6>
+                    <div class="row g-4" id="doctorsList">
+                        <div class="col-md-6 doctor-item" th:each="med : ${medicos}" th:data-doc-specialty="${med.especialidad.nombre}">
+                            <div class="app-card border-0 bg-light shadow-sm-hover transition-all p-3 doctor-option cursor-pointer" th:data-doctor="'Dr/a. ' + ${med.apellidos}" th:data-sede="${med.sede.nombre}" th:data-id-medico="${med.id}" th:data-horariolv="${med.horarioLv}" th:data-horariosab="${med.horarioSabado}" th:data-duracion="${med.duracionCita}" onclick="selectDoctor(this)">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-4 bg-white d-flex align-items-center justify-content-center shadow-sm" style="width:64px;height:64px;color:#8B5CF6;">
+                                        <i class="bi bi-person-badge-fill fs-2"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-1" th:text="${med.nombres + ' ' + med.apellidos}">Nombre Médico</h6>
+                                        <div class="d-flex gap-2">
+                                            <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i><span th:text="${med.sede.nombre}">Sede</span></span>
+                                            <span class="small text-success fw-medium"><i class="bi bi-star-fill me-1"></i>4.9 (24)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 text-center py-5" id="noDoctorsMsg" style="display:none;">
+                            <div class="opacity-25 mb-3" style="font-size:3rem;"><i class="bi bi-person-slash"></i></div>
+                            <h6 class="text-muted">No hay médicos disponibles para esta especialidad</h6>
+                            <button class="app-btn bg-light mt-3" onclick="agendarPrev()">Cambiar especialidad</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Fecha y Hora -->
+        <div class="agendar-step animate-fade-in" data-agendar-step="3" style="display:none;">
+            <div class="app-card border-0 shadow-sm">
+                <div class="app-card-body p-4">
+                    <h6 class="fw-bold mb-4 text-dark"><i class="bi bi-chevron-right text-primary me-2"></i>Elige el mejor momento para tu cita</h6>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Fecha de consulta</label>
+                            <input type="date" class="form-control border-0 bg-light p-3 rounded-4 shadow-sm" id="citaFecha" style="font-size:.95rem;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Sede de atención</label>
+                            <div class="p-3 bg-light rounded-4 shadow-sm d-flex align-items-center">
+                                <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                                <input type="text" class="bg-transparent border-0 flex-grow-1 fw-bold p-0" id="citaSede" readonly style="outline:none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1 mt-5 mb-3">Horarios Disponibles</label>
+                    <div class="d-flex flex-wrap gap-2 mb-2" id="horariosGrid">
+                        <p class="text-muted small">Selecciona una fecha para ver los horarios disponibles.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Confirmación -->
+        <div class="agendar-step animate-fade-in" data-agendar-step="4" style="display:none;">
+            <div class="app-card border-0 shadow-sm overflow-hidden">
+                <div class="bg-primary p-4 text-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-white text-primary d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                            <i class="bi bi-shield-check fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Resumen de tu Cita</h5>
+                    </div>
+                </div>
+                <div class="app-card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-4">
+                                <p class="text-muted small mb-1">Especialidad</p>
+                                <p class="fw-bold mb-0 fs-6" id="confirmSpec">—</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-4">
+                                <p class="text-muted small mb-1">Médico Especialista</p>
+                                <p class="fw-bold mb-0 fs-6" id="confirmDoc">—</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-4">
+                                <p class="text-muted small mb-1">Fecha Programada</p>
+                                <p class="fw-bold mb-0 fs-6" id="confirmDate">—</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-4">
+                                <p class="text-muted small mb-1">Hora de Cita</p>
+                                <p class="fw-bold mb-0 fs-6" id="confirmTime">—</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded-4">
+                                <p class="text-muted small mb-1">Sede / Ubicación</p>
+                                <p class="fw-bold mb-0 fs-6" id="confirmSede">—</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-info-subtle border-0 rounded-4 d-flex gap-3 align-items-center" style="background:rgba(186,230,253,0.3); color:#0369a1;">
+                        <i class="bi bi-info-circle-fill fs-4"></i>
+                        <p class="small mb-0">Recuerda llegar 15 minutos antes de tu hora programada portando tu DNI físico para el registro en recepción.</p>
+                    </div>
+
+                    <div class="form-check mt-5">
+                        <input class="form-check-input" type="checkbox" id="confirmCheck" style="cursor:pointer; width:20px; height:20px;">
+                        <label class="form-check-label small ms-2 pt-1 cursor-pointer" for="confirmCheck">
+                            Confirmo que los datos anteriores son correctos y deseo programar mi cita.
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation buttons -->
+    <div class="d-flex justify-content-between mt-5 pt-3 border-top" id="agendarNav">
+        <button class="app-btn bg-white border px-4" id="agendarBack" style="display:none;" onclick="agendarPrev()">
+            <i class="bi bi-arrow-left me-2"></i> Atrás
+        </button>
+        <div class="ms-auto">
+            <button class="app-btn bg-primary text-white border-0 px-5" id="agendarNext" onclick="agendarNextAction()">
+                <span class="btn-text">Continuar <i class="bi bi-arrow-right ms-2"></i></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Real POST Form -->
+    <form id="realAgendarForm" th:action="@{/paciente/agendar}" method="POST" style="display:none;">
+        <input type="hidden" name="id_medico" id="hidden_id_medico">
+        <input type="hidden" name="fecha" id="hidden_fecha">
+        <input type="hidden" name="hora" id="hidden_hora">
+        <input type="hidden" name="id_cita" th:if="${citaReagendar != null}" th:value="${citaReagendar.idCita}">
+    </form>
+</div>
+
+</body>
+</html>

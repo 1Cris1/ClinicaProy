@@ -1,0 +1,153 @@
+===========================================================================
+GUIA DE EXPOSICION LINEA POR LINEA - ALUMNO 4: ADMINISTRACION Y LOGISTICA
+===========================================================================
+
+Este archivo contiene el desglose y la explicacion exacta de cada linea de 
+codigo para tus dos historias de usuario (HU 7: Gestion de Catalogo de 
+Farmacia y HU 8: Registro de Nuevo Medico).
+
+---------------------------------------------------------------------------
+💊 HISTORIA DE USUARIO 7: Gestion de Catalogo de Farmacia
+---------------------------------------------------------------------------
+
+Esta funcionalidad permite al administrador ver el inventario completo 
+de medicamentos, vacunas y material medico con sus precios.
+
+1. EXPLICACION LINEA POR LINEA DEL BACKEND (Java)
+Ubicacion: AdminController.java (Lineas 573-581)
+
+[Codigo fuente]:
+573:    @GetMapping("/productos")
+574:    public String listarProductos(Model model) {
+575:        log.info("[Admin] Acceso a Gestión de Productos");
+576:        model.addAttribute("productos", productoRepository.findAll());
+577:        model.addAttribute("totalProductos", productoRepository.count());
+578:        model.addAttribute("pageTitle", "Catálogo de Farmacia");
+579:        model.addAttribute("view", "admin/productos");
+580:        return LAYOUT;
+581:    }
+
+[Detalle linea por linea]:
+* Linea 573: [@GetMapping("/productos")]
+  -> Expone la URL web para que al escribir "/admin/productos" se abra el inventario.
+* Linea 574: [public String listarProductos(Model model) {]
+  -> Inyecta el empaquetador "Model" para llevar datos de Java hacia el HTML.
+* Linea 575: [log.info("[Admin] Acceso a Gestión de Productos");]
+  -> Genera una pista de auditoria. El sistema registra que el administrador entro 
+     a ver el stock, util para cumplir normativas de seguridad (quien ve la informacion).
+* Linea 576: [model.addAttribute("productos", productoRepository.findAll());]
+  -> Con "findAll()", se ejecuta un "SELECT * FROM productos" en la base de datos 
+     y se empaqueta la lista gigante de medicamentos bajo el nombre "productos".
+* Linea 577: [model.addAttribute("totalProductos", productoRepository.count());]
+  -> Ejecuta un "SELECT COUNT(*) FROM productos" para mostrar en la interfaz un numero 
+     estadistico rapido de cuantos items hay en la farmacia sin tener que contarlos uno por uno.
+* Lineas 578 a 580: [model.addAttribute("view", "admin/productos"); return LAYOUT;]
+  -> Determina que porcion visual de HTML renderizar y la ensambla en el Layout principal.
+
+
+---------------------------------------------------------------------------
+👨‍⚕️ HISTORIA DE USUARIO 8: Registro de Nuevo Medico
+---------------------------------------------------------------------------
+
+Esta funcionalidad permite dar de alta a un nuevo doctor en la clinica, 
+creando su perfil medico y al mismo tiempo su usuario y contraseña de sistema.
+
+1. EXPLICACION LINEA POR LINEA DEL BACKEND (Java)
+Ubicacion: AdminController.java (Lineas 286-324)
+
+[Codigo fuente]:
+286:    @PostMapping("/medicos/nuevo")
+287:    public String registrarMedico(@RequestParam String nombres,
+288:                                  @RequestParam String apellidos,
+289:                                  @RequestParam String dni,
+290:                                  @RequestParam String password,
+291:                                  @RequestParam(required = false) String cmp,
+292:                                  @RequestParam(required = false) Integer especialidadId,
+293:                                  // ... otros parametros de sede, email, etc.
+300:        try {
+301:            Usuario nuevoUsuario = Usuario.builder()
+302:                    .username(dni)
+303:                    .password(passwordEncoder.encode(password))
+304:                    .idRol(2)
+305:                    .estado(1)
+306:                    .build();
+307:            usuarioRepository.save(nuevoUsuario);
+308:
+309:            Medico nuevoMedico = Medico.builder()
+310:                    .usuario(nuevoUsuario)
+311:                    .nombres(nombres)
+312:                    .apellidos(apellidos)
+313:                    .dni(dni)
+314:                    .cmp(cmp)
+315:                    // ...
+321:                    .estado("Activo")
+322:                    .build();
+323:            medicoRepository.save(nuevoMedico);
+324:            return "redirect:/admin/medicos?exito";
+325:        } catch (Exception e) {
+326:            log.error("Error registrando medico", e);
+327:            return "redirect:/admin/medicos?error";
+328:        }
+
+[Detalle linea por linea]:
+* Linea 286: [@PostMapping("/medicos/nuevo")]
+  -> Responde al formulario web para capturar los datos y blindar la informacion (metodo POST).
+* Lineas 287 a 299: [public String registrarMedico(@RequestParam...)]
+  -> Atrapa todos los datos. Destaca "(required = false)" que permite que campos como 
+     "cmp" o "email" esten vacios sin crashear el servidor.
+* Linea 300: [try {]
+  -> Inicia el bloque seguro para capturar si, por ejemplo, el DNI ya esta duplicado en la base de datos.
+* Lineas 301 a 306: [Usuario nuevoUsuario = Usuario.builder() ... .build();]
+  -> Crea las credenciales de acceso al sistema. El "username" siempre sera su DNI.
+  -> Se usa "passwordEncoder.encode(password)" (Bcrypt) para encriptar la contraseña 
+     y guardarla como un codigo ilegible, protegiendo al sistema de hackers.
+  -> "idRol(2)" especifica el nivel de permisos para el menu del Medico.
+* Linea 307: [usuarioRepository.save(nuevoUsuario);]
+  -> Inserta el usuario en la BD para que le asigne un ID unico y exista en la seguridad de Spring.
+* Lineas 309 a 322: [Medico nuevoMedico = Medico.builder() ...]
+  -> Construye el Perfil Publico del medico asociandolo con su usuario ".usuario(nuevoUsuario)". 
+     Esto se llama "Integridad Referencial" (Foreing Key). 
+* Linea 323: [medicoRepository.save(nuevoMedico);]
+  -> Guarda el registro final del doctor.
+* Lineas 325 a 328: [} catch (Exception e) { log.error("Error registrando medico", e); ... ]
+  -> Si el DNI o CMP se repitiera, la base de datos mandara un error. El sistema lo atrapa, 
+     lo anota en los logs y devuelve al administrador a la pantalla con un mensaje visual de error.
+
+2. EXPLICACION LINEA POR LINEA DEL FRONTEND (HTML / Thymeleaf)
+Ubicacion: medicos.html (Formulario de Nuevo Medico)
+
+[Codigo fuente]:
+15:    <form th:action="@{/admin/medicos/nuevo}" method="post">
+18:        <input type="text" name="dni" class="form-control" required placeholder="DNI (Será su Usuario)">
+22:        <input type="text" name="nombres" class="form-control" required>
+26:        <select name="especialidadId" class="form-select" required>
+27:            <option th:each="esp : ${especialidades}" th:value="${esp.id}" th:text="${esp.nombre}"></option>
+28:        </select>
+45:        <button type="submit" class="btn btn-primary">Registrar Médico</button>
+46:    </form>
+
+[Detalle linea por linea]:
+* Linea 15: [<form th:action="@{/admin/medicos/nuevo}" method="post">]
+  -> Inicia el formulario, apuntando al controlador Backend que creara al usuario.
+* Linea 18: [<input name="dni"...>]
+  -> Atrapa el DNI. Ojo aqui: la interfaz avisa que este DNI se usara tambien como "Username" 
+     para el login del medico.
+* Linea 27: [<option th:each="esp : ${especialidades}"...>]
+  -> Thymeleaf itera sobre todas las especialidades cargadas desde la BD (ej. Cardiologia, 
+     Pediatria) y dibuja una lista desplegable dinamicamente.
+* Linea 45: [<button type="submit"...>]
+  -> Empaqueta toda la informacion de las cajas de texto y se la envia a Java.
+
+
+3. IMPACTO EN BASE DE DATOS (Las tablas afectadas)
+---------------------------------------------------------------------------
+Cuando este codigo se ejecuta, ocurren cambios criticos en 2 tablas:
+1. Tabla `usuarios`: Se hace un INSERT con el username (DNI) y la contraseña 
+   encriptada (Bcrypt). Se le da el id_rol = 2 (Permisos de Medico).
+2. Tabla `medicos`: Se hace un INSERT con sus datos profesionales (CMP, nombres) 
+   y se vincula mediante una Foreign Key (llave foranea) al ID del usuario recien creado.
+
+===========================================================================
+¡Exitos en tu sustentacion! Esta guia te garantiza defender el codigo a nivel
+tecnico y de negocio de forma impecable.
+===========================================================================

@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Sedes - ClinicX Admin</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h4 class="fw-bold mb-0">Gestión de Sedes</h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge" style="background:var(--ad-primary);color:#fff;padding:.5rem 1rem;" th:text="${totalSedes} + ' sedes'">0 sedes</span>
+                <button class="btn rounded-pill px-4 fw-bold shadow-sm btn-sm" style="background:var(--ad-primary);color:#fff;" data-bs-toggle="modal" data-bs-target="#modalNuevaSede">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar Sede
+                </button>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4" th:each="s : ${sedes}">
+                <div class="ad-card h-100">
+                    <div class="ad-card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="stat-icon" style="background:#DBEAFE;color:#2563EB;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">
+                                <i class="bi bi-building-fill"></i>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#modalEditarSede" th:attr="data-id=${s.id}, data-nombre=${s.nombre}, data-direccion=${s.direccion}, data-distrito=${s.distrito}, data-ciudad=${s.ciudad}, data-telefono=${s.telefono}, data-email=${s.email}, data-horarioLv=${s.horarioLv}, data-horarioSabado=${s.horarioSabado}, data-horarioDomingo=${s.horarioDomingo}, data-numConsultorios=${s.numConsultorios}, data-estado=${s.estado}" onclick="cargarDatosSede(this)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-circle" data-bs-toggle="modal" data-bs-target="#modalEliminarSede" th:attr="data-id=${s.id}, data-nombre=${s.nombre}" onclick="cargarEliminarSede(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <span class="ad-badge-status mb-2" 
+                              th:style="${s.estado == 'Activo'} ? 'background:#D1FAE5;color:#059669;' : 'background:#E5E7EB;color:#6B7280;'"
+                              th:text="${s.estado != null} ? ${s.estado} : 'Activo'">-</span>
+                        <h5 class="fw-bold mb-1" th:text="${s.nombre}">-</h5>
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-geo-alt me-1"></i><span th:text="${s.direccion}">-</span>
+                        </p>
+                        <p class="text-muted small mb-2" th:if="${s.telefono != null}">
+                            <i class="bi bi-telephone me-1"></i><span th:text="${s.telefono}">-</span>
+                        </p>
+                        <p class="text-muted small mb-2" th:if="${s.email != null}">
+                            <i class="bi bi-envelope me-1"></i><span th:text="${s.email}">-</span>
+                        </p>
+                        <p class="text-muted small mb-3" th:if="${s.horarioLv != null}">
+                            <i class="bi bi-clock me-1"></i><span th:text="${s.horarioLv}">-</span>
+                        </p>
+                        <div class="d-flex gap-3 small" th:if="${s.numConsultorios != null}">
+                            <span class="fw-bold text-primary" th:text="${s.numConsultorios} + ' consultorios'">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${sedes.isEmpty()}" class="col-12 text-center py-5">
+                <i class="bi bi-building" style="font-size:3rem;color:var(--ad-muted);"></i>
+                <p class="text-muted mt-3">No hay sedes registradas</p>
+            </div>
+        </div>
+
+        <!-- Modal Nueva Sede -->
+        <div class="modal fade" id="modalNuevaSede" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Registrar Nueva Sede</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/sedes/nuevo}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Nombre de la Sede</label>
+                                <input name="nombre" class="form-control ad-input" placeholder="Ej: Clínica Central" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" class="form-select ad-input">
+                                    <option value="Activo" selected>Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Dirección</label>
+                                <input name="direccion" class="form-control ad-input" placeholder="Ej: Av. Lima 1234, Centro" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Distrito</label>
+                                <input name="distrito" class="form-control ad-input" placeholder="Ej: Cercado de Lima">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Ciudad</label>
+                                <input name="ciudad" class="form-control ad-input" placeholder="Ej: Lima">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Teléfono</label>
+                                <input name="telefono" class="form-control ad-input" placeholder="Ej: +51 1 234-5678">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input name="email" type="email" class="form-control ad-input" placeholder="Ej: clinica@email.com">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Horario Lunes-Viernes</label>
+                                <input name="horarioLv" class="form-control ad-input" placeholder="Ej: 8:00 AM - 6:00 PM">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Horario Sábado</label>
+                                <input name="horarioSabado" class="form-control ad-input" placeholder="Ej: 9:00 AM - 1:00 PM">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Horario Domingo</label>
+                                <input name="horarioDomingo" class="form-control ad-input" placeholder="Ej: Cerrado">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">NÂ° Consultorios</label>
+                                <input name="numConsultorios" type="number" min="1" class="form-control ad-input" placeholder="Ej: 10">
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Registrar</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Editar Sede -->
+        <div class="modal fade" id="modalEditarSede" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Sede</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/sedes/editar}" method="post">
+                        <input type="hidden" name="id" id="editId">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Nombre de la Sede</label>
+                                <input name="nombre" id="editNombre" class="form-control ad-input" placeholder="Ej: Clínica Central" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" id="editEstado" class="form-select ad-input">
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Dirección</label>
+                                <input name="direccion" id="editDireccion" class="form-control ad-input" placeholder="Ej: Av. Lima 1234, Centro" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Distrito</label>
+                                <input name="distrito" id="editDistrito" class="form-control ad-input" placeholder="Ej: Cercado de Lima">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Ciudad</label>
+                                <input name="ciudad" id="editCiudad" class="form-control ad-input" placeholder="Ej: Lima">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Teléfono</label>
+                                <input name="telefono" id="editTelefono" class="form-control ad-input" placeholder="Ej: +51 1 234-5678">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input name="email" id="editEmail" type="email" class="form-control ad-input" placeholder="Ej: clinica@email.com">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Horario Lunes-Viernes</label>
+                                <input name="horarioLv" id="editHorarioLv" class="form-control ad-input" placeholder="Ej: 8:00 AM - 6:00 PM">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Horario Sábado</label>
+                                <input name="horarioSabado" id="editHorarioSabado" class="form-control ad-input" placeholder="Ej: 9:00 AM - 1:00 PM">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Horario Domingo</label>
+                                <input name="horarioDomingo" id="editHorarioDomingo" class="form-control ad-input" placeholder="Ej: Cerrado">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">NÂ° Consultorios</label>
+                                <input name="numConsultorios" id="editNumConsultorios" type="number" min="1" class="form-control ad-input" placeholder="Ej: 10">
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Guardar Cambios</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Eliminar Sede -->
+        <div class="modal fade" id="modalEliminarSede" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Eliminar Sede</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p>Â¿Está seguro de eliminar la sede <strong id="eliminarNombre"></strong>?</p>
+                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <a id="btnConfirmarEliminar" class="btn btn-danger rounded-pill px-4 fw-bold btn-sm">
+                        <i class="bi bi-trash me-1"></i> Eliminar
+                    </a>
+                </div>
+            </div></div>
+        </div>
+
+        
+    </div>
+</body>
+</html>
+
+

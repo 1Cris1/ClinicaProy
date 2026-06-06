@@ -1,0 +1,67 @@
+=============================================================================
+             GUION FINAL DE EXPOSICIÓN - PROYECTO CLINICX
+=============================================================================
+
+Este documento detalla qué debe exponer cada integrante frente al jurado, 
+enfocándose en demostrar el dominio de las 3 CAPAS DE LA ARQUITECTURA: 
+1. FRONTEND (HTML, CSS, Thymeleaf, JavaScript)
+2. BACKEND (Java, Spring Boot, Controladores, Servicios)
+3. BASE DE DATOS (MySQL, JPA Hibernate, Entidades, Repositorios)
+
+-----------------------------------------------------------------------------
+PARTE 1: ¿CÓMO EXPLICAR LA CONEXIÓN FRONTEND -> BACKEND -> BD?
+-----------------------------------------------------------------------------
+El jurado siempre pregunta: "¿Cómo viaja la información desde que el usuario 
+hace clic hasta que se guarda en la base de datos?" 
+
+Respondan usando el modelo MVC (Modelo-Vista-Controlador) en estas 3 capas:
+
+1. FRONTEND (La Vista - Interfaz de Usuario):
+   - Usamos HTML/Thymeleaf. Cuando el usuario llena un formulario y presiona
+     el botón "Guardar", Thymeleaf (usando `th:action`) envía los datos 
+     empaquetados a través de una petición HTTP (POST).
+
+2. BACKEND (El Controlador y la Lógica - Spring Boot):
+   - El Controlador de Java (`@Controller`) captura la petición mediante
+     `@PostMapping`. Aquí se validan los datos y se inyectan dependencias.
+   - El Controlador llama a la capa de SERVICIOS o REPOSITORIOS, donde
+     reside la lógica de negocio real.
+
+3. BASE DE DATOS (El Modelo - JPA / MySQL):
+   - En lugar de escribir sentencias "INSERT INTO" manualmente (SQL puro), 
+     nuestro backend usa Spring Data JPA. 
+   - Mapeamos tablas con clases de Java usando `@Entity`. El Repositorio 
+     extiende `JpaRepository`, lo que nos permite usar el método `.save()` 
+     para insertar los datos directamente en la tabla de MySQL.
+
+-----------------------------------------------------------------------------
+PARTE 2: QUÉ EXPONDRÁ CADA INTEGRANTE (Y SUS 3 CAPAS)
+-----------------------------------------------------------------------------
+
+👤 INTEGRANTE 1: RHOMEL (Seguridad y Registro de Pacientes)
+[Tus 3 Capas a exponer]:
+- Frontend: Vista de Registro (`registro.html`) e Inicio de Sesión (`login.html`).
+- Backend: `PublicController` y validación en vivo con `ApiPeruService` (RestTemplate). `SecurityConfig` para proteger las rutas.
+- Base de Datos: Tabla `usuarios` y `pacientes`. Explicar cómo el backend usa `BCryptPasswordEncoder` para guardar la contraseña encriptada en la BD.
+
+👤 INTEGRANTE 2: MIGUEL (Agendamiento de Citas y Prevención de Cruces)
+[Tus 3 Capas a exponer]:
+- Frontend: Portal del paciente (`agendar.html`). Explicar cómo se envían la `fecha` y `hora` al backend.
+- Backend: `PacienteController`. Explicar la validación "Double Booking" y la sincronización asíncrona hacia Google Calendar (`CompletableFuture`).
+- Base de Datos: Tabla `citas`. Explicar cómo modificaron `CitaRepository` agregando `existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNot` para buscar cruces en MySQL antes de guardar.
+
+👤 INTEGRANTE 3: CRISTIAN (Administración, Maestros y Reportes)
+[Tus 3 Capas a exponer]:
+- Frontend: Panel de control de Admin (`medicos.html`, `pacientes.html`).
+- Backend: `AdminController`. Explicar cómo se manejan los catálogos y cómo se definen los horarios (`horario_lv`, `horario_sabado`).
+- Base de Datos: Relaciones `@ManyToOne`. Mostrar cómo la tabla `medicos` tiene claves foráneas (FK) en BD hacia las tablas `especialidades` y `sedes`.
+
+👤 INTEGRANTE 4: JHOAN (Consultorio Clínico e Historia Médica)
+[Tus 3 Capas a exponer]:
+- Frontend: Pantalla del consultorio médico (`consultorio.html`).
+- Backend: `MedicoController`. Explicar el objeto `Principal` para filtrar la sesión. Explicar el uso crítico de la anotación `@Transactional`.
+- Base de Datos: Tablas `citas`, `recetas` y `detalles_receta`. Explicar que `@Transactional` garantiza la atomicidad (ACID) en la BD: o se guarda toda la historia y la receta en las 3 tablas, o si falla la BD, se hace un "Rollback" para evitar datos huérfanos.
+
+=============================================================================
+¡DOMINANDO LAS 3 CAPAS DEMOSTRARÁN QUE CONOCEN EL PROYECTO DE PIES A CABEZA!
+=============================================================================

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Laboratorio Clínico - Médico</title></head>
+<body>
+<div th:fragment="cuerpo">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Laboratorio Clínico: Visor Médico</h4>
+            <p class="text-muted small mb-0">Seguimiento avanzado y comparativa histórica de resultados.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Listado de Órdenes Recientes -->
+        <div class="col-lg-4">
+            <div class="doc-card shadow-sm border-0 h-100">
+                <div class="doc-card-header bg-white border-bottom py-3">
+                    <h6 class="fw-bold mb-0">Órdenes Recientes</h6>
+                </div>
+                <div class="doc-card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <div th:each="o : ${ordenes}" class="list-group-item list-group-item-action border-0 p-3 mb-1 rounded-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary" th:text="${'#' + o.id}">#1</span>
+                                <span class="badge rounded-pill" 
+                                      th:text="${o.estado}"
+                                      th:classappend="${o.estado == 'Validado' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'}">Estado</span>
+                            </div>
+                            <p class="mb-1 fw-bold small mt-2" th:text="${o.paciente.nombres + ' ' + o.paciente.apellidos}">Paciente</p>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span th:text="${#temporals.format(o.fechaSolicitud, 'dd/MM/yyyy')}">12/04/2026</span>
+                                <span th:if="${o.prioridad == 'STAT'}" class="text-danger fw-bold">STAT</span>
+                            </div>
+                        </div>
+                        <div th:if="${#lists.isEmpty(ordenes)}" class="text-center py-5">
+                            <p class="text-muted small">No hay órdenes registradas.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DiacnosticAnaliticIA - Comparativa Histórica -->
+        <div class="col-lg-8">
+            <div class="doc-card shadow-sm border-0 mb-4">
+                <div class="doc-card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-graph-up me-2 text-primary"></i>DiacnosticAnaliticIA: Comparativa Histórica</h6>
+                    <a th:if="${pacienteSeleccionado != null and !ordenes.isEmpty()}" 
+                       th:href="@{'/laboratorio/orden/' + ${ordenes[0].id} + '/pdf'}" 
+                       class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Descargar Informe Completo
+                    </a>
+                </div>
+                <div class="doc-card-body">
+                    <div th:if="${pacienteSeleccionado != null}">
+                        <div class="alert alert-info border-0 bg-light-subtle d-flex align-items-center gap-3 p-3 rounded-3 mb-4">
+                            <div class="avatar-circle-sm" style="background: var(--gradient-primary); color: #fff;">
+                                <span th:text="${#strings.substring(pacienteSeleccionado.nombres,0,1)}">P</span>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" th:text="${pacienteSeleccionado.nombres + ' ' + pacienteSeleccionado.apellidos}">Nombre Paciente</h6>
+                                <small class="text-muted" th:text="${'DNI: ' + pacienteSeleccionado.dni}">DNI</small>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <thead class="bg-light small text-center">
+                                    <tr>
+                                        <th class="text-start">Análisis / Biomarcador</th>
+                                        <th>Rango Ref.</th>
+                                        <th>Último (12/04)</th>
+                                        <th>Anterior (01/03)</th>
+                                        <th>Anterior (15/01)</th>
+                                        <th>Tendencia</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="small text-center">
+                                    <tr>
+                                        <td class="text-start fw-bold">Glucosa Basal</td>
+                                        <td class="text-muted">70 - 110 mg/dL</td>
+                                        <td class="text-danger fw-bold">145.2</td>
+                                        <td>112.0</td>
+                                        <td>98.5</td>
+                                        <td><i class="bi bi-arrow-up-right text-danger"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold">Colesterol Total</td>
+                                        <td class="text-muted">&lt; 200 mg/dL</td>
+                                        <td>185.0</td>
+                                        <td class="text-danger">215.0</td>
+                                        <td class="text-danger">230.0</td>
+                                        <td><i class="bi bi-arrow-down-right text-success"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-start fw-bold">Hemoglobina</td>
+                                        <td class="text-muted">13.5 - 17.5 g/dL</td>
+                                        <td>14.2</td>
+                                        <td>14.0</td>
+                                        <td>13.8</td>
+                                        <td><i class="bi bi-dash text-muted"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top">
+                            <h6 class="fw-bold small mb-3">Firma Digital del Responsable</h6>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/f/f8/Firma_de_Ricardo_Lagos.svg" alt="Firma" style="height: 50px; opacity: 0.6; filter: grayscale(1);">
+                                <div class="text-muted" style="font-size: .7rem;">
+                                    <p class="mb-0 fw-bold">Dr. Armando Casas</p>
+                                    <p class="mb-0">Patólogo Clínico - CMP 88921</p>
+                                    <p class="mb-0">Validado electrónicamente: 12/04/2026 14:30</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${pacienteSeleccionado == null}" class="text-center py-5">
+                        <i class="bi bi-search text-muted opacity-25" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Seleccione una orden para ver la comparativa histórica.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

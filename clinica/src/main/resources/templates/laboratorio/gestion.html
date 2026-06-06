@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Gestión de Órdenes - Laboratorio</title></head>
+<body>
+<div th:fragment="cuerpo">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Worklist de Laboratorio</h4>
+            <p class="text-muted small mb-0">Gestión de toma de muestras y procesamiento.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="filterStatus">
+                <option value="">Todos los estados</option>
+                <option value="Pendiente de toma">Pendiente de toma</option>
+                <option value="En proceso">En proceso</option>
+                <option value="Validado">Validado</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small fw-bold">
+                        <tr>
+                            <!-- th ID rem -->
+                            <th class="py-3">PACIENTE</th>
+                            <th class="py-3">FECHA SOLICITUD</th>
+                            <th class="py-3">PRIORIDAD</th>
+                            <th class="py-3">ESTADO</th>
+                            <th class="py-3 pe-4 text-center">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="o : ${ordenes}">
+                            <!-- td ID rem -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle-sm" style="background: #e2e8f0; color: #475569; font-weight: 700; font-size: .7rem;"
+                                         th:text="${#strings.substring(o.paciente.nombres,0,1) + #strings.substring(o.paciente.apellidos,0,1)}">P</div>
+                                    <div>
+                                        <span class="d-block fw-bold text-dark" th:text="${o.paciente.nombres + ' ' + o.paciente.apellidos}">Paciente</span>
+                                        <small class="text-muted" th:text="${'DNI: ' + o.paciente.dni}">DNI</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td th:text="${#temporals.format(o.fechaSolicitud, 'dd/MM/yyyy HH:mm')}">--/--/--</td>
+                            <td>
+                                <span class="badge rounded-pill px-3" 
+                                      th:text="${o.prioridad}"
+                                      th:classappend="${o.prioridad == 'STAT' ? 'bg-danger' : 'bg-info'}">
+                                    Prioridad
+                                </span>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm status-select" th:data-id="${o.id}" onchange="updateStatus(this)">
+                                    <option th:selected="${o.estado == 'Pendiente de toma'}">Pendiente de toma</option>
+                                    <option th:selected="${o.estado == 'En proceso'}">En proceso</option>
+                                    <option th:selected="${o.estado == 'Validado'}">Validado</option>
+                                    <option th:selected="${o.estado == 'Entregado'}">Entregado</option>
+                                </select>
+                            </td>
+                            <td class="pe-4 text-center d-flex gap-2 justify-content-center">
+                                <a th:href="@{'/laboratorio/orden/' + ${o.id}}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                    <i class="bi bi-pencil-square me-1"></i>Ingresar
+                                </a>
+                                <a th:if="${o.estado == 'Validado' or o.estado == 'Entregado'}" 
+                                   th:href="@{'/laboratorio/orden/' + ${o.id} + '/pdf'}" 
+                                   class="btn btn-sm btn-outline-danger rounded-pill px-3" target="_blank">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:fragment="scripts">
+    <script>
+        function updateStatus(select) {
+            const id = select.getAttribute('data-id');
+            const status = select.value;
+            fetch('/laboratorio/orden/actualizar-estado?id=' + id + '&estado=' + encodeURIComponent(status), {
+                method: 'POST'
+            }).then(r => {
+                if(r.ok) {
+                    // Opcional: Feedback visual
+                }
+            });
+        }
+    </script>
+</th:block>
+</body>
+</html>

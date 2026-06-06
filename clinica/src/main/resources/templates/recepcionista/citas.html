@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Citas - Recepción - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        
+        <!-- Alertas de Feedback de Registro -->
+        <!-- EXPOSICIÓN MIGUEL: Explicar cómo Thymeleaf evalúa param.success de la URL (después del Redirect de Java) para decidir si inyecta o no este código de alerta verde en la pantalla -->
+        <div th:if="${param.success != null}" class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-3 py-3 px-4 mb-4 rounded-4 animate__animated animate__fadeInDown">
+            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-check-lg fs-5"></i>
+            </div>
+            <div>
+                <h6 class="mb-0 fw-bold text-success">Cita Agendada Exitosamente</h6>
+                <p class="mb-0 small opacity-75">El paciente ha sido notificado y la cita aparece en la agenda.</p>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${param.error != null}" class="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-3 py-3 px-4 mb-4 rounded-4 animate__animated animate__shakeX">
+            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-exclamation-triangle fs-5"></i>
+            </div>
+            <div>
+                <h6 class="mb-0 fw-bold text-danger">Error al procesar la cita</h6>
+                <p class="mb-0 small opacity-75" th:text="${param.error[0] == 'horario_ocupado' ? 'El médico ya tiene una cita agendada en la fecha y hora seleccionadas.' : (param.error[0] == 'data_not_found' ? 'Médico o paciente no disponible.' : 'Ocurrió un error en el servidor. Inténtelo de nuevo.')}"></p>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h4 class="fw-800 mb-0" style="color: var(--sidebar-bg); letter-spacing: -0.5px;">Gestión de Agenda Hoy</h4>
+                <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i> Visualiza el estado de las citas y valida acreditaciones SUSALUD.</p>
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+                <div class="input-group input-group-sm rounded-pill overflow-hidden border shadow-sm" style="width: 180px;">
+                    <span class="input-group-text bg-white border-0"><i class="bi bi-calendar-event text-primary"></i></span>
+                    <input type="date" class="form-control border-0 bg-white" id="fechaFiltro" th:value="${fechaSeleccionada}" onchange="filtrarPorFecha()">
+                </div>
+                <button class="btn btn-primary d-flex align-items-center gap-2 px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaCita" style="border-radius: 12px; height: 40px;">
+                    <i class="bi bi-plus-circle-fill"></i> <span class="fw-bold">Nueva Cita</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #D97706 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#FFFBEB;color:#D97706;"><i class="bi bi-clock-history"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Pendientes</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${citasPendientes}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #2563EB !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#DBEAFE;color:#2563EB;"><i class="bi bi-calendar-check-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Confirmadas</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${citasConfirmadas}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #059669 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#D1FAE5;color:#059669;"><i class="bi bi-check-all"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Completadas</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${citasCompletadas}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #DC2626 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#FEE2E2;color:#DC2626;"><i class="bi bi-x-circle-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Canceladas</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${citasCanceladas}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-card shadow-sm border-0 overflow-hidden">
+            <div class="table-responsive p-0">
+                <table class="app-table align-middle" id="tablaCitas">
+                    <thead><tr><th>Hora</th><th>Paciente / Cobertura</th><th>Médico</th><th>Servicio</th><th>Estado Cita</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                        <tr th:if="${citas.isEmpty()}">
+                            <td colspan="6" class="text-center text-muted py-4">No hay citas registradas para esta fecha.</td>
+                        </tr>
+                        <tr th:each="c : ${citas}" class="hce-row-animate" 
+                            th:style="${c.estado == 'Cancelada' ? 'border-left: 5px solid #ef4444 !important;' : 
+                                      (c.paciente?.estadoSeguro == 'ACTIVO' ? 'border-left: 5px solid #22c55e !important;' : 
+                                      (c.paciente != null && c.paciente.usuario != null && c.paciente.usuario.estadoRegistro != null && c.paciente.usuario.estadoRegistro.toString() == 'VERIFICADO_WEB' ? 'border-left: 5px solid #3b82f6 !important;' : ''))}">
+                            <td class="fw-bold text-primary" th:text="${c.horaCita}">--:--</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white small fw-bold shadow-sm" 
+                                         style="width: 32px; height: 32px; background: #94a3b8;"
+                                         th:text="${c.paciente != null && c.paciente.nombres != null ? #strings.substring(c.paciente.nombres,0,1) : 'S'}">P</div>
+                                    <div>
+                                        <p class="mb-0 fw-bold" th:text="${(c.paciente?.nombres ?: 'S/N') + ' ' + (c.paciente?.apellidos ?: '')}">--</p>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <span class="x-small fw-bold text-uppercase" style="font-size: 0.6rem;" 
+                                                  th:text="${c.paciente.nombreIafas != null ? c.paciente.nombreIafas : 'Particular'}">SIS</span>
+                                            <span th:if="${c.paciente.estadoSeguro == 'ACTIVO'}" class="text-success" style="font-size: 0.7rem;"><i class="bi bi-shield-fill-check"></i></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:text="'Dr. ' + ${(c.medico.nombres ?: 'S/N') + ' ' + (c.medico.apellidos ?: '')}">--</span><br>
+                                <span class="text-muted" style="font-size:0.7rem;" th:text="${c.medico.especialidad != null ? c.medico.especialidad.nombre : 'Gral'}">--</span>
+                            </td>
+                            <td th:text="${c.servicio != null} ? ${c.servicio.nombre} : '-'">--</td>
+                            <td>
+                                <span th:if="${c.estado == 'Pendiente'}" class="app-badge badge-warning-premium">Pendiente</span>
+                                <span th:if="${c.estado == 'Confirmada'}" class="app-badge badge-info-premium">Confirmada</span>
+                                <span th:if="${c.estado == 'Completada'}" class="app-badge badge-success-premium">Completada</span>
+                                <span th:if="${c.estado == 'Cancelada'}" class="app-badge badge-danger-premium">Cancelada</span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="rc-btn-action" style="background: #D1FAE5; color: #065F46;" 
+                                            th:attr="data-dni=${c.paciente.dni}" onclick="acreditarSeguro(this)">
+                                        <i class="bi bi-shield-fill-check me-1"></i> Acreditar
+                                    </button>
+                                    <button th:if="${c.estado == 'Pendiente'}" class="rc-btn-action" th:attr="data-id=${c.idCita}" onclick="checkIn(this)">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                    <button class="rc-btn-action" th:attr="data-id=${c.idCita}, data-fecha=${c.fechaCita}, data-hora=${c.horaCita}, data-estado=${c.estado}" onclick="editarCita(this)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal Nueva Cita -->
+        <div class="modal fade" id="modalNuevaCita" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Registrar Nueva Cita</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <!-- EXPOSICIÓN MIGUEL: Este th:action enlaza la interfaz HTML con nuestro Backend en Java, empaquetando todos los inputs para enviarlos por método seguro POST -->
+                    <form th:action="@{/recepcionista/citas/nuevo}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Paciente</label>
+                                <!-- Selector de pacientes -->
+                                <select name="pacienteId" class="form-select" required>
+                                    <option value="">Seleccionar paciente...</option>
+                                    <!-- Itera y crea una opcion por cada paciente con su ID y nombres -->
+                                    <option th:each="p : ${pacientes}" th:value="${p.id}" th:text="${p.nombres + ' ' + p.apellidos + ' - DNI: ' + p.dni}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Médico</label>
+                                <!-- Selector de medicos -->
+                                <select name="medicoId" class="form-select" required>
+                                    <option value="">Seleccionar médico...</option>
+                                    <!-- Itera y crea una opcion por cada medico con su ID y nombres -->
+                                    <option th:each="m : ${medicos}" th:value="${m.id}" th:text="${'Dr. ' + m.nombres + ' ' + m.apellidos + ' - ' + (m.especialidad != null ? m.especialidad.nombre : 'Gral')}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fecha</label>
+                                <!-- Entrada para la fecha de la cita -->
+                                <input name="fecha" type="date" class="form-control" required th:value="${fechaSeleccionada}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Hora</label>
+                                <!-- Entrada para la hora de la cita -->
+                                <input name="hora" type="time" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Servicio</label>
+                                <!-- Selector de servicios clinicos -->
+                                <select name="servicioId" class="form-select">
+                                    <option value="">Seleccionar servicio...</option>
+                                    <!-- Itera y crea una opcion por cada servicio con su ID, nombre y precio -->
+                                    <option th:each="s : ${servicios}" th:value="${s.id}" th:text="${s.nombre + ' - S/ ' + s.precio}"></option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Observaciones</label>
+                                <!-- Area de texto para detalles u observaciones de la cita -->
+                                <textarea name="observaciones" class="form-control" rows="2" placeholder="Observaciones adicionales"></textarea>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Registrar Cita</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Editar Cita -->
+        <div class="modal fade" id="modalEditarCita" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Cita</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/recepcionista/citas/editar}" method="post">
+                        <input type="hidden" name="idCita" id="editIdCita">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fecha</label>
+                                <input name="fecha" id="editFecha" type="date" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Hora</label>
+                                <input name="hora" id="editHora" type="time" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" id="editEstado" class="form-select">
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Confirmada">Confirmada</option>
+                                    <option value="Completada">Completada</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Observaciones</label>
+                                <textarea name="observaciones" id="editObservaciones" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Guardar Cambios</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Scripts -->
+        <th:block th:fragment="scripts">
+            <script>
+                async function acreditarSeguro(btn) {
+                    const dni = btn.getAttribute('data-dni');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                    try {
+                        const res = await fetch(`/api/recepcionista/paciente/${dni}/refrescar-seguro`, { method: 'POST' });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Seguro Acreditado',
+                                text: `Paciente: ${data.nombreIafas} | Estado: ${data.estadoSeguro}`,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Atención', 'No se pudo validar el seguro automáticamente.', 'warning');
+                        }
+                    } catch (e) {
+                        Swal.fire('Error', 'Error en la conexión con SUSALUD.', 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-shield-fill-check me-1"></i> Acreditar';
+                    }
+                }
+
+                function filtrarPorFecha() {
+                    const fecha = document.getElementById('fechaFiltro').value;
+                    window.location.href = '/recepcionista/citas?fecha=' + fecha;
+                }
+
+                function editarCita(btn) {
+                    const id = btn.getAttribute('data-id');
+                    const fecha = btn.getAttribute('data-fecha');
+                    const hora = btn.getAttribute('data-hora');
+                    const estado = btn.getAttribute('data-estado');
+                    
+                    document.getElementById('editIdCita').value = id;
+                    document.getElementById('editFecha').value = fecha;
+                    document.getElementById('editHora').value = hora;
+                    document.getElementById('editEstado').value = estado;
+                    
+                    new bootstrap.Modal(document.getElementById('modalEditarCita')).show();
+                }
+            </script>
+        </th:block>
+    </div>
+</body>
+</html>
+
+

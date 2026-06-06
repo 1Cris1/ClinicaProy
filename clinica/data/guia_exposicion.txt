@@ -1,0 +1,158 @@
+===========================================================================
+GUIA PARA EXPOSICION INTEGRAL - CURSO INTEGRADOR 2 - PROYECTO CLINICA
+===========================================================================
+
+1. REPARTO DE INTEGRANTES, CONTROLADORES JAVA Y PLANTILLAS HTML (SIN DASHBOARDS NI CALENDAR)
+---------------------------------------------------------------------------
+
+INTEGRANTE 1: RHOMEL (SEGURIDAD Y REGISTRO)
+
+- US 1: Inicio de sesión con DNI y Contraseña
+  * Backend Java:
+    - SecurityConfig.java -> filterChain(HttpSecurity http) [Configuración general de seguridad]
+    - UserDetailsServiceImpl.java -> loadUserByUsername(String username) [Autentica usando el DNI]
+    - CustomAuthenticationSuccessHandler.java -> onAuthenticationSuccess(...) [Redirige según el Rol]
+    [Explicación Fácil para Exponer el Java]:
+    "Nuestra clase SecurityConfig es como el guardia de seguridad del sistema. Revisa quién eres y qué puesto tienes. Si intentas entrar a una zona prohibida, te bloquea. La clase UserDetailsServiceImpl es quien busca tu DNI en la base de datos y verifica que tu contraseña sea correcta. Finalmente, el SuccessHandler es quien te dirige a tu pantalla correcta: si eres doctor te manda al consultorio, si eres paciente te manda a tu panel."
+  * Frontend HTML / Thymeleaf:
+    - templates/publico/login.html
+    - th:action="@{/authenticate}": [Por qué se usa] Crea una ruta segura generada por Spring Boot para enviar de forma protegida las credenciales ingresadas al servidor.
+    - th:if="${param.error}": [Por qué se usa] Condicional de Thymeleaf. Permite que el HTML sea dinámico; el mensaje de error rojo SOLO existe en la pantalla si el backend envía el parámetro 'error', caso contrario no se dibuja en el HTML final.
+
+- US 2: Registro de Pacientes Autónomo
+  * Backend Java:
+    - PublicoController.java -> registrarPaciente(...) [Crea Usuario/Paciente y llama a SUSALUD y FHIR]
+    [Explicación Fácil para Exponer el Java]:
+    "En Java, el PublicoController es el que recibe los datos que escribiste en el formulario web. Primero revisa que el DNI no exista ya en el sistema. Luego, se conecta por internet (usando RestTemplate) con la base de datos externa de la API Perú para traer tus nombres reales, y finalmente guarda tu cuenta nueva de forma segura en MySQL."
+  * Frontend HTML / Thymeleaf:
+    - templates/publico/registro.html
+    - th:action="@{/registro}": [Por qué se usa] Para que el formulario web de registro sepa exactamente a qué ruta del Backend mandar la data, empaquetándola en un modelo.
+    - th:if="${param.error == 'duplicado'}": [Por qué se usa] Spring Boot evalúa lógicamente la variable antes de cargar la página para mostrar u ocultar la alerta si el DNI ya existe en la BD.
+
+
+INTEGRANTE 2: MIGUEL (GESTIÓN OPERATIVA DE CITAS EN RECEPCIÓN)
+
+- US 3: Agendamiento de Citas
+  * Backend Java:
+    - RecepcionistaController.java -> nuevaCita(...) [POST `/recepcionista/citas/nuevo`]
+    - CitaRepository.java -> save(Cita nuevaCita) [Guarda en la base de datos]
+    [Explicación Fácil para Exponer el Java]:
+    "El RecepcionistaController recibe la orden de agendar. En su código (Java), usa el CitaRepository para preguntarle a la base de datos: '¿Este doctor ya tiene una cita ocupada a esta hora?'. Si le dice que sí, aborta la operación y manda un mensaje de error. Si le dice que no, empaqueta los datos (Paciente, Médico, Fecha) en un objeto 'Cita' y lo guarda en MySQL."
+  * Eje Técnico Clave: Mapeo de Relaciones Referenciales de JPA. El controlador actúa como el puente que une tres entidades maestras (`Paciente`, `Medico`, y `Servicio`) en una nueva transacción (`Cita`), garantizando la integridad de claves foráneas.
+  * Frontend HTML / Thymeleaf:
+    - templates/recepcionista/citas.html
+    - th:action="@{/recepcionista/citas/nuevo}": [Por qué se usa] Enlaza la vista con el endpoint del Controller de Recepción de manera dinámica (sin rutas quemadas fijas).
+    - th:if="${param.success == 'agendado'}": [Por qué se usa] Para evaluar condicionalmente si el Controller devolvió un éxito, y así Thymeleaf decida si inyectar la etiqueta de la alerta verde de éxito.
+
+- US 23: Confirmación de Llegada del Paciente (Check-in)
+  * Backend Java:
+    - RecepcionistaController.java -> checkIn(...) [POST `/recepcionista/citas/checkin`]
+    - CitaRepository.java -> save(cita) [Cambia el estado de la cita a 'Confirmada' en BD]
+    [Explicación Fácil para Exponer el Java]:
+    "El controlador solo recibe el número (ID) de la cita que el paciente va a confirmar. Usa ese número para buscar la cita en la base de datos, le cambia la palabra 'Pendiente' a 'Confirmada' usando el método setEstado(), y la vuelve a guardar. Es un proceso de actualización directo y rápido."
+  * Frontend HTML / Thymeleaf:
+    - templates/recepcionista/citas.html
+    - th:action="@{/recepcionista/citas/checkin}" (Formulario dinámico en la lista de citas)
+    - input th:value="${cita.id}" (Pasa el ID exacto de la cita para confirmarla en un clic)
+
+
+INTEGRANTE 3: CRISTIAN (ADMINISTRACIÓN Y MAESTROS DE DATOS)
+
+- US 9: Gestión de Médicos y Recepcionistas (Activo/Inactivo)
+  * Backend Java:
+    - AdminController.java -> registrarMedico(...) [Alta encriptando la contraseña con BCrypt]
+    - PublicoController.java -> consultarColegiatura(...) [Endpoint REST `/api/colegiatura/{cmp}` para validación en tiempo real]
+    [Explicación Fácil para Exponer el Java]:
+    "El AdminController captura todos los datos del nuevo doctor, pero no guarda la clave tal cual. Usa una clase especial de Java llamada 'BCryptPasswordEncoder' que convierte la contraseña en un texto encriptado ilegible antes de mandarla a MySQL. Así, ni siquiera nosotros como programadores podemos saber las claves de los doctores."
+  * Frontend HTML / Thymeleaf:
+    - templates/admin/medicos.html
+    - th:each="medico : ${medicos}": [Por qué se usa] Es un bucle "for" dentro de HTML. Spring Boot manda una lista de médicos desde Java, y Thymeleaf se encarga de clonar y repetir la fila `<tr>` en la tabla por cada médico encontrado.
+    - th:action="@{/admin/medicos/editar}": Para enviar los datos del modal directo al Controller.
+    - Script AJAX para validación de CMP con autocompletado en vivo de Nombres y Apellidos.
+
+- US 11: Gestión de Especialidades Médicas (Agregar/Editar)
+  * Backend Java:
+    - AdminController.java -> registrarEspecialidad(...) y editarEspecialidad(...) [Usa lombok builders]
+    [Explicación Fácil para Exponer el Java]:
+    "En Java, usamos una tecnología llamada Lombok Builder. Esto nos permite crear objetos complejos de especialidades de forma limpia y ordenada, indicando paso por paso: el nombre, el ícono y el color, sin tener que escribir mucho código repetitivo antes de guardarlo en la base de datos."
+  * Frontend HTML / Thymeleaf:
+    - templates/admin/especialidades.html
+    - th:each="esp : ${especialidades}": [Por qué se usa] Porque evita tener que escribir a mano 20 tarjetas de HTML; Thymeleaf recibe la lista dinámica del backend y repite el diseño inyectando el color y nombre de cada especialidad.
+    - th:action="@{/admin/especialidades/nuevo}": [Por qué se usa] Conecta el formulario del maestro de especialidades con la capa lógica.
+
+
+INTEGRANTE 4: JHOAN (CONSULTORIO CLÍNICO Y AGENDA DEL MÉDICO)
+
+- US 16: Agenda Diaria Cronológica del Médico
+  * Backend Java:
+    - MedicoController.java -> agenda(...) [Extrae la agenda de citas del médico]
+    - CitaRepository.java -> findByMedicoIdAndFechaCitaOrderByHoraCitaAsc(...) [Garantiza orden cronológico]
+    [Explicación Fácil para Exponer el Java]:
+    "Cuando el doctor entra a su agenda, el MedicoController extrae su 'DNI' directamente de su sesión segura para evitar que vea la agenda de otros. Con ese dato, usamos el CitaRepository para consultar a la base de datos filtrando solo las citas de hoy y ordenándolas desde la más temprana a la más tardía (OrderByHoraCitaAsc)."
+  * Frontend HTML / Thymeleaf:
+    - templates/doctores/agenda.html
+    - th:each="cita : ${citasSemana}": [Por qué se usa] Thymeleaf itera sobre el listado filtrado por MySQL que el Controller (`@GetMapping`) pasó usando `model.addAttribute()`.
+    - th:text="${#temporals.format(cita.horaCita, 'HH:mm')}": [Por qué se usa] Thymeleaf extrae dinámicamente una propiedad de la clase Java y además incluye librerías integradas (`#temporals`) para dar un formato elegante a la fecha/hora antes de mandarla al HTML del navegador.
+
+- US 17: Registro de Evolución Médica y Receta Digital
+  * Backend Java:
+    - MedicoController.java -> completarConsulta(...) [POST `/medico/consulta/completar`]
+    - RecetaRepository.java / MedicamentoPrescritoRepository.java [Crea la receta y asocia los medicamentos]
+    [Explicación Fácil para Exponer el Java]:
+    "El código Java de completarConsulta tiene una etiqueta fundamental llamada @Transactional. Esto le dice a Spring Boot: 'Guarda las notas médicas y las medicinas recetadas al mismo tiempo'. Si por algún motivo la base de datos se cuelga al guardar una medicina, Java hace un 'Rollback' y echa todo el proceso hacia atrás para que no haya recetas a medias."
+  * Frontend HTML / Thymeleaf:
+    - templates/doctores/consulta.html
+    - th:action="@{/medico/consulta/completar}" (Formulario clínico que envía el diagnóstico y las medicinas)
+    - input name="med_nombre" (Lista dinámica de medicamentos agregados por el médico)
+
+
+2. EXPLICACIÓN SENCILLA "PARA NO PROGRAMADORES" (El Analógico del Restaurante)
+---------------------------------------------------------------------------
+Para explicar el flujo de datos sin enredar al jurado, usen esta analogía:
+- Controller (Controlador): Es el MESERO. Toma el pedido del usuario en la pantalla y lo lleva a la cocina.
+- Service (Servicio): Es el CHEF. Toma los ingredientes y prepara la receta (la lógica de negocio).
+- Repository (Repositorio): Es la DESPENSA o ALMACÉN. Donde están guardados todos los ingredientes (los datos).
+- Thymeleaf (HTML): Es el MENÚ físico y el Plato servido. Es la forma visual en la que el comensal interactúa.
+
+Muestren cómo fluye una historia usando este ejemplo:
+"Cuando Jhoan completa una consulta (US 17), el Mesero (MedicoController) recibe la nota y la receta del médico, el Chef (MedicamentoPrescrito) empaqueta los medicamentos y los guarda a la Despensa (Base de Datos) de forma atómica y segura."
+
+
+3. DEFENSAS TÉCNICAS A PREGUNTAS DEL JURADO (Mata-Preguntas)
+---------------------------------------------------------------------------
+
+P: ¿Cómo garantizan que un paciente no pueda ver las pantallas del médico o del administrador?
+R: "Utilizamos Spring Security con control de accesos basado en Roles. En la clase 'SecurityConfig', definimos de forma jerárquica que la ruta `/admin/**` requiera tener la autoridad 'ROLE_ADMIN', `/medico/**` requiera 'ROLE_MEDICO' y `/paciente/**` requiera 'ROLE_PACIENTE'. Cualquier intento ajeno es bloqueado con código HTTP 403 (Acceso Denegado) de forma automática." (Rhomel)
+
+P: ¿Por qué después de enviar un formulario (como agendar una cita o registrar un pago) redirigen en lugar de pintar la vista directamente?
+R: "Implementamos el patrón de diseño POST-REDIRECT-GET (PRG). Al procesar un formulario con un método POST, siempre hacemos una redirección HTTP (Redirect) hacia un método GET. Esto evita el gravísimo problema de la doble postulación de datos: si el usuario recarga la página por accidente (F5), no se volverá a crear una cita duplicada en la base de datos." (Miguel)
+
+P: ¿Qué es la anotación @Transactional y por qué la usan al registrar/editar médicos o completar consultas?
+R: "Es la garantía de Integridad de Datos (el principio ACID). Al completar una consulta, se guarda el diagnóstico en la cita y los medicamentos prescritos en la tabla de recetas. Si la base de datos falla a mitad del proceso, Spring detecta el fallo y ejecuta un ROLLBACK (marcha atrás) automático, evitando dejar una receta sin cita o medicamentos huérfanos." (Cristian / Jhoan)
+
+P: ¿Cómo sabe el médico quién está logueado para ver solo su agenda y no la de otros doctores?
+R: "Utilizamos el objeto 'Principal' que nos provee Spring Security en la cabecera de los métodos del controlador. A partir de él, recuperamos el 'username' del usuario autenticado de forma segura en la sesión, buscamos al médico correspondiente en la base de datos y filtramos las consultas de CitaRepository únicamente para su ID." (Jhoan)
+
+P: ¿Por qué usan JPA en lugar de escribir consultas SQL puras con JDBC?
+R: "Por productividad y seguridad. JPA parametriza todas las entradas de manera automática, lo que nos brinda inmunidad contra ataques de inyección SQL (SQL Injection), que es la vulnerabilidad número uno en sistemas web. Además, acelera el desarrollo reduciendo el boilerplate code." (Todos)
+
+
+4. DICCIONARIO CLAVE PARA EXPLICAR LÍNEAS DE CÓDIGO
+---------------------------------------------------------------------------
+- th:action: "Etiqueta Thymeleaf que conecta un formulario web con una ruta (endpoint) en el controlador de Spring Boot."
+- th:each: "Bucle para recorrer listas. Es el equivalente a un 'for' de Java pero escrito directamente en el código HTML."
+- th:text: "Muestra texto dinámico. Sobrescribe el contenido estático de una etiqueta HTML con el dato real proveniente de la base de datos."
+- @Autowired / Inyección: "Es como contratar un asistente. En lugar de crear los objetos a mano, Spring Boot nos los entrega listos para usar (Inyección de Dependencias)."
+- .stream().filter().collect(): "Es un colador moderno. Filtra y procesa listas de datos en memoria de forma sumamente rápida, elegante y legible."
+- BCrypt: "Es una picadora de carne criptográfica. Convierte contraseñas en textos ilegibles e irreversibles para garantizar la privacidad total del usuario."
+
+
+5. EL FLUJO "STORYTELLING" PERFECTO PARA LA EXPOSICIÓN 
+---------------------------------------------------------------------------
+Para que el profesor los califique con la nota más alta, expongan en este orden simulando un flujo de negocio real:
+
+1. RHOMEL: Abre la web y registra un paciente nuevo de forma autónoma en templates/publico/registro.html (US 2). Muestra la contraseña encriptada en BD. Luego, inicia sesión en templates/publico/login.html con el DNI del paciente nuevo (US 1).
+2. MIGUEL: Inicia sesión como Recepcionista. Abre templates/recepcionista/citas.html y agenda la cita al nuevo paciente (US 3). Luego, cuando el paciente llega físicamente a la clínica, el recepcionista realiza el Check-in (US 23) cambiando el estado a 'Confirmada' en un clic.
+3. CRISTIAN: Entra como Administrador. Crea una nueva Especialidad en templates/admin/especialidades.html (US 11) y registra un nuevo Médico de forma rápida en templates/admin/medicos.html (US 9) asignándole esa especialidad, explicando el control de estados Activo/Inactivo.
+4. JHOAN: Inicia sesión como el nuevo médico. Muestra la Agenda Diaria cronológica del médico en templates/doctores/agenda.html (US 16) donde ya figura la cita del paciente. Entra a la consulta activa templates/doctores/consulta.html (US 17), escribe las notas y prescribe los medicamentos de la receta digital, finalizando con éxito la atención.
+===========================================================================

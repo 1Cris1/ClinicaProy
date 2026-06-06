@@ -1,0 +1,92 @@
+/* =========================================
+   ClinicX — PORTAL MÉDICO
+   DOCTOR SPECIFIC STYLES
+   ========================================= */
+
+:root {
+    --doc-sidebar-w: 270px;
+    --doc-bg: #1E3A5F;
+    --doc-hover: rgba(255,255,255,.08);
+    --doc-active: rgba(255,255,255,.15);
+    --doc-primary: #38BDF8;
+    --doc-primary-light: #7DD3FC;
+    --doc-surface: #F8FAFC;
+    --doc-text: #FFFFFF;
+    --doc-muted: rgba(255,255,255,.6);
+    --doc-border: rgba(255,255,255,.1);
+    --doc-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    --doc-radius: 1rem;
+    --doc-transition: .3s cubic-bezier(.4,0,.2,1);
+    --doc-gradient: linear-gradient(180deg, #1E3A5F 0%, #0F172A 100%);
+}
+
+
+/* SIDEBAR OVERRIDES */
+.doc-sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--doc-sidebar-w); height: 100vh;
+    background: var(--doc-gradient); color: var(--doc-text);
+    display: flex; flex-direction: column; overflow-y: auto;
+    z-index: 1040; transition: transform var(--doc-transition);
+}
+
+.doc-nav-link {
+    display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem;
+    margin: 0.2rem 0.75rem;
+    border-radius: 12px; color: rgba(255,255,255,.7); text-decoration: none;
+    font-size: .875rem; font-weight: 500; transition: var(--doc-transition);
+    position: relative;
+}
+.doc-nav-link:hover { background: var(--doc-hover); color: #fff; transform: translateX(4px); }
+.doc-nav-link.active { background: var(--doc-active); color: #fff; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15); }
+.doc-nav-link.active i { color: var(--doc-primary); }
+.doc-nav-link.active::before {
+    content: ''; position: absolute; left: -8px; top: 25%; height: 50%; width: 4px;
+    background: var(--doc-primary); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--doc-primary);
+}
+
+
+/* MEDICAL COMPONENTS */
+.doc-stat {
+    background: #fff; border: 1px solid var(--doc-border);
+    border-radius: var(--doc-radius); padding: 1.15rem; transition: var(--doc-transition);
+}
+.doc-stat:hover { box-shadow: var(--doc-shadow); transform: translateY(-2px); }
+
+.doc-card {
+    background: #fff; border: 1px solid var(--doc-border);
+    border-radius: var(--doc-radius); transition: var(--doc-transition);
+}
+
+/* AGENDA SLOTS */
+.agenda-slot {
+    padding: .4rem .6rem; border-radius: 6px;
+    font-size: .7rem; font-weight: 600; margin-bottom: 2px;
+}
+.agenda-slot.occupied { background: #CCFBF1; color: #0F766E; border-left: 3px solid #0D9488; }
+.agenda-slot.free { background: #F1F5F9; color: #94A3B8; border-left: 3px solid #CBD5E1; }
+
+.doc-card-body { padding: 1.25rem; }
+.doc-card-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--doc-border); display: flex; justify-content: space-between; align-items: center; }
+
+/* DOCTOR TABLE */
+.doc-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.doc-table thead th {
+    background: #F1F5F9; padding: .85rem 1rem;
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    color: #64748B; border-bottom: 2px solid #E2E8F0;
+}
+.doc-table tbody td { padding: .85rem 1rem; border-bottom: 1px solid #F1F5F9; font-size: .85rem; vertical-align: middle; }
+.doc-table tbody tr:hover { background: #F0FDFA; }
+
+/* BADGES */
+.doc-badge-status {
+    padding: 4px 12px; border-radius: 50px;
+    font-size: .7rem; font-weight: 700;
+}
+
+/* CONSULTATION SPECIFICS */
+.patient-info-list .d-flex { border-color: #F8FAFC !important; }
+.medication-row td { padding: 10px 5px !important; }
+.medication-row .form-control { border-radius: 8px !important; }
+

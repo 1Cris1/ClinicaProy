@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Recetas Médicas - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="fw-bold mb-1">Recetas Médicas</h4>
+                <p class="text-muted small mb-0">Consulta tus recetas vigentes y el historial de prescripciones.</p>
+            </div>
+        </div>
+
+        <!-- Custom Tabs Navigation -->
+        <div class="d-flex gap-2 mb-4 p-1 bg-light rounded-pill w-fit-content overflow-auto" style="max-width:100%;">
+            <button class="app-btn py-2 px-4 rounded-pill border-0 transition-all shadow-sm" id="btn-activas" onclick="switchRecetaTab('activas')" style="background:var(--primary); color:white;">
+                Activas <span class="badge rounded-pill ms-1 bg-white text-primary" th:text="${recetasActivas != null ? recetasActivas.size() : 0}">0</span>
+            </button>
+            <button class="app-btn py-2 px-4 rounded-pill border-0 transition-all hover-translate" id="btn-historial" onclick="switchRecetaTab('historial')" style="background:transparent; color:var(--text-muted);">
+                Historial <span class="badge rounded-pill ms-1 bg-secondary text-white" th:text="${historialRecetas != null ? historialRecetas.size() : 0}">0</span>
+            </button>
+        </div>
+
+        <!-- Panel Activas -->
+        <div id="panel-activas" class="animate-fade-in">
+            <div th:if="${#lists.isEmpty(recetasActivas)}" class="app-card py-5 text-center border-0">
+                <div class="opacity-25 mb-3" style="font-size:3.5rem;"><i class="bi bi-capsule-pill"></i></div>
+                <p class="mb-1 fw-bold">Sin recetas activas</p>
+                <p class="text-muted small">No tienes recetas médicas vigentes en este momento.</p>
+            </div>
+
+            <div th:each="receta : ${recetasActivas}" class="app-card mb-4 border-0 shadow-sm-hover transition-all">
+                <div class="app-card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:52px; height:52px; background:var(--bg-light); color:var(--primary);">
+                                <i class="bi bi-file-earmark-medical-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 fs-5" th:text="${'Receta ' + receta.codigo}">#R-2026-001</h6>
+                                <p class="text-muted small mb-0">Emitida por <span class="fw-bold text-dark" th:text="${'Dr/a. ' + receta.medico.nombres + ' ' + receta.medico.apellidos}">Dr. Ramos</span></p>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="app-badge" style="background:#DCFCE7; color:#15803D;">Vigente</span>
+                            <p class="text-muted small mb-0 mt-1" th:text="${'Fecha: ' + receta.fechaEmision}">08/04/2026</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-light rounded-4 p-1 overflow-hidden">
+                        <table class="app-table mb-0">
+                            <thead class="bg-white">
+                                <tr style="background: transparent!important;">
+                                    <th class="ps-4">Medicamento</th>
+                                    <th>Dosis y Frecuencia</th>
+                                    <th>Duración</th>
+                                    <th class="pe-4">Indicaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white">
+                                <tr th:each="med : ${receta.medicamentos}">
+                                    <td class="ps-4 border-0 py-3">
+                                        <div class="fw-bold text-primary"><i class="bi bi-capsule me-2"></i>[(${med.nombre})]</div>
+                                    </td>
+                                    <td class="border-0 py-3">
+                                        <div class="small fw-medium">[(${med.dosis})]</div>
+                                        <div class="text-muted" style="font-size:.7rem;">[(${med.frecuencia})]</div>
+                                    </td>
+                                    <td class="border-0 py-3"><span class="app-badge bg-light text-dark fw-bold border" th:text="${med.duracion}">30 días</span></td>
+                                    <td class="pe-4 border-0 py-3 small text-muted">[(${med.instrucciones})]</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <a th:href="@{/paciente/recetas/descargar/{id}(id=${receta.idReceta})}" class="app-btn bg-primary text-white border-0 px-4">
+                            <i class="bi bi-download me-2"></i> Descargar Receta Completa (PDF)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Historial -->
+        <div id="panel-historial" style="display:none;" class="animate-fade-in">
+            <div class="app-card border-0 shadow-sm">
+                <div class="app-card-body p-0">
+                    <div class="app-table-responsive">
+                        <table class="app-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Médico</th>
+                                    <th>Especialidad</th>
+                                    <th>Fecha Emisión</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="receta : ${historialRecetas}">
+                                    <td class="fw-bold font-monospace" th:text="${receta.codigo}">#R-000</td>
+                                    <td th:text="${receta.medico.nombres + ' ' + receta.medico.apellidos}">Dra. Ana López</td>
+                                    <td th:text="${receta.medico.especialidad.nombre}">Medicina General</td>
+                                    <td class="text-muted" th:text="${receta.fechaEmision}">15/02/2026</td>
+                                    <td><span class="app-badge bg-light text-muted border" th:text="${receta.estado}">Finalizada</span></td>
+                                    <td>
+                                        <a th:href="@{/paciente/recetas/descargar/{id}(id=${receta.idReceta})}" class="text-primary text-decoration-none fw-bold small">
+                                            <i class="bi bi-file-earmark-pdf"></i> Ver PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(historialRecetas)}">
+                                    <td colspan="6" class="text-center py-5 text-muted">No se registran recetas antiguas en el historial.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+    </div>
+</body>
+</html>
+
+
+

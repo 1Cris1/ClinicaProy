@@ -1,0 +1,246 @@
+===========================================================================
+GUIA DE EXPOSICION LINEA POR LINEA - ALUMNO 1: RECEPCION Y CITAS
+===========================================================================
+
+Este archivo contiene el desglose y la explicacion exacta de cada linea de 
+codigo para tus dos historias de usuario (HU 1: Agendamiento de Citas y 
+HU 2: Confirmacion de Llegada / Check-in).
+
+---------------------------------------------------------------------------
+🚶 HISTORIA DE USUARIO 2: Confirmacion de Llegada / Check-in (La mas facil)
+---------------------------------------------------------------------------
+
+Esta funcionalidad cambia el estado de una cita de "Pendiente" a "Confirmada" 
+cuando el paciente llega de forma presencial a la clinica, situandolo en 
+la sala de espera.
+
+1. EXPLICACION LINEA POR LINEA DEL BACKEND (Java)
+Ubicacion: RecepcionistaController.java (Lineas 92-100)
+
+[Codigo fuente]:
+92:     @PostMapping("/citas/checkin")
+93:     public String checkIn(@RequestParam Integer idCita) {
+94:         Cita cita = citaRepository.findById(idCita).orElse(null);
+95:         if (cita != null && "Pendiente".equals(cita.getEstado())) {
+96:             cita.setEstado("Confirmada");
+97:             citaRepository.save(cita);
+98:         }
+99:         return "redirect:/recepcionista/inicio";
+100:    }
+
+[Detalle linea por linea]:
+* Linea 92: [@PostMapping("/citas/checkin")]
+  -> Indica que este metodo responde exclusivamente a peticiones HTTP de tipo POST 
+     enviadas a la URL "/recepcionista/citas/checkin". Mapea el envio de formularios.
+* Linea 93: [public String checkIn(@RequestParam Integer idCita) {]
+  -> Declara el metodo publico "checkIn" que retorna una cadena de texto (redireccion). 
+     El parametro "@RequestParam Integer idCita" le indica a Spring Boot que busque 
+     un valor llamado "idCita" en la peticion web y lo inyecte convertido en un entero.
+* Linea 94: [Cita cita = citaRepository.findById(idCita).orElse(null);]
+  -> Hace una consulta segura a la base de datos usando el repositorio. Si encuentra 
+     la cita, la carga en la variable. Si no existe, ".orElse(null)" evita que el 
+     programa falle y le asigna el valor vacio "null" de forma segura.
+* Linea 95: [if (cita != null && "Pendiente".equals(cita.getEstado())) {]
+  -> Condicional de seguridad que valida que la cita exista realmente (no sea nula) 
+     y que su estado actual sea estrictamente "Pendiente" (para evitar re-confirmar 
+     citas que ya estan completadas o canceladas).
+* Linea 96: [cita.setEstado("Confirmada");]
+  -> Modifica en memoria RAM el estado de la cita, asignandole el texto "Confirmada".
+* Linea 97: [citaRepository.save(cita);]
+  -> Guarda el cambio en la base de datos. Como la entidad Cita ya cuenta con una 
+     llave primaria ("idCita"), Spring Data JPA sabe que debe ejecutar una sentencia 
+     SQL de tipo "UPDATE" en lugar de un "INSERT".
+* Linea 98: [}]
+  -> Cierra el bloque condicional de seguridad.
+* Linea 99: [return "redirect:/recepcionista/inicio";]
+  -> Redirecciona el navegador de la recepcionista a la ruta "/recepcionista/inicio" 
+     (el dashboard de recepcion), refrescando las estadisticas de sala de espera.
+* Linea 100: [}]
+  -> Cierra el metodo "checkIn".
+
+
+2. EXPLICACION LINEA POR LINEA DEL FRONTEND (HTML / Thymeleaf)
+Ubicacion: dashboard.html (Lineas 110-115)
+
+[Codigo fuente]:
+110:    <form th:if="${cita.estado == 'Pendiente'}" th:action="@{/recepcionista/citas/checkin}" method="post" class="d-inline">
+111:        <input type="hidden" name="idCita" th:value="${cita.idCita}">
+112:        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" style="font-size: 0.7rem;">
+113:            Check-in <i class="bi bi-arrow-right-short"></i>
+114:        </button>
+115:    </form>
+
+[Detalle linea por linea]:
+* Linea 110: [<form th:if="${cita.estado == 'Pendiente'}" th:action="..." method="post">]
+  -> "th:if" es un condicional de Thymeleaf. Si la cita ya esta confirmada o cancelada, 
+     el formulario completo desaparece de la pantalla. "th:action" define dinamicamente 
+     la ruta destino "/recepcionista/citas/checkin". "method=post" envia la peticion por POST.
+* Linea 111: [<input type="hidden" name="idCita" th:value="${cita.idCita}">]
+  -> Crea una caja de texto oculta ("hidden") invisible para el usuario. "name=idCita" 
+     debe llamarse exactamente igual que el parametro del Backend. "th:value" inyecta 
+     el ID unico de la cita proveniente de la base de datos.
+* Linea 112: [<button type="submit" class="btn btn-primary ...">]
+  -> Crea el boton de envio ("submit") con clases CSS de Bootstrap (boton pequeño, 
+     bordes redondeados y una sombra sutil).
+* Linea 113: [Check-in <i class="bi bi-arrow-right-short"></i>]
+  -> Muestra el texto "Check-in" y dibuja un icono de flecha derecha de Bootstrap Icons.
+* Lineas 114-115: [</button> </form>]
+  -> Cierran el boton y el formulario respectivamente.
+
+
+===========================================================================
+📅 HISTORIA DE USUARIO 1: Agendamiento de Citas (Nueva Cita)
+===========================================================================
+
+Esta funcionalidad permite registrar un nuevo turno o cita en la base de datos, 
+asociando un paciente, un medico, un servicio, una fecha y una hora especifica.
+
+1. EXPLICACION LINEA POR LINEA DEL BACKEND (Java)
+Ubicacion: RecepcionistaController.java (Lineas 121-158)
+
+[Codigo fuente]:
+121:     @PostMapping("/citas/nuevo")
+122:     public String nuevaCita(@RequestParam Integer pacienteId,
+123:                           @RequestParam Integer medicoId,
+124:                           @RequestParam String fecha,
+125:                           @RequestParam String hora,
+126:                           @RequestParam(required = false) Integer servicioId,
+127:                           @RequestParam(required = false) String observaciones) {
+128:         try {
+129:             Paciente paciente = pacienteRepository.findById(pacienteId).orElse(null);
+130:             Medico medico = medicoRepository.findById(medicoId).orElse(null);
+131:             Servicio servicio = (servicioId != null) 
+132:                     ? servicioRepository.findById(servicioId).orElse(servicioRepository.findById(1).orElse(null))
+133:                     : servicioRepository.findById(1).orElse(null);
+134: 
+135:             if (paciente != null && medico != null && servicio != null) {
+136:                 Cita nuevaCita = Cita.builder()
+137:                         .paciente(paciente)
+138:                         .medico(medico)
+139:                         .servicio(servicio)
+140:                         .fechaCita(LocalDate.parse(fecha))
+141:                         .horaCita(hora)
+142:                         .estado("Pendiente")
+143:                         .motivo(observaciones)
+144:                         .fechaRegistro(LocalDateTime.now())
+145:                         .build();
+146:                 citaRepository.save(nuevaCita);
+147:                 try {
+148:                     googleCalendarService.crearEventoCita(nuevaCita);
+149:                 } catch (Exception e) {
+150:                     log.warn("Error sync calendar: {}", e.getMessage());
+151:                 }
+152:                 return "redirect:/recepcionista/citas?fecha=" + fecha + "&success=agendado";
+153:             }
+154:         } catch (Exception e) {
+155:             log.error("Error agendando cita", e);
+156:         }
+157:         return "redirect:/recepcionista/citas?error=internal_error";
+158:     }
+
+[Detalle linea por linea]:
+* Linea 121: [@PostMapping("/citas/nuevo")]
+  -> Indica que este metodo responde a peticiones de tipo POST en la URL "/recepcionista/citas/nuevo".
+* Lineas 122 a 127: [public String nuevaCita(...)]
+  -> Define el metodo e inyecta mediante "@RequestParam" las variables enviadas del formulario 
+     HTML: ID de paciente, ID de medico, fecha, hora, ID de servicio (opcional) y observaciones (opcional).
+* Linea 128: [try {]
+  -> Inicia el bloque "try". Protege el codigo de posibles errores en la conversion de 
+     fechas o caidas de conexion con la base de datos, evitando congelar el servidor web.
+* Lineas 129 y 130: [Paciente paciente = ...; Medico medico = ...;]
+  -> Busca en las tablas de Pacientes y Medicos los registros correspondientes a los 
+     identificadores recibidos. Si no los encuentra, les asigna un valor nulo de forma segura.
+* Lineas 131 a 133: [Servicio servicio = ... (lógica de contingencia)]
+  -> Si el recepcionista no eligio un servicio (nulo), el sistema le asigna por defecto 
+     la Consulta General (ID 1) para evitar errores de base de datos e integridad.
+* Linea 135: [if (paciente != null && medico != null && servicio != null) {]
+  -> Valida que los tres datos clave se hayan recuperado correctamente desde la base de 
+     datos. Si alguno de ellos no existe en el sistema, no permite crear la cita.
+* Linea 136: [Cita nuevaCita = Cita.builder()]
+  -> Inicia la creacion de la entidad Cita usando el patron de diseño "Builder" de Lombok.
+* Lineas 137 a 139: [.paciente(paciente) .medico(medico) .servicio(servicio)]
+  -> Enlaza los objetos cargados a la nueva cita.
+* Linea 140: [.fechaCita(LocalDate.parse(fecha))]
+  -> Convierte la fecha recibida como texto (ej. "2026-05-17") a un objeto nativo "LocalDate".
+* Lineas 141 a 144: [.horaCita(hora) .estado("Pendiente") .motivo(observaciones) .fechaRegistro(...)]
+  -> Asigna la hora, define el estado inicial como "Pendiente" (valor por defecto) e inserta 
+     la fecha y hora exacta actual en la que se realizo el registro (LocalDateTime.now()).
+* Linea 145: [.build();]
+  -> Consolida y termina de construir el objeto en la memoria del servidor Java.
+* Linea 146: [citaRepository.save(nuevaCita);]
+  -> Inserta la nueva cita en la base de datos relacional mediante Spring Data JPA. 
+     (Se ejecuta una sentencia SQL de tipo "INSERT INTO citas...").
+* Linea 147: [try { (bloque interno)]
+  -> Inicia un try-catch secundario. Sirve para blindar la aplicacion contra fallos externos.
+* Linea 148: [googleCalendarService.crearEventoCita(nuevaCita);]
+  -> Se conecta a la API de Google y registra la cita en la agenda de Google Calendar del medico.
+* Lineas 149 a 151: [} catch (Exception e) { log.warn(...) }]
+  -> Si falla Google Calendar (ej. por caida de red externa), captura el error, escribe una 
+     advertencia en logs y permite que el programa siga su flujo principal sin trabarse.
+* Linea 152: [return "redirect:/recepcionista/citas?fecha=" + fecha + "&success=agendado";]
+  -> Redirecciona de vuelta a la agenda de citas filtrando por la fecha del registro 
+     y enviando el parametro "?success=agendado" para notificar el exito en pantalla.
+* Linea 153: [}]
+  -> Cierra el condicional del if seguro.
+* Lineas 154 a 156: [} catch (Exception e) { log.error(...) }]
+  -> Captura cualquier error general en el bloque principal y escribe el log de soporte.
+* Linea 157: [return "redirect:/recepcionista/citas?error=internal_error";]
+  -> Redirecciona al usuario en caso de error, añadiendo el parametro "?error=internal_error".
+* Linea 158: [}]
+  -> Cierra el metodo "nuevaCita".
+
+
+2. EXPLICACION LINEA POR LINEA DEL FRONTEND (HTML / Thymeleaf)
+Ubicacion: citas.html (Lineas 157-198)
+
+[Codigo fuente]:
+157:    <form th:action="@{/recepcionista/citas/nuevo}" method="post">
+161:        <select name="pacienteId" class="form-select" required>
+163:            <option th:each="p : ${pacientes}" th:value="${p.id}" th:text="${p.nombres + ' ' + p.apellidos + ' - DNI: ' + p.dni}"></option>
+168:        <select name="medicoId" class="form-select" required>
+170:            <option th:each="m : ${medicos}" th:value="${m.id}" th:text="${'Dr. ' + m.nombres + ' ' + m.apellidos}"></option>
+175:        <input name="fecha" type="date" class="form-control" required th:value="${fechaSeleccionada}">
+179:        <input name="hora" type="time" class="form-control" required>
+183:        <select name="servicioId" class="form-select">
+185:            <option th:each="s : ${servicios}" th:value="${s.id}" th:text="${s.nombre + ' - S/ ' + s.precio}"></option>
+190:        <textarea name="observaciones" class="form-control" rows="2" placeholder="Observaciones adicionales"></textarea>
+196:        <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Registrar Cita</button>
+198:    </form>
+
+[Detalle linea por linea]:
+* Linea 157: [<form th:action="@{/recepcionista/citas/nuevo}" method="post">]
+  -> Define el formulario web apuntando al endpoint de registro POST en el servidor.
+* Linea 161: [<select name="pacienteId" class="form-select" required>]
+  -> Combo-box para seleccionar al paciente. "name=pacienteId" enlaza este campo al 
+     parametro correspondiente en el controlador Java.
+* Linea 163: [<option th:each="p : ${pacientes}" th:value="${p.id}" th:text="...">]
+  -> "th:each" actua como bucle iterador que dibuja una opcion para cada paciente de la clinica. 
+     "th:value" asigna de forma oculta la PK del paciente e inyecta en la pantalla su nombre y DNI.
+* Lineas 168 y 170: [<select name="medicoId" ...>]
+  -> Combo-box para seleccionar al medico de la cita, enviando su clave primaria "medicoId".
+* Linea 175: [<input name="fecha" type="date" ... th:value="${fechaSeleccionada}">]
+  -> Campo de calendario. "name=fecha" se vincula al parametro del backend. "th:value" 
+     pre-selecciona por defecto la fecha de hoy.
+* Linea 179: [<input name="hora" type="time" class="form-control" required>]
+  -> Campo de hora. Abre el reloj nativo del navegador y se vincula al parametro "hora".
+* Lineas 183 y 185: [<select name="servicioId" ...>]
+  -> Selector opcional de servicios clinicos cargados del sistema con sus precios en pantalla.
+* Linea 190: [<textarea name="observaciones" ...></textarea>]
+  -> Area de texto multilinea para notas clinicas u observaciones de agendamiento.
+* Linea 196: [<button type="submit" ...>Registrar Cita</button>]
+  -> Boton de tipo submit que procesa y envia todos los datos cargados en el formulario web.
+* Linea 198: [</form>]
+  -> Cierre del formulario web.
+
+3. IMPACTO EN BASE DE DATOS (Las tablas afectadas)
+---------------------------------------------------------------------------
+Para la HU 2 (Check-in):
+- Tabla `citas`: Solo se ejecuta un UPDATE cambiando la columna `estado` de "Pendiente" a "Confirmada".
+
+Para la HU 1 (Agendamiento):
+- Tabla `citas`: Se ejecuta un INSERT creando una nueva fila que incluye las Foreign Keys (llaves foraneas) hacia `id_paciente`, `id_medico` y `id_servicio`.
+
+===========================================================================
+¡Exitos en tu sustentacion! Esta guia te garantiza defender el codigo a nivel
+tecnico y de negocio de forma impecable.
+===========================================================================

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Panel Médico - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <!-- Welcome Banner -->
+        <div class="app-card mb-4" style="background:var(--gradient-primary); border:none; color:#fff;">
+            <div class="app-card-body d-flex justify-content-between align-items-center flex-wrap gap-3 py-4">
+                <div>
+                    <h4 class="fw-bold mb-1">
+                        Buenos días, Dr. <span th:text="${medico != null ? medico.apellidos : 'Doctor'}">Doctor</span> 👋
+                    </h4>
+                    <p class="mb-0" style="opacity:.9; font-size:.85rem;" id="docFecha">Cargando fecha...</p>
+                </div>
+                <a th:href="@{/medico/consulta}" class="app-btn bg-white text-primary border-0 shadow-sm">
+                    <i class="bi bi-clipboard2-pulse-fill"></i> Iniciar Consulta Activa
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="app-stat">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background:#E0F2FE; color:#0369A1;"><i class="bi bi-calendar-check-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted" style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Citas Hoy</p>
+                            <h4 class="fw-bold mb-0" style="font-size:1.5rem;" th:text="${totalCitasHoy}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background:#DCFCE7; color:#15803D;"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted" style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Atendidos</p>
+                            <h4 class="fw-bold mb-0" style="font-size:1.5rem;" th:text="${atendidosHoy}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background:#FEF3C7; color:#B45309;"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted" style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Consultas Mes</p>
+                            <h4 class="fw-bold mb-0" style="font-size:1.5rem;" th:text="${consultasMes}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background:#FCE7F3; color:#BE185D;"><i class="bi bi-person-heart"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted" style="font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Mis Pacientes</p>
+                            <h4 class="fw-bold mb-0" style="font-size:1.5rem;" th:text="${totalPacientes}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Siguiente Paciente -->
+            <div class="col-lg-4">
+                <div class="app-card h-100">
+                    <div class="app-card-header"><h6 class="fw-bold mb-0"><i class="bi bi-person-check-fill me-2"></i>Siguiente Paciente</h6></div>
+                    <div class="app-card-body text-center py-4">
+                        <div th:if="${siguienteCita != null}">
+                            <div class="mx-auto mb-3" style="width:64px; height:64px; background:var(--gradient-primary); border-radius:18px; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
+                                <span style="font-size:1.4rem; font-weight:800; color:#fff;"
+                                      th:text="${#strings.substring(siguienteCita.paciente.nombres, 0, 1) + #strings.substring(siguienteCita.paciente.apellidos, 0, 1)}">P</span>
+                            </div>
+                            <h5 class="fw-bold mb-1" th:text="${siguienteCita.paciente.nombres + ' ' + siguienteCita.paciente.apellidos}">Paciente</h5>
+                            <p class="text-muted small mb-2" th:text="'DNI: ' + ${siguienteCita.paciente.dni}">DNI</p>
+                            <span class="app-badge bg-primary text-white" th:text="${siguienteCita.horaCita}">--:-- AM</span>
+                            
+                            <div class="mt-4 p-3 rounded-3 bg-light text-start">
+                                <p class="mb-1 fw-bold small text-muted text-uppercase" style="letter-spacing: .5px;">Motivo de Consulta:</p>
+                                <p class="mb-0 small fw-medium" th:text="${siguienteCita.motivo}">Chequeo general preventivo</p>
+                            </div>
+
+                            <a th:href="@{/medico/consulta}" class="app-btn app-btn-primary w-100 justify-content-center mt-4">
+                                <i class="bi bi-clipboard2-pulse-fill"></i> Atender Ahora
+                            </a>
+                        </div>
+
+                        <div th:if="${siguienteCita == null}" class="py-5">
+                            <i class="bi bi-calendar-check text-muted opacity-25" style="font-size:3rem;"></i>
+                            <p class="text-muted small mt-3 mb-0">No tienes pacientes en espera.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Citas de Hoy -->
+            <div class="col-lg-8">
+                <div class="app-card h-100">
+                    <div class="app-card-header">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-calendar3 me-2"></i>Agenda de Hoy</h6>
+                        <a th:href="@{/medico/agenda}" class="text-decoration-none small fw-bold" style="color:var(--primary);">Ver lista completa</a>
+                    </div>
+                    <div class="app-card-body p-0">
+                        <div class="app-table-responsive">
+                            <table class="app-table">
+                                <thead><tr><th>Hora</th><th>Paciente</th><th>Estado</th><th>Acciones</th></tr></thead>
+                                <tbody>
+                                    <!-- EXPOSICIÓN JHOAN: Aquí Thymeleaf itera sobre la lista 'citasHoy' que le mandó el MedicoController, inyectando los datos reales del paciente y la hora. -->
+                                    <tr th:each="c : ${citasHoy}">
+                                        <td class="fw-bold" style="color:var(--primary);" th:text="${c.horaCita}">--:--</td>
+                                        <td>
+                                            <p class="mb-0 fw-bold" th:text="${c.paciente.nombres + ' ' + c.paciente.apellidos}">Paciente</p>
+                                            <p class="mb-0 text-muted" style="font-size:0.7rem;" th:text="${'DNI: ' + c.paciente.dni}">DNI</p>
+                                        </td>
+                                        <td>
+                                            <span th:if="${c.estado == 'Completada'}" class="app-badge" style="background:#D1FAE5; color:#059669;">Atendido</span>
+                                            <span th:if="${c.estado == 'Pendiente'}" class="app-badge" style="background:#E0F2FE; color:#0369A1;">En Espera</span>
+                                            <span th:if="${c.estado == 'Confirmada'}" class="app-badge" style="background:#FEF3C7; color:#D97706;">Confirmado</span>
+                                        </td>
+                                        <td>
+                                            <a th:if="${c.estado != 'Completada'}" th:href="@{/medico/consulta}"
+                                               class="app-btn py-1 px-3 bg-light border text-primary" style="font-size:.75rem;">
+                                                Atender
+                                            </a>
+                                            <button th:if="${c.estado == 'Completada'}" class="btn btn-sm btn-light border-0 text-muted">
+                                                <i class="bi bi-eye-fill"></i> Ver Ficha
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(citasHoy)}">
+                                        <td colspan="4" class="text-center py-5 text-muted">No hay citas registradas para hoy.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicadores Dinámicos (Vue.js + Chart.js) -->
+        <div id="doctorStatsApp" class="mt-4">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="app-card h-100">
+                        <div class="app-card-header d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Productividad Semanal</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary active">Consultas</button>
+                                <button class="btn btn-outline-primary">Pacientes</button>
+                            </div>
+                        </div>
+                        <div class="app-card-body">
+                            <canvas id="productivityChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="app-card h-100">
+                        <div class="app-card-header"><h6 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill me-2"></i>Estado de Turnos</h6></div>
+                        <div class="app-card-body d-flex flex-column align-items-center justify-content-center">
+                            <canvas id="statusChart" style="max-height: 200px;"></canvas>
+                            <div class="mt-4 w-100">
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span>Atendidos</span>
+                                    <span class="fw-bold text-success">{{ stats.atendidos || 0 }}</span>
+                                </div>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" :style="{width: calculatePercent(stats.atendidos) + '%'}"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span>En Espera</span>
+                                    <span class="fw-bold text-primary">{{ stats.espera || 0 }}</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" :style="{width: calculatePercent(stats.espera) + '%'}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            const medicoId = /*[[${medico.id}]]*/ 0;
+            
+            const { createApp } = Vue;
+            
+            createApp({
+                data() {
+                    return {
+                        stats: {
+                            atendidos: /*[[${atendidosHoy}]]*/ 0,
+                            espera: /*[[${totalCitasHoy - atendidosHoy}]]*/ 0
+                        },
+                        loading: false
+                    }
+                },
+                mounted() {
+                    this.initCharts();
+                    this.updateDate();
+                },
+                methods: {
+                    updateDate() {
+                        const d = new Date();
+                        const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+                        const el = document.getElementById('docFecha');
+                        if(el) el.textContent = d.toLocaleDateString('es-PE', opts);
+                    },
+                    calculatePercent(val) {
+                        const total = (this.stats.atendidos + this.stats.espera) || 1;
+                        return (val / total) * 100;
+                    },
+                    initCharts() {
+                        // Chart de Productividad
+                        const ctxProd = document.getElementById('productivityChart').getContext('2d');
+                        new Chart(ctxProd, {
+                            type: 'line',
+                            data: {
+                                labels: ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'],
+                                datasets: [{
+                                    label: 'Consultas Realizadas',
+                                    data: [12, 19, 15, 8, 22, 10],
+                                    borderColor: '#8B5CF6',
+                                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                    tension: 0.4,
+                                    fill: true
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+                            }
+                        });
+
+                        // Chart de Estados
+                        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+                        new Chart(ctxStatus, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Atendidos', 'En Espera'],
+                                datasets: [{
+                                    data: [this.stats.atendidos, this.stats.espera],
+                                    backgroundColor: ['#10B981', '#3B82F6'],
+                                    borderWidth: 0,
+                                    cutout: '80%'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } }
+                            }
+                        });
+                    }
+                }
+            }).mount('#doctorStatsApp');
+            /*]]>*/
+        </script>
+    </th:block>
+</body>
+</html>

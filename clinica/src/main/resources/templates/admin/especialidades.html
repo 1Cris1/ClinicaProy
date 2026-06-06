@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Especialidades - ClinicX Admin</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h4 class="fw-bold mb-0">Especialidades Médicas</h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge" style="background:var(--ad-primary);color:#fff;padding:.5rem 1rem;" th:text="${totalEspecialidades} + ' especialidades'">0 especialidades</span>
+                <button class="btn rounded-pill px-4 fw-bold shadow-sm btn-sm" style="background:var(--ad-primary);color:#fff;" data-bs-toggle="modal" data-bs-target="#modalNuevaEspecialidad">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar Especialidad
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!--Bucle que dibuja una "tarjeta" por cada especialidad inyectando variables dinámicas de color e ícono -->
+            <div class="col-md-4" th:each="e : ${especialidades}">
+                <div class="ad-card">
+                    <div class="ad-card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon" th:style="'background:' + (${e.color != null} ? ${e.color} : '#DBEAFE') + ';color:#fff;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;'">
+                            <i th:class="${e.icono != null} ? ${e.icono} : 'bi bi-stethoscope'"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-0" th:text="${e.nombre}">Especialidad</h6>
+                            <p class="text-muted small mb-0" th:text="${e.descripcion != null} ? ${e.descripcion} : 'Sin descripción'">-</p>
+                            <span class="badge mt-1" th:style="${e.estado} ? 'background:#D1FAE5;color:#059669;' : 'background:#E5E7EB;color:#6B7280;'" th:text="${e.estado} ? 'Activo' : 'Inactivo'">-</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#modalEditarEspecialidad" th:attr="data-id=${e.id}, data-nombre=${e.nombre}, data-descripcion=${e.descripcion}, data-icono=${e.icono}, data-color=${e.color}, data-estado=${e.estado}" onclick="cargarDatosEspecialidad(this)">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${especialidades.isEmpty()}" class="col-12 text-center py-5">
+                <i class="bi bi-heart-pulse" style="font-size:3rem;color:var(--ad-muted);"></i>
+                <p class="text-muted mt-3">No hay especialidades registradas</p>
+            </div>
+        </div>
+
+        <!-- Modal Nueva Especialidad -->
+        <div class="modal fade" id="modalNuevaEspecialidad" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Registrar Nueva Especialidad</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <!--  enlaza este formulario HTML con la ruta del AdminController para registrar la nueva especialidad -->
+                    <form th:action="@{/admin/especialidades/nuevo}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Nombre de la Especialidad</label>
+                                <input name="nombre" class="form-control ad-input" placeholder="Ej: Cardiología" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" class="form-select ad-input">
+                                    <option value="true" selected>Activo</option>
+                                    <option value="false">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Descripción</label>
+                                <textarea name="descripcion" class="form-control ad-input" rows="2" placeholder="Descripción breve de la especialidad"></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Icono (clase Bootstrap Icons)</label>
+                                <input name="icono" class="form-control ad-input" placeholder="Ej: bi bi-heart-pulse">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Color (código hex)</label>
+                                <input name="color" type="color" class="form-control ad-input" value="#DBEAFE">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Imagen (opcional)</label>
+                                <input type="hidden" name="imagenUrl" id="imagenUrlNuevo">
+                                <div class="upload-area" id="uploadAreaNuevo" onclick="document.getElementById('fileNuevo').click()" style="border:2px dashed #ddd;border-radius:8px;padding:15px;text-align:center;cursor:pointer;transition:all 0.3s;">
+                                    <i class="bi bi-cloud-arrow-up" style="font-size:1.5rem;color:#666;"></i>
+                                    <p class="mb-0 small text-muted">Arrastra o haz clic</p>
+                                </div>
+                                <input type="file" id="fileNuevo" accept="image/*" style="display:none;" onchange="handleUpload(this, 'imagenUrlNuevo', 'previewNuevo')">
+                                <img id="previewNuevo" src="" style="display:none;max-height:80px;margin-top:10px;border-radius:8px;">
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Registrar</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Editar Especialidad -->
+        <div class="modal fade" id="modalEditarEspecialidad" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Especialidad</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/especialidades/editar}" method="post">
+                        <input type="hidden" name="id" id="editId">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Nombre de la Especialidad</label>
+                                <input name="nombre" id="editNombre" class="form-control ad-input" placeholder="Ej: Cardiología" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" id="editEstado" class="form-select ad-input">
+                                    <option value="true">Activo</option>
+                                    <option value="false">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Descripción</label>
+                                <textarea name="descripcion" id="editDescripcion" class="form-control ad-input" rows="2" placeholder="Descripción breve de la especialidad"></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Icono (clase Bootstrap Icons)</label>
+                                <input name="icono" id="editIcono" class="form-control ad-input" placeholder="Ej: bi bi-heart-pulse">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Color (código hex)</label>
+                                <input name="color" id="editColor" type="color" class="form-control ad-input">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Imagen (opcional)</label>
+                                <input type="hidden" name="imagenUrl" id="imagenUrlEdit">
+                                <div class="upload-area" id="uploadAreaEdit" onclick="document.getElementById('fileEdit').click()" style="border:2px dashed #ddd;border-radius:8px;padding:15px;text-align:center;cursor:pointer;transition:all 0.3s;">
+                                    <i class="bi bi-cloud-arrow-up" style="font-size:1.5rem;color:#666;"></i>
+                                    <p class="mb-0 small text-muted">Arrastra o haz clic</p>
+                                </div>
+                                <input type="file" id="fileEdit" accept="image/*" style="display:none;" onchange="handleUpload(this, 'imagenUrlEdit', 'previewEdit')">
+                                <img id="previewEdit" src="" style="display:none;max-height:80px;margin-top:10px;border-radius:8px;">
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Guardar Cambios</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        
+    </div>
+</body>
+</html>
+
+
+
