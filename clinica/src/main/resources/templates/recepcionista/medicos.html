@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Doctores - Recepción - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h4 class="fw-800 mb-0" style="color: var(--sidebar-bg); letter-spacing: -0.5px;">Directorio de Doctores</h4>
+            <span class="app-badge badge-info-premium" th:text="${totalMedicos} + ' doctores registrados'">0 doctores</span>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-6 col-lg-3">
+                <div class="app-stat" style="border-left: 4px solid #2563EB !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#DBEAFE;color:#2563EB;"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Total Médicos</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${totalMedicos}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat" style="border-left: 4px solid #059669 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#D1FAE5;color:#059669;"><i class="bi bi-person-check-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Activos</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${medicosActivos}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat" style="border-left: 4px solid #D97706 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#FEF3C7;color:#D97706;"><i class="bi bi-calendar-week-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Citas Hoy</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${citasHoy}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat" style="border-left: 4px solid #DC2626 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#FEE2E2;color:#DC2626;"><i class="bi bi-building-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Sedes</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${totalSedes}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-card shadow-sm border-0 overflow-hidden mb-4">
+            <div class="p-3 border-bottom bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar por nombre o especialidad..." id="buscarMedico" oninput="searchTable()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-0">
+                <table class="app-table align-middle" id="tablaMedicos">
+                    <thead><tr><th>CMP</th><th>Nombre Completo</th><th>Especialidad</th><th>Sede</th><th>Horario</th><th>Estado</th></tr></thead>
+                    <tbody>
+                        <tr th:if="${medicos.isEmpty()}">
+                            <td colspan="6" class="text-center text-muted py-4">No hay médicos registrados.</td>
+                        </tr>
+                        <tr th:each="m : ${medicos}">
+                            <td class="fw-bold" th:text="${m.cmp}">--</td>
+                            <td>
+                                <p class="mb-0 fw-bold" th:text="${'Dr. ' + m.nombres + ' ' + m.apellidos}">--</p>
+                                <p class="mb-0 text-muted" style="font-size:0.7rem;" th:text="'Email: ' + (${m.email != null} ? ${m.email} : '-')">--</p>
+                            </td>
+                            <td th:text="${m.especialidad != null} ? ${m.especialidad.nombre} : '-'">--</td>
+                            <td th:text="${m.sede != null} ? ${m.sede.nombre} : '-'">--</td>
+                            <td class="text-muted small" th:text="${m.horarioLv != null} ? ${m.horarioLv} : '-'">--</td>
+                            <td>
+                                <span th:if="${m.estado == 'Activo' or m.estado == null}" class="app-badge badge-success-premium">Activo</span>
+                                <span th:if="${m.estado == 'Inactivo'}" class="app-badge badge-danger-premium">Inactivo</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        
+    </div>
+</body>
+</html>
+
+

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Panel de Recepción - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <!-- Stats -->
+        <div class="row g-4 mb-5">
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #0369A1 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#E0F2FE;color:#0369A1;"><i class="bi bi-person-walking"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Sala Espera</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${enSalaEspera}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #1D4ED8 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#DBEAFE;color:#1D4ED8;"><i class="bi bi-calendar-check-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Restantes hoy</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${citasRestantes}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #059669 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#D1FAE5;color:#059669;"><i class="bi bi-currency-dollar"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Recaudación</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${'S/ ' + #numbers.formatDecimal(totalPagosHoy, 1, 'DEFAULT', 0, 'DEFAULT')}">S/ 0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="app-stat shadow-sm border-0" style="border-left: 4px solid #E11D48 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#FFE4E6;color:#E11D48;"><i class="bi bi-x-circle-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Canceladas</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${cancelaciones}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Checking de Llegadas -->
+            <div class="col-lg-8">
+                <div class="app-card shadow-sm border-0 h-100">
+                    <div class="app-card-header bg-white border-bottom-0 pt-4 px-4">
+                        <div>
+                            <h5 class="fw-800 mb-1" style="color: #1E293B;">Control de Llegadas</h5>
+                            <p class="text-muted small mb-0">Gestión de pacientes en tiempo real</p>
+                        </div>
+                        <a th:href="@{/recepcionista/citas}" class="btn btn-sm btn-light fw-bold rounded-pill px-3">
+                            <i class="bi bi-calendar3 me-1"></i> Ver Agenda Completa
+                        </a>
+                    </div>
+                    <div class="app-card-body p-0">
+                        <div class="app-table-responsive">
+                            <table class="app-table align-middle">
+                                <thead class="app-table-thead">
+                                    <tr>
+                                        <th class="ps-4">Horario</th>
+                                        <th>Paciente / DNI</th>
+                                        <th>Especialista</th>
+                                        <th>Estado Actual</th>
+                                        <th class="pe-4 text-center">Gestión</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${#lists.isEmpty(citasHoy)}">
+                                        <td colspan="5" class="text-center text-muted py-5">
+                                            <i class="bi bi-inbox opacity-25 d-block mb-2" style="font-size: 2rem;"></i>
+                                            No hay citas programadas para hoy.
+                                        </td>
+                                    </tr>
+                                    <tr th:each="cita : ${citasHoy}" class="hover-row">
+                                        <td class="ps-4">
+                                            <span class="fw-800 text-primary bg-primary-subtle px-2 py-1 rounded" style="font-size: 0.8rem;" th:text="${cita.horaCita}">10:00 AM</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-2 bg-light rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 32px; height: 32px; font-size: 0.7rem;" th:text="${#strings.substring(cita.paciente.nombres,0,1) + #strings.substring(cita.paciente.apellidos,0,1)}">JS</div>
+                                                <div>
+                                                    <p class="mb-0 fw-bold" style="font-size: 0.85rem;" th:text="${cita.paciente.nombres + ' ' + cita.paciente.apellidos}">Juan Silva</p>
+                                                    <p class="mb-0 text-muted" style="font-size: 0.65rem;" th:text="${'DNI: ' + cita.paciente.dni}">DNI: 71223344</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="mb-0 fw-bold" style="font-size: 0.85rem;" th:text="${'Dr. ' + cita.medico.apellidos}">Dr. Ramos</p>
+                                            <p class="mb-0 badge bg-secondary-subtle text-secondary border-0" style="font-size: 0.6rem;" th:text="${cita.medico.especialidad.nombre}">Cardiología</p>
+                                        </td>
+                                        <td>
+                                            <span th:if="${cita.estado == 'Pendiente'}" class="app-badge badge-warning-premium">Esperando</span>
+                                            <span th:if="${cita.estado == 'Confirmada'}" class="app-badge badge-info-premium">Confirmada</span>
+                                            <span th:if="${cita.estado == 'Completada'}" class="app-badge badge-success-premium">Atendido</span>
+                                            <span th:if="${cita.estado == 'Cancelada'}" class="app-badge badge-danger-premium">Cancelada</span>
+                                        </td>
+                                        <td class="pe-4 text-center">
+                                            <!-- EXPOSICIÓN MIGUEL: Este 'th:if' es clave. Oculta el formulario de Check-in si el paciente ya fue procesado, evitando que un recepcionista dé doble clic o genere errores en sala de espera -->
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <form th:if="${cita.estado == 'Pendiente'}" th:action="@{/recepcionista/citas/checkin}" method="post" class="d-inline">
+                                                    <!-- Campo oculto para enviar el ID de la cita -->
+                                                    <input type="hidden" name="idCita" th:value="${cita.idCita}">
+                                                    <!-- Boton de envio para hacer checkin -->
+                                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" style="font-size: 0.7rem;" title="Marcar Llegada">
+                                                        Check-in <i class="bi bi-arrow-right-short"></i>
+                                                    </button>
+                                                </form>
+                                                <!-- EXPOSICIÓN MIGUEL: Consumo Asíncrono. Este botón dispara fetch() para traer el historial en formato JSON. -->
+                                                <button class="btn btn-light btn-sm rounded-pill px-2 shadow-sm text-primary" style="font-size: 0.7rem;" th:attr="data-id=${cita.paciente.id}, data-nombre=${cita.paciente.nombres + ' ' + cita.paciente.apellidos}" onclick="verHistorial(this)" title="Ver Historial Clínico">
+                                                    <i class="bi bi-clock-history"></i>
+                                                </button>
+                                            </div>
+                                            <span th:if="${cita.estado != 'Pendiente'}" class="text-success fw-bold small d-block mt-1"><i class="bi bi-check-all"></i> Procesado</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disponibilidad por Médico (Grid) -->
+            <div class="col-lg-4">
+                <div class="app-card shadow-sm border-0 h-100">
+                    <div class="app-card-header bg-white border-bottom-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-800 mb-0" style="color: #1E293B;"><i class="bi bi-grid-3x3-gap-fill me-2 text-primary"></i>Agenda de Especialistas</h6>
+                        <span class="badge bg-light text-primary border" style="font-size: 0.6rem;" th:text="${medicos.size() + ' Activos'}">0 Activos</span>
+                    </div>
+                    <div class="app-card-body px-4 pb-4" style="max-height: 500px; overflow-y: auto;">
+                        <div th:each="m : ${medicos}" class="consultorio-item p-3 mb-3 rounded-4 border bg-white d-flex align-items-center justify-content-between shadow-sm border-start border-4"
+                             th:style="${m.estado == 'Activo' ? 'border-left-color: #10B981 !important;' : 'border-left-color: #94a3b8 !important; opacity: 0.7;'}">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-sm bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                                    <span th:text="${#strings.substring(m.nombres,0,1)}">D</span>
+                                </div>
+                                <div>
+                                    <span class="fw-800 d-block text-dark" style="font-size: 0.85rem;" th:text="${'Dr. ' + m.apellidos}">Dr. Ramos</span>
+                                    <span class="text-muted fw-600" style="font-size: 0.65rem; text-transform: uppercase;" th:text="${m.especialidad.nombre}">Cardiología</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span th:if="${m.estado == 'Activo'}" class="status-dot-pulse bg-success" title="En Turno"></span>
+                                <span th:if="${m.estado != 'Activo'}" class="status-dot rounded-circle bg-secondary" style="width:10px; height:10px; display:inline-block;" title="Fuera de Turno"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-primary btn-sm w-100 rounded-pill fw-bold py-2" data-bs-toggle="modal" data-bs-target="#mapaModal">
+                                Ver Mapa de Consultorios <i class="bi bi-geo-alt-fill ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL MAPA COMPLETO -->
+        <div class="modal fade" id="mapaModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+                    <div class="modal-header border-0 pb-0 pt-4 px-4">
+                        <div>
+                            <h5 class="fw-800 mb-1" style="color: #1E293B;"><i class="bi bi-map-fill me-2 text-primary"></i>Plano de la Clínica</h5>
+                            <p class="text-muted small mb-0">Distribución de Consultorios y Servicios</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <ul class="nav nav-pills mb-4 bg-light p-1 rounded-pill justify-content-center" id="pills-tab" role="tablist" style="width: fit-content; margin: 0 auto;">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active rounded-pill px-4 fw-bold" id="pills-f1-tab" data-bs-toggle="pill" data-bs-target="#floor1" type="button" role="tab">PISO 1</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-pill px-4 fw-bold" id="pills-f2-tab" data-bs-toggle="pill" data-bs-target="#floor2" type="button" role="tab">PISO 2</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="pills-tabContent">
+                            <!-- PISO 1 -->
+                            <div class="tab-pane fade show active" id="floor1" role="tabpanel">
+                                <div class="clinic-map-container shadow-inner rounded-4 p-4" style="background: #F8FAFC; border: 2px dashed #E2E8F0;">
+                                    <div class="floor-grid first-floor">
+                                        <div class="map-room reception" title="Recepción Principal">REPC</div>
+                                        <div class="map-room pharmacy" title="Farmacia Central">FARM</div>
+                                        <div class="map-room laboratory" title="Laboratorio Clínico">LAB</div>
+                                        <div class="map-room triage" title="Triaje">TRJ</div>
+                                        <div class="map-room consultorio occupied" title="101 - Dr. Ramos">101</div>
+                                        <div class="map-room consultorio paused" title="102 - Dra. Solís">102</div>
+                                        <div class="map-room consultorio available" title="103 - Disponible">103</div>
+                                        <div class="map-room consultorio occupied" title="104 - Dr. Valdivia">104</div>
+                                        <div class="map-room consultorio available" title="105 - Disponible">105</div>
+                                        <div class="map-corridor">PASILLO PRINCIPAL</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- PISO 2 -->
+                            <div class="tab-pane fade" id="floor2" role="tabpanel">
+                                <div class="clinic-map-container shadow-inner rounded-4 p-4" style="background: #F8FAFC; border: 2px dashed #E2E8F0;">
+                                    <div class="floor-grid second-floor">
+                                        <div class="map-room surgery" title="Sala de Cirugía">QUIRÓFANO</div>
+                                        <div class="map-room consultorio occupied" title="201 - Dr. Castillo">201</div>
+                                        <div class="map-room consultorio available" title="202 - Disponible">202</div>
+                                        <div class="map-room consultorio available" title="203 - Disponible">203</div>
+                                        <div class="map-room consultorio occupied" title="204 - Dra. Mendoza">204</div>
+                                        <div class="map-room consultorio occupied" title="205 - Dr. Paredes">205</div>
+                                        <div class="map-room consultorio available" title="206 - Disponible">206</div>
+                                        <div class="map-room consultorio available" title="207 - Disponible">207</div>
+                                        <div class="map-corridor">AREA MÉDICA</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-4 mt-4 pt-3 border-top">
+                            <div class="d-flex align-items-center gap-2 small fw-bold text-muted">
+                                <div class="rounded-circle" style="width:10px; height:10px; background:#10B981;"></div> Disponible
+                            </div>
+                            <div class="d-flex align-items-center gap-2 small fw-bold text-muted">
+                                <div class="rounded-circle" style="width:10px; height:10px; background:#EF4444;"></div> Ocupado
+                            </div>
+                            <div class="d-flex align-items-center gap-2 small fw-bold text-muted">
+                                <div class="rounded-circle" style="width:10px; height:10px; background:#F59E0B;"></div> En Pausa
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .clinic-map-container {
+                min-height: 350px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .floor-grid {
+                display: grid;
+                gap: 10px;
+                width: 100%;
+                max-width: 600px;
+                grid-template-areas: 
+                    "r1 r2 r3 r4"
+                    "c1 c1 c1 c1"
+                    "r5 r6 r7 r8";
+            }
+            .first-floor {
+                grid-template-areas: 
+                    "room101 room102 room103 triage"
+                    "corridor corridor corridor corridor"
+                    "reception pharmacy laboratory room104";
+            }
+            .second-floor {
+                grid-template-areas: 
+                    "room201 room202 room203 surgery"
+                    "corridor corridor corridor surgery"
+                    "room204 room205 room206 surgery";
+            }
+            .map-room {
+                background: #fff;
+                border: 2px solid #E2E8F0;
+                border-radius: 12px;
+                height: 80px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                font-size: 0.8rem;
+                color: #64748B;
+                transition: all 0.2s ease;
+                cursor: help;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            }
+            .map-room:hover {
+                transform: translateY(-3px);
+                border-color: var(--primary);
+                color: var(--primary);
+            }
+            .map-corridor {
+                grid-area: corridor;
+                background: #F1F5F9;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.6rem;
+                font-weight: 700;
+                color: #94A3B8;
+                letter-spacing: 2px;
+                height: 40px;
+            }
+            .map-room.reception { grid-area: reception; background: #EEF2FF; border-color: #C7D2FE; color: #4F46E5; }
+            .map-room.pharmacy { grid-area: pharmacy; background: #F0FDF4; border-color: #BBF7D0; color: #16A34A; }
+            .map-room.laboratory { grid-area: laboratory; background: #FFF7ED; border-color: #FED7AA; color: #EA580C; }
+            .map-room.triage { grid-area: triage; }
+            .map-room.surgery { grid-area: surgery; height: 100%; background: #FDF2F8; border-color: #FBCFE8; color: #DB2777; }
+            
+            .map-room.available { border-left: 5px solid #10B981; }
+            .map-room.occupied { border-left: 5px solid #EF4444; }
+            .map-room.paused { border-left: 5px solid #F59E0B; }
+            
+            /* Mapping areas */
+            .map-room[title*="101"] { grid-area: room101; }
+            .map-room[title*="102"] { grid-area: room102; }
+            .map-room[title*="103"] { grid-area: room103; }
+            .map-room[title*="104"] { grid-area: room104; }
+            .map-room[title*="105"] { grid-area: room105; }
+            .map-room[title*="201"] { grid-area: room201; }
+            .map-room[title*="202"] { grid-area: room202; }
+            .map-room[title*="203"] { grid-area: room203; }
+            .map-room[title*="204"] { grid-area: room204; }
+            .map-room[title*="205"] { grid-area: room205; }
+            .map-room[title*="206"] { grid-area: room206; }
+        </style>
+
+        <!-- Monitor de Sala de Espera Real-Time (Vue.js + Citas Service) -->
+        <div id="receptionApp" class="mt-4">
+            <div class="app-card shadow-sm border-0" style="border-top: 4px solid var(--primary) !important;">
+                <div class="app-card-header bg-white pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-800 mb-1" style="color: #1E293B;"><i class="bi bi-display me-2 text-primary"></i>Monitor de Sala de Espera</h5>
+                        <p class="text-muted small mb-0">Actualización automática de estados de turnos</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-light text-dark border fw-normal" style="font-size: 0.7rem;">
+                            <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i> Conectado
+                        </span>
+                        <button class="btn btn-sm btn-primary rounded-circle" @click="fetchCitas" title="Refrescar">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="app-card-body p-4">
+                    <div class="row g-4">
+                        <!-- En Espera -->
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 bg-light border-0 shadow-none h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-primary">EN ESPERA</h6>
+                                    <span class="badge bg-primary rounded-pill">{{ filterByEstado('Pendiente').length }}</span>
+                                </div>
+                                <div class="wait-list" style="max-height: 400px; overflow-y: auto;">
+                                    <div v-for="cita in filterByEstado('Pendiente')" :key="cita.idCita" class="p-3 bg-white rounded-3 shadow-sm mb-2 border-start border-primary border-4 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="mb-0 fw-bold small text-dark">{{ cita.paciente.nombres }} {{ cita.paciente.apellidos }}</p>
+                                            <span class="text-muted" style="font-size: 0.7rem;">Cita: {{ cita.horaCita }} | Dr. {{ cita.medico.apellidos }}</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" style="font-size: 0.65rem;" @click="updateStatus(cita.idCita, 'En Espera')">
+                                            Ingresar
+                                        </button>
+                                    </div>
+                                    <div v-if="filterByEstado('Pendiente').length === 0" class="text-center py-4 text-muted small">
+                                        No hay pacientes esperando.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- En Consulta -->
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-4 bg-light border-0 shadow-none h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold mb-0 text-success">EN CONSULTA</h6>
+                                    <span class="badge bg-success rounded-pill">{{ filterByEstado('En Espera').length }}</span>
+                                </div>
+                                <div class="wait-list" style="max-height: 400px; overflow-y: auto;">
+                                    <div v-for="cita in filterByEstado('En Espera')" :key="cita.idCita" class="p-3 bg-white rounded-3 shadow-sm mb-2 border-start border-success border-4 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="mb-0 fw-bold small text-dark">{{ cita.paciente.nombres }} {{ cita.paciente.apellidos }}</p>
+                                            <span class="text-muted" style="font-size: 0.7rem;">Consultorio: 10{{ cita.idCita % 5 + 1 }} | Dr. {{ cita.medico.apellidos }}</span>
+                                        </div>
+                                        <span class="status-dot-pulse bg-success"></span>
+                                    </div>
+                                    <div v-if="filterByEstado('En Espera').length === 0" class="text-center py-4 text-muted small">
+                                        No hay consultas activas.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal Historial -->
+        <div class="modal fade" id="modalHistorial" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content border-0 shadow-lg" style="border-radius:24px;">
+                    <div class="modal-header border-0 pb-0 pt-4 px-4">
+                        <h5 class="modal-title fw-800 text-dark"><i class="bi bi-clock-history text-primary me-2"></i>Historial de Citas - <span id="historialNombre"></span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Médico</th>
+                                        <th>Servicio</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historialBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="scripts">
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            async function verHistorial(btn) {
+                const pacienteId = btn.getAttribute('data-id');
+                const nombre = btn.getAttribute('data-nombre');
+                document.getElementById('historialNombre').textContent = nombre;
+                
+                const tbody = document.getElementById('historialBody');
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+                
+                new bootstrap.Modal(document.getElementById('modalHistorial')).show();
+
+                try {
+                    const response = await fetch(`/recepcionista/pacientes/historial?id=${pacienteId}`);
+                    const data = await response.json();
+                    
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No hay historial previo para este paciente.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.map(cita => `
+                        <tr>
+                            <td class="fw-bold">${cita.fecha}</td>
+                            <td>${cita.hora}</td>
+                            <td>${cita.medico}</td>
+                            <td>${cita.servicio}</td>
+                            <td><span class="badge" style="background-color: ${cita.color}; color: ${cita.textColor}">${cita.estado}</span></td>
+                        </tr>
+                    `).join('');
+                } catch (error) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error al cargar el historial.</td></tr>';
+                }
+            }
+            
+            const { createApp } = Vue;
+            
+            createApp({
+                data() {
+                    return {
+                        citas: [],
+                        loading: false
+                    }
+                },
+                mounted() {
+                    this.fetchCitas();
+                    // Polling cada 10 segundos
+                    setInterval(this.fetchCitas, 10000);
+                },
+                methods: {
+                    fetchCitas() {
+                        this.loading = true;
+                        fetch('/api/v1/citas/hoy')
+                            .then(res => res.json())
+                            .then(data => {
+                                this.citas = data;
+                                this.loading = false;
+                            });
+                    },
+                    filterByEstado(estado) {
+                        return this.citas.filter(c => c.estado === estado);
+                    },
+                    updateStatus(id, estado) {
+                        fetch(`/api/v1/citas/${id}/estado`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ estado: estado })
+                        })
+                        .then(() => this.fetchCitas());
+                    }
+                }
+            }).mount('#receptionApp');
+            /*]]>*/
+        </script>
+    </th:block>
+</body>
+</html>
+
+
+

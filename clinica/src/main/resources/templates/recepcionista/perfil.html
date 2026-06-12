@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Mi Perfil - Recepción - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+                <div class="profile-card shadow-sm">
+                    <div class="profile-header text-center">
+                        <div class="profile-avatar-lg shadow-sm mb-3">
+                            <span th:text="${#strings.substring(recepcionistaGlobal.nombres, 0, 1) + #strings.substring(recepcionistaGlobal.apellidos, 0, 1)}">RC</span>
+                        </div>
+                        <h3 class="fw-800 mb-1" th:text="${recepcionistaGlobal.nombres + ' ' + recepcionistaGlobal.apellidos}">Recepcionista</h3>
+                        <p class="mb-0 opacity-75 fw-500" style="letter-spacing: 0.5px;">Panel de Administración y Recepción</p>
+                        <div class="mt-3">
+                            <span class="app-badge badge-success-premium" style="background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); color: #fff;">
+                                <i class="bi bi-patch-check-fill me-1"></i> Perfil Verificado
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-body">
+                        <div class="d-flex align-items-center gap-2 mb-4">
+                            <i class="bi bi-shield-lock-fill text-primary"></i>
+                            <h5 class="fw-800 mb-0" style="color: #1E293B; letter-spacing: -0.5px;">Información de Seguridad</h5>
+                        </div>
+
+                        <form>
+                            <div class="row g-4">
+                                <div class="col-md-6 text-center text-md-start">
+                                    <div class="info-box">
+                                        <label class="form-label small text-muted fw-bold text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px;">Usuario / DNI</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-person-vcard text-primary opacity-50"></i>
+                                            <p class="mb-0 fw-800 text-dark" th:text="${recepcionistaGlobal.username}">33333333</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-center text-md-start">
+                                    <div class="info-box">
+                                        <label class="form-label small text-muted fw-bold text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px;">Correo Institucional</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-envelope-at text-primary opacity-50"></i>
+                                            <p class="mb-0 fw-800 text-dark" th:text="${recepcionistaGlobal.email}">correo@clinica.com</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-center text-md-start">
+                                    <div class="info-box">
+                                        <label class="form-label small text-muted fw-bold text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px;">Rol Asignado</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-person-badge-fill text-primary opacity-50"></i>
+                                            <p class="mb-0 fw-800 text-dark">Recepcionista</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-center text-md-start">
+                                    <div class="info-box">
+                                        <label class="form-label small text-muted fw-bold text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px;">Último Acceso</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-calendar-check text-primary opacity-50"></i>
+                                            <p class="mb-0 fw-800 text-dark" th:text="${#temporals.format(#temporals.createNow(), 'dd/MM/yyyy')}">18/04/2026</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12 mt-4 pt-2">
+                                    <button type="button" class="btn btn-primary w-100 py-3 shadow-lg" onclick="alert('Funcionalidad de edición coming soon')">
+                                        <i class="bi bi-shield-check me-2"></i> Actualizar Preferencias del Perfil
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

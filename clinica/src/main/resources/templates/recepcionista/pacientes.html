@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Pacientes - Recepción - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h4 class="fw-800 mb-0" style="color: var(--sidebar-bg); letter-spacing: -0.5px;">Gestión de Pacientes</h4>
+            <button class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalNuevoPaciente">
+                <i class="bi bi-person-plus-fill"></i> Registrar Paciente
+            </button>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-6 col-lg-4">
+                <div class="app-stat" style="border-left: 4px solid #2563EB !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#DBEAFE;color:#2563EB;"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Total Pacientes</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${totalPacientes}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-4">
+                <div class="app-stat" style="border-left: 4px solid #059669 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#D1FAE5;color:#059669;"><i class="bi bi-person-check-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Activos</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${pacientesActivos}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-4">
+                <div class="app-stat" style="border-left: 4px solid #D97706 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon shadow-sm" style="background:#FEF3C7;color:#D97706;"><i class="bi bi-person-dash-fill"></i></div>
+                        <div>
+                            <p class="mb-0 text-muted fw-bold text-uppercase" style="font-size:.65rem; letter-spacing:1px;">Inactivos</p>
+                            <h4 class="fw-800 mb-0" style="font-size:1.6rem; color: #1E293B;" th:text="${pacientesInactivos}">0</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-card shadow-sm border-0 overflow-hidden mb-4">
+            <div class="p-3 border-bottom bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar por nombre o DNI..." id="buscarPaciente" oninput="searchTable()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-0">
+                <table class="app-table align-middle" id="tablaPacientes">
+                    <thead><tr><th>DNI</th><th>Nombre Completo</th><th>Email</th><th>Teléfono</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                        <tr th:if="${pacientes.isEmpty()}">
+                            <td colspan="6" class="text-center text-muted py-4">No hay pacientes registrados.</td>
+                        </tr>
+                        <tr th:each="p : ${pacientes}">
+                            <td class="fw-bold">
+                                <span th:text="${p.dni}">--</span>
+                                <div th:if="${p.usuario != null && p.usuario.estadoRegistro != null}" class="mt-1" style="font-size: 0.6rem; letter-spacing: 0.5px;">
+                                    <span th:if="${p.usuario.estadoRegistro.toString() == 'PENDIENTE'}" class="text-warning fw-bold text-uppercase"><i class="bi bi-clock-history me-1"></i>Web Pendiente</span>
+                                    <span th:if="${p.usuario.estadoRegistro.toString() == 'VERIFICADO_WEB'}" class="text-info fw-bold text-uppercase"><i class="bi bi-patch-check-fill me-1"></i>Web Verificado</span>
+                                    <span th:if="${p.usuario.estadoRegistro.toString() == 'VALIDADO_CLINICA'}" class="text-success fw-bold text-uppercase"><i class="bi bi-shield-check-fill me-1"></i>Validado Clínica</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold" th:text="${p.nombres + ' ' + p.apellidos}">--</div>
+                                <div class="x-small text-muted" th:text="${p.nombreIafas != null ? p.nombreIafas : 'Particular'}">Particular</div>
+                            </td>
+                            <td class="text-muted small" th:text="${p.email != null} ? ${p.email} : '-'">-</td>
+                            <td class="text-muted small" th:text="${p.telefono != null} ? ${p.telefono} : '-'">-</td>
+                            <td>
+                                <span th:if="${p.estado == 'Activo' or p.estado == null}" class="app-badge badge-success-premium">Activo</span>
+                                <span th:if="${p.estado == 'Inactivo'}" class="app-badge badge-danger-premium">Inactivo</span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <!-- Botón Validar Identidad Física -->
+                                    <button th:if="${p.usuario != null && p.usuario.estadoRegistro != null && p.usuario.estadoRegistro.toString() != 'VALIDADO_CLINICA'}" 
+                                            class="rc-btn-action bg-success-subtle text-success border-success-subtle" 
+                                            th:onclick="'validarIdentidad(' + ${p.usuario.id} + ')'" title="Validar DNI Físico">
+                                        <i class="bi bi-person-check-fill"></i>
+                                    </button>
+                                    
+                                    <!-- Botón Refrescar Seguro SUSALUD -->
+                                    <button class="rc-btn-action bg-info-subtle text-info border-info-subtle" 
+                                            th:onclick="'refrescarSeguro(' + ${p.id} + ')'" title="Refrescar Seguro SUSALUD">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+
+                                    <button class="rc-btn-action" th:attr="data-id=${p.id}, data-nombres=${p.nombres}, data-apellidos=${p.apellidos}, data-dni=${p.dni}, data-email=${p.email}, data-telefono=${p.telefono}, data-estado=${p.estado}" onclick="editarPaciente(this)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="rc-btn-action" th:attr="data-id=${p.id}, data-nombre=${p.nombres + ' ' + p.apellidos}" onclick="verHistorial(this)">
+                                        <i class="bi bi-clock-history"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal Nuevo Paciente -->
+        <div class="modal fade" id="modalNuevoPaciente" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Registrar Nuevo Paciente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/recepcionista/pacientes/nuevo}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Nombres</label>
+                                <input name="nombres" id="pacienteNombresInput" class="form-control" placeholder="Ej: Juan Carlos" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Apellidos</label>
+                                <input name="apellidos" id="pacienteApellidosInput" class="form-control" placeholder="Ej: Pérez López" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold d-flex justify-content-between">
+                                    DNI
+                                    <span id="dniLoading" class="spinner-border spinner-border-sm text-primary d-none" role="status"></span>
+                                    <span id="dniSuccess" class="text-success d-none" style="font-size: 0.75rem;"><i class="bi bi-patch-check-fill"></i> Verificado</span>
+                                </label>
+                                <input name="dni" id="pacienteDniInput" class="form-control" placeholder="8 dígitos" maxlength="8" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Teléfono</label>
+                                <input name="telefono" class="form-control" placeholder="+51 999...">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fecha Nac.</label>
+                                <input name="fechaNacimiento" id="pacienteFechaNacInput" type="date" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input name="email" id="pacienteEmailInput" type="email" class="form-control" placeholder="correo@email.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Dirección</label>
+                                <input name="direccion" id="pacienteDireccionInput" class="form-control" placeholder="Dirección del paciente">
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Registrar</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Editar Paciente -->
+        <div class="modal fade" id="modalEditarPaciente" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Paciente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/recepcionista/pacientes/editar}" method="post">
+                        <input type="hidden" name="id" id="editId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Nombres</label>
+                                <input name="nombres" id="editNombres" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Apellidos</label>
+                                <input name="apellidos" id="editApellidos" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">DNI</label>
+                                <input name="dni" id="editDni" class="form-control" maxlength="8" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Teléfono</label>
+                                <input name="telefono" id="editTelefono" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" id="editEstadoPac" class="form-select">
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email</label>
+                                <input name="email" id="editEmail" type="email" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Dirección</label>
+                                <input name="direccion" id="editDireccion" class="form-control">
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Guardar Cambios</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Historial -->
+        <div class="modal fade" id="modalHistorial" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Historial de Citas - <span id="historialNombre"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body p-0">
+                    <table class="rc-table">
+                        <thead><tr><th>Fecha</th><th>Hora</th><th>Médico</th><th>Servicio</th><th>Estado</th></tr></thead>
+                        <tbody id="historialBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div></div>
+        </div>
+
+        <script>
+            async function validarIdentidad(usuarioId) {
+                if (!confirm('¿Confirma que ha verificado el DNI físico del paciente?')) return;
+                
+                try {
+                    const response = await fetch(`/recepcionista/pacientes/validar-identidad?usuarioId=${usuarioId}`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error validando identidad:', error);
+                }
+            }
+
+            async function refrescarSeguro(pacienteId) {
+                try {
+                    const response = await fetch(`/recepcionista/pacientes/refrescar-seguro?pacienteId=${pacienteId}`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('Datos de seguro actualizados: ' + result.data.iafas);
+                        location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error refrescando seguro:', error);
+                }
+            }
+
+            document.getElementById('pacienteDniInput').addEventListener('input', async function(e) {
+                const dni = e.target.value;
+                if (dni.length === 8) {
+                    const loading = document.getElementById('dniLoading');
+                    const success = document.getElementById('dniSuccess');
+                    const nombreInput = document.getElementById('pacienteNombresInput');
+                    const apellidoInput = document.getElementById('pacienteApellidosInput');
+                    const emailInput = document.getElementById('pacienteEmailInput');
+                    const fechaNacInput = document.getElementById('pacienteFechaNacInput');
+                    const direccionInput = document.getElementById('pacienteDireccionInput');
+                    
+                    loading.classList.remove('d-none');
+                    success.classList.add('d-none');
+                    
+                    try {
+                        const response = await fetch(`/api/identidad/${dni}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.nombres) {
+                                nombreInput.value = data.nombres;
+                                apellidoInput.value = (data.apellido_paterno || '') + ' ' + (data.apellido_materno || '');
+                                if (!emailInput.value) {
+                                    emailInput.value = dni + '@clinicx.com';
+                                }
+                                if (data.fecha_nacimiento) {
+                                    fechaNacInput.value = data.fecha_nacimiento;
+                                }
+                                if (data.direccion) {
+                                    direccionInput.value = data.direccion;
+                                }
+                                success.classList.remove('d-none');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error al validar DNI:', error);
+                    } finally {
+                        loading.classList.add('d-none');
+                    }
+                } else {
+                    document.getElementById('dniSuccess').classList.add('d-none');
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>
