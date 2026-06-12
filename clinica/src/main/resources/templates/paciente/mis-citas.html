@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Mis Citas - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="fw-bold mb-1">Mis Citas Médicas</h4>
+                <p class="text-muted small mb-0">Gestiona tus citas programadas y revisa tu historial de atenciones.</p>
+            </div>
+            <a th:href="@{/paciente/agendar}" class="app-btn bg-primary text-white border-0">
+                <i class="bi bi-plus-lg me-1"></i> Nueva Cita
+            </a>
+        </div>
+        <div th:if="${param.agendado != null and param.agendado[0] == 'true'}" class="alert alert-success py-3 fw-bold rounded-4 mb-4 border-0 shadow-sm">
+            <i class="bi bi-check-circle-fill me-2 fs-5 align-middle"></i> ¡Cita agendada con éxito! Te esperamos en la sede seleccionada.
+        </div>
+        <div th:if="${param.exito != null and param.exito[0] == 'true'}" class="alert alert-success py-3 fw-bold rounded-4 mb-4 border-0 shadow-sm">
+            <i class="bi bi-check-circle-fill me-2 fs-5 align-middle"></i> ¡Cita pagada y agendada con éxito! Te esperamos en la sede seleccionada.
+        </div>
+        <div th:if="${param.cancelado != null and param.cancelado[0] == 'true'}" class="alert alert-warning py-3 fw-bold rounded-4 mb-4 border-0 shadow-sm" style="color:#B45309;background:#FEF3C7;">
+            <i class="bi bi-exclamation-circle-fill me-2 fs-5 align-middle"></i> Tu cita médica ha sido cancelada correctamente.
+        </div>
+        <div th:if="${param.reagendado != null and param.reagendado[0] == 'true'}" class="alert alert-info py-3 fw-bold rounded-4 mb-4 border-0 shadow-sm" style="color:#0369a1;background:#e0f2fe;">
+            <i class="bi bi-calendar-check-fill me-2 fs-5 align-middle"></i> Cita re-agendada con éxito. Por favor espera la confirmación.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'pago_fallido'}" class="alert alert-danger py-3 fw-bold rounded-4 mb-4 border-0 shadow-sm">
+            <i class="bi bi-x-circle-fill me-2 fs-5 align-middle"></i> El pago de la cita no pudo ser procesado o fue cancelado. Por favor, intenta de nuevo.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'pago_inicializacion'}" class="alert alert-danger py-3 fw-bold rounded-4 mb-4 border-0 shadow-sm">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5 align-middle"></i> Ocurrió un error al iniciar el pago en línea. Por favor, intenta pagar en recepción.
+        </div>
+        <div th:if="${param.info != null and param.info[0] == 'pago_pendiente'}" class="alert alert-info py-3 fw-bold rounded-4 mb-4 border-0 shadow-sm" style="color:#0369a1;background:#e0f2fe;">
+            <i class="bi bi-info-circle-fill me-2 fs-5 align-middle"></i> El pago de tu cita está pendiente. Te notificaremos cuando se confirme.
+        </div>
+
+        <!-- Custom Tabs Navigation -->
+        <div class="d-flex gap-2 mb-4 p-1 bg-light rounded-pill w-fit-content overflow-auto" style="max-width:100%;">
+            <button class="app-btn py-2 px-4 rounded-pill border-0 transition-all shadow-sm" id="btn-proximas" data-tab="proximas" onclick="switchTab('proximas')" style="background:var(--primary); color:white;">
+                Próximas <span class="badge rounded-pill ms-1 bg-white text-primary" th:text="${citas != null ? #lists.size(citas.?[estado == 'Pendiente' or estado == 'Confirmada']) : 0}">0</span>
+            </button>
+            <button class="app-btn py-2 px-4 rounded-pill border-0 transition-all hover-translate" id="btn-completadas" data-tab="completadas" onclick="switchTab('completadas')" style="background:transparent; color:var(--text-muted);">
+                Completadas <span class="badge rounded-pill ms-1 bg-secondary text-white" th:text="${citas != null ? #lists.size(citas.?[estado == 'Completada']) : 0}">0</span>
+            </button>
+            <button class="app-btn py-2 px-4 rounded-pill border-0 transition-all hover-translate" id="btn-canceladas" data-tab="canceladas" onclick="switchTab('canceladas')" style="background:transparent; color:var(--text-muted);">
+                Canceladas <span class="badge rounded-pill ms-1 bg-secondary text-white" th:text="${citas != null ? #lists.size(citas.?[estado == 'Cancelada']) : 0}">0</span>
+            </button>
+        </div>
+
+        <!-- Panels Container -->
+        <div class="tab-content">
+            <!-- Próximas -->
+            <div id="panel-proximas" class="tab-pane-active animate-fade-in">
+                <div th:if="${citas == null or #lists.isEmpty(citas.?[estado == 'Pendiente' or estado == 'Confirmada'])}" class="app-card py-5 text-center border-0">
+                    <div class="opacity-25 mb-3" style="font-size:3.5rem;"><i class="bi bi-calendar-x"></i></div>
+                    <p class="mb-1 fw-bold">No tienes citas próximas</p>
+                    <p class="text-muted small mb-4">Agenda una nueva cita para recibir atención médica especializada.</p>
+                    <a th:href="@{/paciente/agendar}" class="app-btn bg-primary text-white border-0 px-4">Agendar Cita Ahora</a>
+                </div>
+
+                <div class="app-card mb-3 border-0 shadow-sm-hover transition-all" th:each="cita : ${citas}" th:if="${cita.estado == 'Pendiente' or cita.estado == 'Confirmada'}">
+                    <div class="app-card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:64px; height:64px; background:var(--bg-light); color:var(--primary);">
+                                    <i class="bi bi-heart-pulse-fill fs-3"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-5" th:text="${cita.medico.especialidad.nombre}">Especialidad</h6>
+                                    <p class="mb-2 text-primary fw-medium" th:text="${'Dr/a. ' + cita.medico.nombres + ' ' + cita.medico.apellidos}">Médico</p>
+                                    <div class="d-flex flex-wrap gap-3 mt-1">
+                                        <span class="small text-muted"><i class="bi bi-calendar3 me-1"></i> <span th:text="${cita.fechaCita}">Fecha</span></span>
+                                        <span class="small text-muted"><i class="bi bi-clock me-1"></i> <span th:text="${cita.horaCita}">Hora</span></span>
+                                        <span class="small text-muted"><i class="bi bi-geo-alt me-1"></i> <span th:text="${cita.medico.sede.nombre}">Sede</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span th:if="${cita.estado == 'Confirmada'}" class="app-badge" style="background:#DCFCE7; color:#15803D;">Confirmada</span>
+                                <span th:if="${cita.estado == 'Pendiente'}" class="app-badge" style="background:#FEF3C7; color:#B45309;">Pendiente</span>
+                                
+                                <a th:href="@{/paciente/agendar(id_cita=${cita.idCita})}" class="app-btn bg-white text-primary border-primary px-3 py-1" style="font-size:.75rem;">
+                                    <i class="bi bi-calendar2-range me-1"></i> Re-agendar
+                                </a>
+                                
+                                <button type="button" class="app-btn bg-light text-danger border-danger-subtle px-3 py-1" style="font-size:.75rem;" th:onclick="'confirmarCancelacion(' + ${cita.idCita} + ')'">
+                                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completadas -->
+            <div id="panel-completadas" style="display:none;" class="animate-fade-in">
+                <div class="app-card border-0 shadow-sm">
+                    <div class="app-card-body p-0">
+                        <div class="app-table-responsive">
+                            <table class="app-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha y Hora</th>
+                                        <th>Especialidad</th>
+                                        <th>Médico Especialista</th>
+                                        <th>Sede / Consultorio</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cita : ${citas}" th:if="${cita.estado == 'Completada'}">
+                                        <td>
+                                            <div class="fw-bold" th:text="${cita.fechaCita}">25/03/2026</div>
+                                            <div class="small text-muted" th:text="${cita.horaCita}">10:00 AM</div>
+                                        </td>
+                                        <td th:text="${cita.medico.especialidad.nombre}">Dermatología</td>
+                                        <td class="fw-medium text-primary" th:text="${cita.medico.nombres + ' ' + cita.medico.apellidos}">Dr. Jorge Castillo</td>
+                                        <td>
+                                            <div th:text="${cita.medico.sede.nombre}">Sede</div>
+                                            <div class="small text-muted" th:text="${cita.medico.consultorio != null ? 'Consultorio ' + cita.medico.consultorio : '-'}">Consultorio</div>
+                                        </td>
+                                        <td><span class="app-badge" style="background:#DCFCE7; color:#15803D;">Completada</span></td>
+                                    </tr>
+                                    <tr th:if="${citas == null or #lists.isEmpty(citas.?[estado == 'Completada'])}">
+                                        <td colspan="5" class="text-center text-muted py-5">No registras citas completadas en tu historial.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canceladas -->
+            <div id="panel-canceladas" style="display:none;" class="animate-fade-in">
+                <div class="app-card border-0 shadow-sm">
+                    <div class="app-card-body p-0">
+                        <div class="app-table-responsive">
+                            <table class="app-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Especialidad</th>
+                                        <th>Médico</th>
+                                        <th>Motivo / Info</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="cita : ${citas}" th:if="${cita.estado == 'Cancelada'}">
+                                        <td th:text="${cita.fechaCita}">05/03/2026</td>
+                                        <td th:text="${cita.medico.especialidad.nombre}">Odontología</td>
+                                        <td class="fw-medium" th:text="${cita.medico.nombres + ' ' + cita.medico.apellidos}">Dra. Ana López</td>
+                                        <td class="text-muted small">Cancelada por el paciente</td>
+                                        <td><span class="app-badge" style="background:#FEE2E2; color:#DC2626;">Cancelada</span></td>
+                                    </tr>
+                                    <tr th:if="${citas == null or #lists.isEmpty(citas.?[estado == 'Cancelada'])}">
+                                        <td colspan="5" class="text-center text-muted py-5">No tienes citas canceladas.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Cancelar Cita -->
+        <div class="modal fade" id="cancelarCitaModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius:1.25rem;">
+                    <div class="modal-header border-0 pb-0">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center pb-5 px-4 mb-2">
+                        <div class="mb-4">
+                            <div class="d-inline-flex justify-content-center align-items-center rounded-circle shadow-sm" style="width:80px;height:80px;background:linear-gradient(135deg,#FEE2E2,#FCA5A5);color:#DC2626;">
+                                <i class="bi bi-exclamation-triangle-fill" style="font-size:3rem;"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-bold mb-2">Â¿Cancelar Cita?</h3>
+                        <p class="text-muted mb-4" style="font-size:0.95rem;">Estás a punto de cancelar esta cita médica. Esta acción no se puede deshacer y el horario quedará libre para otros pacientes.</p>
+                        
+                        <form id="formCancelarModal" th:action="@{/paciente/citas/cancelar}" method="POST" class="d-flex gap-3 justify-content-center">
+                            <input type="hidden" name="id_cita" id="idCitaModal" value="">
+                            <button type="button" class="app-btn bg-light text-dark border-0 px-4" data-bs-dismiss="modal">No, Mantener</button>
+                            <button type="submit" class="app-btn bg-danger text-white border-0 px-4 shadow-sm">Sí, Cancelar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div th:fragment="scripts">
+            <script>
+                function switchTab(tabId) {
+                    document.querySelectorAll('[data-tab]').forEach(btn => {
+                        btn.style.background = 'transparent';
+                        btn.style.color = 'var(--text-muted)';
+                        btn.classList.remove('shadow-sm');
+                    });
+                    const activeBtn = document.getElementById('btn-' + tabId);
+                    if (activeBtn) {
+                        activeBtn.style.background = 'var(--primary)';
+                        activeBtn.style.color = 'white';
+                        activeBtn.classList.add('shadow-sm');
+                    }
+                    ['proximas', 'completadas', 'canceladas'].forEach(p => {
+                        const el = document.getElementById('panel-' + p);
+                        if (el) el.style.display = 'none';
+                    });
+                    const activePanel = document.getElementById('panel-' + tabId);
+                    if (activePanel) activePanel.style.display = 'block';
+                }
+
+                function confirmarCancelacion(id) {
+                    const input = document.getElementById('idCitaModal');
+                    const modalEl = document.getElementById('cancelarCitaModal');
+                    if (input && modalEl) {
+                        input.value = id;
+                        new bootstrap.Modal(modalEl).show();
+                    }
+                }
+            </script>
+        </div>
+    </div>
+</body>
+</html>
+
+

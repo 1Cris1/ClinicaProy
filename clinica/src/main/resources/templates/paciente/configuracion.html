@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Configuración - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="mb-4">
+            <h4 class="fw-bold mb-1">Configuración</h4>
+            <p class="text-muted small mb-0">Personaliza tu experiencia y gestiona la seguridad de tu cuenta.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <!-- Notificaciones -->
+                <div class="app-card border-0 shadow-sm mb-4">
+                    <div class="app-card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bell-fill text-primary me-2"></i>Preferencias de Notificación</h6>
+                            <span class="app-badge bg-primary-subtle text-primary border-0 small">Personalizable</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center py-4 border-bottom">
+                            <div>
+                                <p class="fw-bold mb-1">Recordatorios de Citas</p>
+                                <p class="text-muted mb-0 small">Recibe un aviso 24h antes de tu cita programada por correo electrónico.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" checked style="width:2.8rem;height:1.4rem;cursor:pointer;">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-4 border-bottom">
+                            <div>
+                                <p class="fw-bold mb-1">Resultados de Laboratorio</p>
+                                <p class="text-muted mb-0 small">Notificación inmediata cuando tus resultados estén listos para descarga.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" checked style="width:2.8rem;height:1.4rem;cursor:pointer;">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-4 border-bottom">
+                            <div>
+                                <p class="fw-bold mb-1">Alertas de Farmacia y Ofertas</p>
+                                <p class="text-muted mb-0 small">Recibe avisos sobre disponibilidad de medicamentos y campañas de salud.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" style="width:2.8rem;height:1.4rem;cursor:pointer;">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-4">
+                            <div>
+                                <p class="fw-bold mb-1">Notificaciones vía WhatsApp</p>
+                                <p class="text-muted mb-0 small">Recibe avisos y confirmaciones directamente a tu nmero móvil.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" style="width:2.8rem;height:1.4rem;cursor:pointer;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seguridad -->
+                <div class="app-card border-0 shadow-sm">
+                    <div class="app-card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                            <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-lock-fill text-primary me-2"></i>Seguridad de la Cuenta</h6>
+                        </div>
+                        
+                        <form id="passwordForm" onsubmit="return false">
+                            <div class="row g-4">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Contraseña Actual</label>
+                                    <input type="password" class="form-control border-0 bg-light p-3 rounded-4 shadow-sm" placeholder="**************************">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Nueva Contraseña</label>
+                                    <input type="password" class="form-control border-0 bg-light p-3 rounded-4 shadow-sm" placeholder="Mínimo 8 caracteres">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1">Repetir Nueva Contraseña</label>
+                                    <input type="password" class="form-control border-0 bg-light p-3 rounded-4 shadow-sm" placeholder="Verifica tu contraseña">
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <button type="button" class="app-btn bg-primary text-white border-0 px-5 shadow-sm" onclick="alert('âœ… Contraseña actualizada correctamente.')">
+                                    Actualizar Seguridad
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="col-lg-4">
+                <div class="app-card border-0 shadow-sm text-center mb-4">
+                    <div class="app-card-body p-4">
+                        <div class="mx-auto mb-3" style="width:64px;height:64px;background:var(--gradient-primary);border-radius:18px;display:flex;align-items:center;justify-content:center;color:#fff;">
+                            <span style="font-size:1.5rem;font-weight:800;" th:text="${pacienteGlobal != null ? #strings.substring(pacienteGlobal.nombres,0,1) + #strings.substring(pacienteGlobal.apellidos,0,1) : 'CP'}">CP</span>
+                        </div>
+                        <h6 class="fw-bold mb-1" th:text="${pacienteGlobal != null ? pacienteGlobal.nombres + ' ' + pacienteGlobal.apellidos : 'Paciente'}">Nombre Paciente</h6>
+                        <p class="text-muted small mb-3" th:text="${pacienteGlobal != null ? pacienteGlobal.email : 'correo@ejemplo.com'}">correo@ejemplo.com</p>
+                        <span class="app-badge" style="background:#DCFCE7; color:#15803D;"><i class="bi bi-patch-check-fill me-1"></i>Cuenta Verificada</span>
+                    </div>
+                </div>
+
+                <div class="app-card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #fff 0%, #fff1f2 100%);">
+                    <div class="app-card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="rounded-circle bg-danger-subtle d-flex align-items-center justify-content-center" style="width:40px;height:40px;color:#dc2626; background: #fee2e2;">
+                                <i class="bi bi-box-arrow-right fs-5"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0 text-danger">Acciones de Sesión</h6>
+                        </div>
+                        <p class="text-muted small mb-4">Al cerrar sesión se limpiará el historial de navegación de forma segura.</p>
+                        <a th:href="@{/}" class="app-btn bg-danger text-white border-0 w-100 shadow-sm">
+                            Cerrar Sesión Activa
+                        </a>
+                    </div>
+                </div>
+
+                <div class="app-card border-0 shadow-sm" style="background: #f8fafc;">
+                    <div class="app-card-body p-4">
+                        <h6 class="fw-bold mb-3 text-dark small text-uppercase letter-spacing-1">Centro de Ayuda</h6>
+                        <div class="d-flex flex-column gap-3">
+                            <a href="tel:016106666" class="text-decoration-none d-flex align-items-center gap-3">
+                                <div class="bg-white border rounded p-2 text-primary shadow-xs"><i class="bi bi-telephone"></i></div>
+                                <span class="small text-muted fw-medium">(01) 610-6666</span>
+                            </a>
+                            <a href="mailto:soporte@clinicx.pe" class="text-decoration-none d-flex align-items-center gap-3">
+                                <div class="bg-white border rounded p-2 text-primary shadow-xs"><i class="bi bi-envelope"></i></div>
+                                <span class="small text-muted fw-medium">soporte@clinicx.pe</span>
+                            </a>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white border rounded p-2 text-success shadow-xs"><i class="bi bi-whatsapp"></i></div>
+                                <span class="small text-muted fw-medium">+51 999 888 777</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+    </div>
+</body>
+</html>
+
+
+

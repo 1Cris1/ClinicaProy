@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Historial Clínico - ClinicX</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="fw-bold mb-1">Historial Clínico</h4>
+                <p class="text-muted small mb-0">Registro completo y cronológico de tus atenciones médicas.</p>
+            </div>
+            <select class="form-select border-0 shadow-sm rounded-pill px-3" style="width:auto; font-size:.85rem; background: var(--bg-light);">
+                <option>Filtrar por año (2026)</option>
+                <option>2025</option>
+                <option>Ver todo el historial</option>
+            </select>
+        </div>
+
+        <div class="app-card border-0 shadow-sm">
+            <div class="app-card-body p-4 p-md-5">
+                <div class="cx-timeline">
+                    <!-- Timeline Item -->
+                    <div th:each="cita : ${atenciones}" class="cx-timeline-item mb-4 pb-4 border-bottom last-border-0">
+                        <div class="row align-items-center g-3">
+                            <div class="col-auto">
+                                <div class="rounded-pill d-flex flex-column align-items-center justify-content-center text-center" style="width:70px; height:70px; background:var(--bg-light);">
+                                    <div class="fw-bold text-primary" th:text="${#temporals.format(cita.fechaCita, 'dd')}">08</div>
+                                    <div class="text-uppercase fw-bold opacity-50" style="font-size: .65rem;" th:text="${#temporals.format(cita.fechaCita, 'MMM')}">ABR</div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                                    <div>
+                                        <h6 class="fw-bold mb-1 fs-5" th:text="${'Consulta: ' + cita.medico.especialidad.nombre}">Consulta Especializada</h6>
+                                        <p class="text-primary fw-medium mb-0" th:text="${'Dr/Dra. ' + cita.medico.nombres + ' ' + cita.medico.apellidos}">Médico</p>
+                                    </div>
+                                    <span class="app-badge" style="background:#DCFCE7; color:#15803D;">Completada</span>
+                                </div>
+                                <p class="text-muted small mb-3"><i class="bi bi-geo-alt me-1"></i> <span th:text="${'Sede ' + cita.medico.sede.nombre + (cita.medico.consultorio != null ? ' - Consultorio ' + cita.medico.consultorio : '')}">Sede</span></p>
+                                
+                                <div class="p-3 rounded-4 bg-light" style="font-size:.9rem; line-height: 1.6;">
+                                    <span class="fw-bold text-dark d-block mb-1" style="font-size: .75rem; text-transform: uppercase; letter-spacing: 0.5px;"><i class="bi bi-journal-text me-1"></i> Observaciones Médicas</span>
+                                    <p class="mb-0 italic" th:if="${cita.notasMedicas != null and !cita.notasMedicas.isEmpty()}" th:text="${cita.notasMedicas}">El paciente presenta una evolución favorable...</p>
+                                    <p class="mb-0 text-muted opacity-50" th:if="${cita.notasMedicas == null or cita.notasMedicas.isEmpty()}">El médico no registró notas adicionales para esta atención.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div th:if="${atenciones == null or #lists.isEmpty(atenciones)}" class="text-center py-5">
+                        <div class="opacity-10 mb-4" style="font-size:5rem;"><i class="bi bi-clock-history"></i></div>
+                        <h5 class="fw-bold text-dark">Historial sin registros</h5>
+                        <p class="text-muted small mb-4">An no cuentas con atenciones finalizadas. Tu historial se actualizará tras tu primera consulta.</p>
+                        <a th:href="@{/paciente/agendar}" class="app-btn bg-primary text-white border-0 px-4">Agendar mi primera cita</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
