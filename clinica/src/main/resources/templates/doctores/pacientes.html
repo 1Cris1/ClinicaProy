@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Mis Pacientes - Médico</title></head>
+<body>
+<div th:fragment="cuerpo">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h5 class="fw-bold mb-1">Mis Pacientes</h5>
+            <p class="text-muted small mb-0">
+                <span th:text="${totalPacientes}">0</span> pacientes registrados en tu historial
+            </p>
+        </div>
+    </div>
+
+    <!-- Con pacientes -->
+    <div class="doc-card" th:if="${!pacientes.isEmpty()}">
+        <div class="doc-card-body p-0">
+            <table class="doc-table">
+                <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>DNI</th>
+                        <th>Teléfono</th>
+                        <th>Correo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="pac : ${pacientes}">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:34px;height:34px;background:linear-gradient(135deg,#0D9488,#2DD4BF);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <span style="font-size:.75rem;font-weight:700;color:#fff;"
+                                          th:text="${#strings.substring(pac.nombres,0,1) + #strings.substring(pac.apellidos,0,1)}">PP</span>
+                                </div>
+                                <div>
+                                    <p class="fw-bold mb-0 small" th:text="${pac.nombres + ' ' + pac.apellidos}">Nombre</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td th:text="${pac.dni}">-</td>
+                        <td th:text="${pac.telefono != null ? pac.telefono : '-'}">-</td>
+                        <td th:text="${pac.email != null ? pac.email : '-'}">-</td>
+                        <td>
+                            <span class="doc-badge-status"
+                                  th:text="${pac.estado != null ? pac.estado : 'Activo'}"
+                                  style="background:#D1FAE5;color:#059669;"></span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sin pacientes -->
+    <div th:if="${pacientes.isEmpty()}" class="doc-card text-center py-5">
+        <i class="bi bi-people text-muted" style="font-size:2.5rem;"></i>
+        <p class="text-muted mt-3">An no tienes pacientes registrados en tu historial.</p>
+    </div>
+
+</div>
+</body>
+</html>
+
+
+

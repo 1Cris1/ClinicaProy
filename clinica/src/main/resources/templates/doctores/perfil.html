@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Mi Perfil - Médico</title></head>
+<body>
+<div th:fragment="cuerpo">
+
+    <div class="row g-4">
+        <!-- Card de Perfil -->
+        <div class="col-lg-4">
+            <div class="doc-card text-center">
+                <div class="doc-card-body py-4">
+                    <div class="mx-auto mb-3" style="width:80px;height:80px;background:linear-gradient(135deg,#0F766E,#0D9488);border-radius:20px;display:flex;align-items:center;justify-content:center;">
+                        <span style="font-size:2rem;font-weight:700;color:#fff;"
+                              th:text="${medico != null ? #strings.substring(medico.nombres,0,1) : 'M'}">M</span>
+                    </div>
+                    <h5 class="fw-bold mb-1" th:text="${medico != null ? 'Dr. ' + medico.nombres + ' ' + medico.apellidos : 'Dr. -'}">Dr.nombre</h5>
+                    <p class="text-muted small mb-1" th:text="${medico?.especialidad?.nombre}">Especialidad</p>
+                    <span class="doc-badge-status" style="background:#D1FAE5;color:#059669;"
+                          th:text="${medico?.estado != null ? medico.estado : 'Activo'}">Activo</span>
+                    <hr class="my-3">
+                    <div class="text-start small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">CMP</span>
+                            <span class="fw-bold" th:text="${medico?.cmp}">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">DNI</span>
+                            <span th:text="${medico?.dni}">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Sede</span>
+                            <span th:text="${medico?.sede?.nombre}">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Consultorio</span>
+                            <span th:text="${medico?.consultorio}">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Ingreso</span>
+                            <span th:text="${medico?.anioIngreso}">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Professional -->
+        <div class="col-lg-8">
+            <div class="doc-card mb-3">
+                <div class="doc-card-header"><h6 class="fw-bold mb-0" style="font-size:.85rem;"><i class="bi bi-person-badge me-1"></i>Información de Contacto</h6></div>
+                <div class="doc-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted fw-bold">Teléfono</label>
+                            <input type="text" class="form-control form-control-sm" readonly
+                                   th:value="${medico?.telefono != null ? medico.telefono : '-'}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted fw-bold">Correo Electrónico</label>
+                            <input type="text" class="form-control form-control-sm" readonly
+                                   th:value="${medico?.email != null ? medico.email : medico?.usuario?.email}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-card">
+                <div class="doc-card-header d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0" style="font-size:.85rem;"><i class="bi bi-clock me-1"></i>Horarios de Atención (Turnos)</h6>
+                    <span th:if="${param.success}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Actualizado</span>
+                </div>
+                <div class="doc-card-body">
+                    <form th:action="@{/medico/horario/actualizar}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-bold">Lunes a Viernes</label>
+                                <input type="text" name="horarioLv" class="form-control form-control-sm border-primary-subtle" placeholder="Ej: 08:00 AM - 02:00 PM o No disponible"
+                                       th:value="${medico?.horarioLv != null ? (medico.horarioLv == 'No disponible' ? '' : medico.horarioLv) : ''}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-bold">Sábados</label>
+                                <input type="text" name="horarioSabado" class="form-control form-control-sm border-primary-subtle" placeholder="Ej: 09:00 AM - 01:00 PM o No disponible"
+                                       th:value="${medico?.horarioSabado != null ? (medico.horarioSabado == 'No disponible' ? '' : medico.horarioSabado) : ''}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-bold">Duración por Cita (minutos)</label>
+                                <select name="duracionCita" class="form-select form-select-sm border-primary-subtle">
+                                    <option value="15" th:selected="${medico?.duracionCita == 15}">15 minutos</option>
+                                    <option value="20" th:selected="${medico?.duracionCita == 20}">20 minutos</option>
+                                    <option value="30" th:selected="${medico?.duracionCita == 30}">30 minutos</option>
+                                    <option value="45" th:selected="${medico?.duracionCita == 45}">45 minutos</option>
+                                    <option value="60" th:selected="${medico?.duracionCita == 60}">60 minutos</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-bold">Satisfacción</label>
+                                <input type="text" class="form-control form-control-sm bg-light" readonly
+                                       th:value="${medico?.satisfaccion != null ? medico.satisfaccion + '/5.0' : '-'}">
+                            </div>
+                            <div class="col-12 mt-3 text-end">
+                                <button type="submit" class="btn btn-sm btn-primary px-4 fw-bold shadow-sm rounded-pill">
+                                    <i class="bi bi-save me-1"></i> Guardar Turnos
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
+
+
+
