@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Entrada de Resultados - Laboratorio</title></head>
+<body>
+<div th:fragment="cuerpo">
+    <div id="appLaboratorio">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a th:href="@{/laboratorio/gestion}" class="btn btn-sm btn-light mb-2"><i class="bi bi-arrow-left"></i> Volver</a>
+                <h4 class="fw-bold mb-1">Entrada de Resultados: Orden <span th:text="${'#' + orden.id}">#0</span></h4>
+                <p class="text-muted small mb-0">Paciente: <strong th:text="${orden.paciente.nombres + ' ' + orden.paciente.apellidos}"></strong></p>
+            </div>
+            <div>
+                <span class="badge rounded-pill bg-light text-dark border p-2 px-3">
+                    Prioridad: <span th:text="${orden.prioridad}" th:classappend="${orden.prioridad == 'STAT' ? 'text-danger fw-bold' : ''}">Normal</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold mb-0">Resultados de Exámenes</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead class="bg-light small text-muted">
+                                <tr>
+                                    <th class="ps-4">Examen</th>
+                                    <th>Valor</th>
+                                    <th>Unidades</th>
+                                    <th>Rango Referencia</th>
+                                    <th class="pe-4 text-end">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="det : ${detalles}">
+                                    <td class="ps-4">
+                                        <span class="fw-bold" th:text="${det.examen.nombre}">Glucosa</span>
+                                        <small class="d-block text-muted" th:text="${det.examen.categoria}">Bioquímica</small>
+                                    </td>
+                                    <td style="width: 150px;">
+                                        <input type="number" step="0.01" class="form-control form-control-sm" 
+                                               th:value="${det.valor}" 
+                                               th:data-min="${det.examen.rangoMin}" 
+                                               th:data-max="${det.examen.rangoMax}"
+                                               oninput="validateRange(this)">
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm">
+                                            <option th:text="${det.examen.unidadMedida}" selected></option>
+                                            <option>mg/dL</option>
+                                            <option>mmol/L</option>
+                                            <option>g/L</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted" th:text="${det.examen.rangoMin + ' - ' + det.examen.rangoMax + ' ' + det.examen.unidadMedida}">70-110 mg/dL</small>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <span class="range-indicator badge rounded-pill bg-success-subtle text-success">Normal</span>
+                                    </td>
+                                </tr>
+                                <!-- Si no hay detalles, permitir agregar -->
+                                <tr th:if="${#lists.isEmpty(detalles)}">
+                                    <td colspan="5" class="text-center py-4">
+                                        <p class="text-muted mb-2">No hay exámenes asociados a esta orden.</p>
+                                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addExamenModal">
+                                            <i class="bi bi-plus-lg"></i> Agregar Examen
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <label class="form-label fw-bold small text-muted">Observaciones del Patólogo / Técnico</label>
+                        <textarea class="form-control border-light bg-light" rows="3" placeholder="Ej: Muestra hemolizada, repetir toma..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 2rem;">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Acciones de Orden</h6>
+                        <button class="btn btn-primary w-100 mb-2" onclick="saveResults()">
+                            <i class="bi bi-cloud-check me-2"></i>Guardar Cambios
+                        </button>
+                        <button class="btn btn-success w-100 mb-2" onclick="validateAndNotify()">
+                            <i class="bi bi-check-all me-2"></i>Validar y Notificar
+                        </button>
+                        <hr>
+                        <button class="btn btn-outline-danger w-100">
+                            <i class="bi bi-x-circle me-2"></i>Anular Orden
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar examen -->
+    <div class="modal fade" id="addExamenModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Añadir Examen a Orden</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <select class="form-select" id="examSelect">
+                        <option value="">Seleccione un examen...</option>
+                        <option th:each="c : ${catalogo}" th:value="${c.id}" th:text="${c.nombre + ' (' + c.categoria + ')'}"></option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="addExamen()">Añadir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:fragment="scripts">
+    <script>
+        function validateRange(input) {
+            const val = parseFloat(input.value);
+            const min = parseFloat(input.getAttribute('data-min'));
+            const max = parseFloat(input.getAttribute('data-max'));
+            const indicator = input.closest('tr').querySelector('.range-indicator');
+
+            if (isNaN(val)) {
+                indicator.textContent = 'Pendiente';
+                indicator.className = 'range-indicator badge rounded-pill bg-light text-muted';
+                input.classList.remove('is-invalid');
+                return;
+            }
+
+            if (val < min || val > max) {
+                indicator.textContent = 'Anormal';
+                indicator.className = 'range-indicator badge rounded-pill bg-danger-subtle text-danger';
+                input.classList.add('is-invalid');
+                input.style.color = 'red';
+            } else {
+                indicator.textContent = 'Normal';
+                indicator.className = 'range-indicator badge rounded-pill bg-success-subtle text-success';
+                input.classList.remove('is-invalid');
+                input.style.color = 'inherit';
+            }
+        }
+
+        function saveResults() {
+            // Implementar lógica de guardado vía API
+            alert('Resultados guardados (Simulación)');
+        }
+
+        function validateAndNotify() {
+            // Implementar lógica de validación y notificación vía WebSocket
+            alert('Orden validada. Notificación enviada al médico.');
+        }
+
+        // Inicializar validaciones existentes
+        document.querySelectorAll('input[type="number"]').forEach(validateRange);
+    </script>
+</th:block>
+</body>
+</html>

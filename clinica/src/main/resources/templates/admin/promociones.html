@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Promociones - ClinicX Admin</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h4 class="fw-bold mb-0">Gestión de Promociones</h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge" style="background:var(--ad-primary);color:#fff;padding:.5rem 1rem;" th:text="${totalPromociones} + ' promociones'">0 promociones</span>
+                <button class="btn rounded-pill px-4 fw-bold shadow-sm btn-sm" style="background:var(--ad-primary);color:#fff;" data-bs-toggle="modal" data-bs-target="#modalNuevaPromocion">
+                    <i class="bi bi-plus-lg me-1"></i> Nueva Promoción
+                </button>
+            </div>
+        </div>
+        <div class="ad-card">
+            <div class="ad-card-body p-0">
+                <table class="ad-table" th:if="${!promociones.isEmpty()}">
+                    <thead><tr><th>Título</th><th>Descripción</th><th>Descuento</th><th>Vigencia</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                        <tr th:each="p : ${promociones}">
+                            <td class="fw-bold" th:text="${p.titulo}">-</td>
+                            <td class="text-muted" th:text="${p.descripcion != null} ? ${p.descripcion} : '-'">-</td>
+                            <td>
+                                <span class="badge" style="background:#D1FAE5;color:#059669;" th:if="${p.descuentoPorcentaje != null}" th:text="${p.descuentoPorcentaje} + '% OFF'">-</span>
+                                <span class="text-muted" th:if="${p.descuentoPorcentaje == null}">-</span>
+                            </td>
+                            <td class="text-muted small">
+                                <span th:if="${p.fechaInicio != null and p.fechaFin != null}" 
+                                      th:text="${p.fechaInicio.format(T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy'))} + ' - ' + ${p.fechaFin.format(T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy'))}">-</span>
+                                <span th:if="${p.fechaInicio == null or p.fechaFin == null}">-</span>
+                            </td>
+                            <td>
+                                <span class="ad-badge-status"
+                                      th:text="${p.estado != null} ? ${p.estado} : 'Activo'"
+                                      th:style="${p.estado == 'Activo'} ? 'background:#D1FAE5;color:#059669;' : (${p.estado == 'Programada'} ? 'background:#FEF3C7;color:#D97706;' : 'background:#E5E7EB;color:#6B7280;')">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#modalEditarPromocion" th:attr="data-id=${p.id}, data-titulo=${p.titulo}, data-descripcion=${p.descripcion}, data-descuento=${p.descuentoPorcentaje}, data-fechaInicio=${p.fechaInicio}, data-fechaFin=${p.fechaFin}, data-estado=${p.estado}, data-imagenUrl=${p.imagenUrl}" onclick="cargarDatosPromocion(this)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger rounded-circle" data-bs-toggle="modal" data-bs-target="#modalEliminarPromocion" th:attr="data-id=${p.id}, data-titulo=${p.titulo}" onclick="cargarEliminarPromocion(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${promociones.isEmpty()}" class="text-center py-5">
+                    <i class="bi bi-tag" style="font-size:3rem;color:var(--ad-muted);"></i>
+                    <p class="text-muted mt-3">No hay promociones registradas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nueva Promoción -->
+        <div class="modal fade" id="modalNuevaPromocion" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Nueva Promoción</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/promociones/nuevo}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Título de la Promoción</label>
+                                <input name="titulo" class="form-control ad-input" placeholder="Ej: 20% OFF en Medicamentos" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Descuento (%)</label>
+                                <input name="descuentoPorcentaje" type="number" step="0.01" min="0" max="100" class="form-control ad-input" placeholder="Ej: 20">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Descripción</label>
+                                <textarea name="descripcion" class="form-control ad-input" rows="2" placeholder="Ej: Descuento especial en medicamentos para diabéticos"></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fecha Inicio</label>
+                                <input name="fechaInicio" type="date" class="form-control ad-input">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fecha Fin</label>
+                                <input name="fechaFin" type="date" class="form-control ad-input">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" class="form-select ad-input">
+                                    <option value="Activo">Activo</option>
+                                    <option value="Programada">Programada</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Imagen (opcional)</label>
+                                <input type="hidden" name="imagenUrl" id="imagenUrlPromoNuevo">
+                                <div class="upload-area" id="uploadAreaPromoNuevo" onclick="document.getElementById('filePromoNuevo').click()" style="border:2px dashed #ddd;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all 0.3s;background:#fafafa;">
+                                    <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#666;"></i>
+                                    <p class="mb-1 small text-muted">Arrastra una imagen aquí o haz clic</p>
+                                    <p class="mb-0 small text-muted" style="font-size:0.7rem;">PNG, JPG, GIF hasta 5MB</p>
+                                </div>
+                                <input type="file" id="filePromoNuevo" accept="image/*" style="display:none;" onchange="handleUploadPromo(this, 'imagenUrlPromoNuevo', 'previewPromoNuevo')">
+                                <div id="previewPromoNuevo" style="display:none;margin-top:10px;">
+                                    <img src="" style="max-height:100px;border-radius:8px;">
+                                    <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="removeImage('imagenUrlPromoNuevo', 'previewPromoNuevo')">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Registrar</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Editar Promoción -->
+        <div class="modal fade" id="modalEditarPromocion" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Promoción</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/promociones/editar}" method="post">
+                        <input type="hidden" name="id" id="editId">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Título de la Promoción</label>
+                                <input name="titulo" id="editTitulo" class="form-control ad-input" placeholder="Ej: 20% OFF en Medicamentos" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Descuento (%)</label>
+                                <input name="descuentoPorcentaje" id="editDescuento" type="number" step="0.01" min="0" max="100" class="form-control ad-input" placeholder="Ej: 20">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Descripción</label>
+                                <textarea name="descripcion" id="editDescripcion" class="form-control ad-input" rows="2" placeholder="Ej: Descuento especial en medicamentos para diabéticos"></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fecha Inicio</label>
+                                <input name="fechaInicio" id="editFechaInicio" type="date" class="form-control ad-input">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Fecha Fin</label>
+                                <input name="fechaFin" id="editFechaFin" type="date" class="form-control ad-input">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" id="editEstado" class="form-select ad-input">
+                                    <option value="Activo">Activo</option>
+                                    <option value="Programada">Programada</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Imagen (opcional)</label>
+                                <input type="hidden" name="imagenUrl" id="imagenUrlPromoEdit">
+                                <div class="upload-area" id="uploadAreaPromoEdit" onclick="document.getElementById('filePromoEdit').click()" style="border:2px dashed #ddd;border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all 0.3s;background:#fafafa;">
+                                    <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:#666;"></i>
+                                    <p class="mb-1 small text-muted">Arrastra una imagen aquí o haz clic</p>
+                                    <p class="mb-0 small text-muted" style="font-size:0.7rem;">PNG, JPG, GIF hasta 5MB</p>
+                                </div>
+                                <input type="file" id="filePromoEdit" accept="image/*" style="display:none;" onchange="handleUploadPromo(this, 'imagenUrlPromoEdit', 'previewPromoEdit')">
+                                <div id="previewPromoEdit" style="display:none;margin-top:10px;">
+                                    <img src="" style="max-height:100px;border-radius:8px;">
+                                    <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="removeImage('imagenUrlPromoEdit', 'previewPromoEdit')">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Guardar Cambios</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Eliminar Promoción -->
+        <div class="modal fade" id="modalEliminarPromocion" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Eliminar Promoción</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p>Â¿Está seguro de eliminar la promoción <strong id="eliminarNombre"></strong>?</p>
+                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <a id="btnConfirmarEliminar" class="btn btn-danger rounded-pill px-4 fw-bold btn-sm">
+                        <i class="bi bi-trash me-1"></i> Eliminar
+                    </a>
+                </div>
+            </div></div>
+        </div>
+
+        
+    </div>
+</body>
+</html>
+
+

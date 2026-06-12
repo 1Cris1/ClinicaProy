@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Salud - ClinicX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/paciente.css}">
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="app-sidebar cx-sidebar" id="sidebar">
+        <div class="app-sidebar-brand">
+            <div class="brand-icon">C</div>
+            <div>
+                <div class="brand-text">ClinicX</div>
+                <div class="brand-sub" style="font-size: .6rem; color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Mi Salud</div>
+            </div>
+        </div>
+
+        <div class="app-sidebar-user">
+            <div class="avatar" th:text="${pacienteGlobal != null ? #strings.substring(pacienteGlobal.nombres,0,1) + #strings.substring(pacienteGlobal.apellidos,0,1) : 'P'}">LF</div>
+            <div>
+                <p class="user-name" th:text="${pacienteGlobal != null ? pacienteGlobal.nombres + ' ' + pacienteGlobal.apellidos : 'Paciente'}">Luis Flores</p>
+                <p class="user-role" th:text="${pacienteGlobal != null ? 'DNI: ' + pacienteGlobal.dni : 'DNI:'}">DNI: 75695322</p>
+            </div>
+        </div>
+
+        <div class="app-sidebar-nav">
+            <div class="app-sidebar-label">Principal</div>
+            <a th:href="@{/paciente/inicio}" th:class="${#strings.contains(view, 'dashboard')} ? 'app-nav-link active' : 'app-nav-link'" data-page="inicio">
+                <i class="bi bi-grid-1x2-fill"></i> Panel
+            </a>
+            <a th:href="@{/paciente/citas}" th:class="${#strings.contains(view, 'citas')} ? 'app-nav-link active' : 'app-nav-link'" data-page="citas">
+                <i class="bi bi-calendar-event-fill"></i> Mis Citas
+                <span class="badge rounded-pill bg-primary ms-auto" style="font-size: .65rem;" th:if="${citasPendientesCount != null and citasPendientesCount > 0}" th:text="${citasPendientesCount}">2</span>
+            </a>
+            <a th:href="@{/paciente/agendar}" th:class="${#strings.contains(view, 'agendar')} ? 'app-nav-link active' : 'app-nav-link'" data-page="agendar">
+                <i class="bi bi-calendar-plus-fill"></i> Agendar Cita
+            </a>
+
+            <div class="app-sidebar-label mt-3">Salud</div>
+            <a th:href="@{/paciente/farmacia}" th:class="${#strings.contains(view, 'farmacia')} ? 'app-nav-link active' : 'app-nav-link'" data-page="farmacia">
+                <i class="bi bi-cart-plus-fill"></i> Farmacia y Ofertas
+                <span class="badge rounded-pill bg-danger ms-auto" style="font-size: .6rem;">Ofertas</span>
+            </a>
+            <a th:href="@{/paciente/resultados}" th:class="${#strings.contains(view, 'resultados')} ? 'app-nav-link active' : 'app-nav-link'" data-page="resultados">
+                <i class="bi bi-clipboard2-pulse-fill"></i> Resultados
+                <span class="badge rounded-pill bg-info ms-auto" style="font-size: .6rem;" th:if="${resultadosListosCount != null and resultadosListosCount > 0}" th:text="${resultadosListosCount}">1</span>
+            </a>
+            <a th:href="@{/paciente/recetas}" th:class="${#strings.contains(view, 'recetas')} ? 'app-nav-link active' : 'app-nav-link'" data-page="recetas">
+                <i class="bi bi-capsule"></i> Recetas Médicas
+            </a>
+            <a th:href="@{/paciente/historial}" th:class="${#strings.contains(view, 'historial')} ? 'app-nav-link active' : 'app-nav-link'" data-page="historial">
+                <i class="bi bi-clock-history"></i> Historial Clínico
+            </a>
+
+            <div class="app-sidebar-label mt-3">Cuenta</div>
+            <a th:href="@{/paciente/perfil}" th:class="${#strings.contains(view, 'perfil')} ? 'app-nav-link active' : 'app-nav-link'" data-page="perfil">
+                <i class="bi bi-person-fill"></i> Mi Perfil
+            </a>
+            <a th:href="@{/paciente/configuracion}" th:class="${#strings.contains(view, 'configuracion')} ? 'app-nav-link active' : 'app-nav-link'" data-page="configuracion">
+                <i class="bi bi-gear-fill"></i> Configuración
+            </a>
+        </div>
+
+        <div class="app-sidebar-footer">
+            <a th:href="@{/}" class="app-nav-link text-danger">
+                <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+            </a>
+        </div>
+    </aside>
+
+    <div class="app-main">
+        <header class="app-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+                <h1 class="page-title mb-0 fw-bold" style="font-size: 1.1rem; color: #1F2937;" th:text="${pageTitle}">Panel</h1>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Notificaciones Dropdown -->
+                <div class="dropdown">
+                    <div class="btn-icon bg-white border rounded-3 p-2 d-flex align-items-center justify-content-center dropdown-toggle" id="notifBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notificaciones" style="width: 40px; height: 40px; color: #6B7280; cursor:pointer;">
+                        <i class="bi bi-bell"></i>
+                        <div class="notif-dot" th:if="${unreadNotifCount != null and unreadNotifCount > 0}" style="position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; background: #8B5CF6; border-radius: 50%; border: 2px solid white;"></div>
+                    </div>
+                    <div class="dropdown-menu dropdown-menu-end notif-dropdown" aria-labelledby="notifBtn">
+                        <div class="notif-header">
+                            <h6 class="mb-0 fw-bold">Notificaciones</h6>
+                            <span class="badge bg-primary rounded-pill small" th:text="${unreadNotifCount} + ' nuevas'">2 nuevas</span>
+                        </div>
+                        <div style="max-height: 350px; overflow-y: auto;">
+                            <!-- Recorrer notificaciones -->
+                            <div th:each="n : ${notificacionesGlobal}">
+                                <a href="#" class="notif-item" th:classappend="${!n.leida ? 'unread' : ''}">
+                                    <div class="notif-icon">
+                                        <i class="bi" th:classappend="${n.icono ?: 'bi-bell'}"></i>
+                                    </div>
+                                    <div class="notif-content">
+                                        <p class="mb-1 small" th:text="${n.mensaje}">Tu receta médica está lista para descargar.</p>
+                                        <span class="notif-time" th:text="${#temporals.format(n.fecha, 'dd/MM/yyyy HH:mm')}">Hace 5 min</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <!-- Empty state -->
+                            <div th:if="${#lists.isEmpty(notificacionesGlobal)}" class="p-4 text-center">
+                                <i class="bi bi-bell-slash text-muted display-6 d-block mb-2"></i>
+                                <p class="text-muted small mb-0">No tienes notificaciones</p>
+                            </div>
+                        </div>
+                        <div class="p-2 border-top text-center" th:if="${!#lists.isEmpty(notificacionesGlobal)}">
+                            <a href="#" class="btn btn-link btn-sm small text-decoration-none fw-bold">Marcar todas como leídas</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-icon bg-white border rounded-3 p-2 d-flex align-items-center justify-content-center" id="helpBtn" title="Ayuda" style="width: 40px; height: 40px; color: #6B7280; cursor: pointer;">
+                    <i class="bi bi-question-circle"></i>
+                </div>
+                <div class="d-flex align-items-center gap-2 ms-2 d-none d-md-flex p-1 px-2 rounded-pill bg-white border">
+                    <div style="width:32px;height:32px;background:linear-gradient(135deg,#8B5CF6,#A78BFA);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.7rem;" th:text="${pacienteGlobal != null ? #strings.substring(pacienteGlobal.nombres,0,1) + #strings.substring(pacienteGlobal.apellidos,0,1) : 'P'}">LF</div>
+                    <div class="pe-1">
+                        <p class="mb-0 fw-bold" style="font-size:.75rem;line-height:1.2;" th:text="${pacienteGlobal != null ? pacienteGlobal.nombres : 'Paciente'}">Luis</p>
+                        <p class="mb-0" style="font-size:.65rem;color:#6B7280;">Paciente</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-content">
+            <div th:replace="~{ ${view} :: cuerpo }"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/vue.min.js}"></script>
+    <script th:src="@{/js/common.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <!-- Fragmento para scripts específicos de cada página -->
+    <th:block th:if="${view != null}">
+        <div th:replace="~{ ${view} :: scripts } ?: ~{}"></div>
+    </th:block>
+</body>
+</html>
+

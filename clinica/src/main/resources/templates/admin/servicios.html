@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Servicios - ClinicX Admin</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h4 class="fw-bold mb-0">Gestión de Servicios</h4>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge" style="background:var(--ad-primary);color:#fff;padding:.5rem 1rem;" th:text="${totalServicios} + ' servicios'">0 servicios</span>
+                <button class="btn rounded-pill px-4 fw-bold shadow-sm btn-sm" style="background:var(--ad-primary);color:#fff;" data-bs-toggle="modal" data-bs-target="#modalNuevoServicio">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar Servicio
+                </button>
+            </div>
+        </div>
+        <div class="ad-card">
+            <div class="ad-card-body p-0">
+                <table class="ad-table" th:if="${!servicios.isEmpty()}">
+                    <thead><tr><th>Servicio</th><th>Especialidad</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                        <tr th:each="s : ${servicios}">
+                            <td class="fw-bold" th:text="${s.nombre}">-</td>
+                            <td th:text="${s.especialidad != null} ? ${s.especialidad.nombre} : '-'">-</td>
+                            <td th:text="'S/ ' + ${#numbers.formatDecimal(s.precio, 1, 2)}">S/ 0.00</td>
+                            <td>
+                                <span class="ad-badge-status"
+                                      th:text="${s.estado != null} ? ${s.estado} : 'Activo'"
+                                      th:style="${s.estado == 'Activo'} ? 'background:#D1FAE5;color:#059669;' : 'background:#E5E7EB;color:#6B7280;'">
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" data-bs-toggle="modal" data-bs-target="#modalEditarServicio" th:attr="data-id=${s.id}, data-nombre=${s.nombre}, data-descripcion=${s.descripcion}, data-precio=${s.precio}, data-especialidad=${s.especialidad != null ? s.especialidad.id : ''}, data-estado=${s.estado}" onclick="cargarDatosServicio(this)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger rounded-circle" data-bs-toggle="modal" data-bs-target="#modalEliminarServicio" th:attr="data-id=${s.id}, data-nombre=${s.nombre}" onclick="cargarEliminarServicio(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${servicios.isEmpty()}" class="text-center py-5">
+                    <i class="bi bi-briefcase" style="font-size:3rem;color:var(--ad-muted);"></i>
+                    <p class="text-muted mt-3">No hay servicios registrados</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Nuevo Servicio -->
+        <div class="modal fade" id="modalNuevoServicio" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Registrar Nuevo Servicio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/servicios/nuevo}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Nombre del Servicio</label>
+                                <input name="nombre" class="form-control ad-input" placeholder="Ej: Consulta General" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Precio (S/)</label>
+                                <input name="precio" type="number" step="0.01" min="0" class="form-control ad-input" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Especialidad</label>
+                                <select name="especialidadId" class="form-select ad-input" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option th:each="e : ${especialidades}" th:value="${e.id}" th:text="${e.nombre}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" class="form-select ad-input">
+                                    <option value="Activo" selected>Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Descripción</label>
+                                <textarea name="descripcion" class="form-control ad-input" rows="2" placeholder="Descripción del servicio"></textarea>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Registrar</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Editar Servicio -->
+        <div class="modal fade" id="modalEditarServicio" tabindex="-1">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Servicio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form th:action="@{/admin/servicios/editar}" method="post">
+                        <input type="hidden" name="id" id="editId">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Nombre del Servicio</label>
+                                <input name="nombre" id="editNombre" class="form-control ad-input" placeholder="Ej: Consulta General" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Precio (S/)</label>
+                                <input name="precio" id="editPrecio" type="number" step="0.01" min="0" class="form-control ad-input" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Especialidad</label>
+                                <select name="especialidadId" id="editEspecialidad" class="form-select ad-input" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option th:each="e : ${especialidades}" th:value="${e.id}" th:text="${e.nombre}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Estado</label>
+                                <select name="estado" id="editEstado" class="form-select ad-input">
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Descripción</label>
+                                <textarea name="descripcion" id="editDescripcion" class="form-control ad-input" rows="2" placeholder="Descripción del servicio"></textarea>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:var(--ad-primary);color:#fff;">Guardar Cambios</button>
+                </div>
+                    </form>
+            </div></div>
+        </div>
+
+        <!-- Modal Eliminar Servicio -->
+        <div class="modal fade" id="modalEliminarServicio" tabindex="-1">
+            <div class="modal-dialog"><div class="modal-content" style="border-radius:var(--ad-radius);border:none;">
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Eliminar Servicio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p>Â¿Está seguro de eliminar el servicio <strong id="eliminarNombre"></strong>?</p>
+                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <a id="btnConfirmarEliminar" class="btn btn-danger rounded-pill px-4 fw-bold btn-sm">
+                        <i class="bi bi-trash me-1"></i> Eliminar
+                    </a>
+                </div>
+            </div></div>
+        </div>
+
+        
+    </div>
+</body>
+</html>
+
+

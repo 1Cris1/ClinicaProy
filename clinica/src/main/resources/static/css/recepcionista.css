@@ -1,0 +1,144 @@
+/* =========================================
+   ClinicX — PORTAL RECEPCIÓN
+   RECEPTIONIST SPECIFIC STYLES
+   ========================================= */
+
+:root {
+    --rc-sidebar-w: 270px;
+    --rc-bg: #1E1B4B;
+    --rc-hover: rgba(255,255,255,.08);
+    --rc-active: rgba(255,255,255,.15);
+    --rc-primary: #A78BFA;
+    --rc-primary-light: #C4B5FD;
+    --rc-surface: #F8FAFC;
+    --rc-text: #FFFFFF;
+    --rc-muted: rgba(255,255,255,.6);
+    --rc-border: rgba(255,255,255,.1);
+    --rc-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    --rc-radius: 1rem;
+    --rc-transition: .3s cubic-bezier(.4,0,.2,1);
+    --rc-gradient: linear-gradient(180deg, #1E1B4B 0%, #0F172A 100%);
+}
+
+
+/* SIDEBAR OVERRIDES */
+.rc-sidebar {
+    position: fixed; top: 0; left: 0;
+    width: var(--rc-sidebar-w); height: 100vh;
+    background: var(--rc-gradient); color: var(--rc-text);
+    display: flex; flex-direction: column; overflow-y: auto;
+    z-index: 1040; transition: transform var(--rc-transition);
+    box-shadow: 4px 0 24px rgba(0,0,0,.3);
+}
+
+.rc-nav-link {
+    display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem;
+    margin: 0.2rem 0.75rem;
+    border-radius: 12px; color: rgba(255,255,255,.7); text-decoration: none;
+    font-size: .875rem; font-weight: 500; transition: var(--rc-transition);
+    position: relative;
+}
+.rc-nav-link:hover { background: var(--rc-hover); color: #fff; transform: translateX(4px); }
+.rc-nav-link.active { background: var(--rc-active); color: #fff; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15); }
+.rc-nav-link.active i { color: var(--rc-primary); }
+.rc-nav-link.active::before {
+    content: ''; position: absolute; left: -8px; top: 25%; height: 50%; width: 4px;
+    background: var(--rc-primary); border-radius: 0 4px 4px 0; box-shadow: 0 0 10px var(--rc-primary);
+}
+
+
+.rc-badge {
+    margin-left: auto; background: #EF4444; color: #fff;
+    font-size: .65rem; padding: 2px 7px; border-radius: 50px; font-weight: 700;
+}
+
+.sidebar-logout {
+    background: rgba(239, 68, 68, 0.1);
+    color: #FDA4AF !important; 
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    transition: all 0.3s ease;
+}
+.sidebar-logout:hover {
+    background: #EF4444 !important;
+    color: #fff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+
+/* TOPBAR & CONTENT */
+.rc-topbar .btn-icon:hover { background: #F5F3FF; color: #8B5CF6; border-color: #8B5CF6; }
+
+.rc-content { background: #F8FAFC; color: #1F2937; }
+
+/* ACTION BUTTONS (Reception specific) */
+.rc-btn-action {
+    min-width: 34px; height: 34px; border-radius: 10px;
+    padding: 0 12px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--rc-border); background: #fff;
+    color: #475569; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer; font-size: .75rem; font-weight: 700; gap: 6px;
+    white-space: nowrap;
+}
+.rc-btn-action:hover {
+    background: var(--rc-primary); color: #fff; border-color: var(--rc-primary);
+    transform: translateY(-2px); box-shadow: 0 6px 12px rgba(167, 139, 250, 0.3);
+}
+.rc-btn-action.text-danger:hover { background: #EF4444; color: #fff; border-color: #EF4444; box-shadow: 0 6px 12px rgba(239, 68, 68, 0.3); }
+
+/* PREMIUM BADGES */
+.badge-success-premium { background: #D1FAE5; color: #059669; border: 1px solid #A7F3D0; }
+.badge-warning-premium { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+.badge-danger-premium { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
+.badge-info-premium { background: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE; }
+
+/* DASHBOARD COMPONENTS */
+.hover-row:hover { background-color: #F8FAFC; }
+.consultorio-item { transition: all 0.3s ease; border-color: #F1F5F9 !important; }
+.consultorio-item:hover { transform: translateX(5px); border-color: var(--rc-primary) !important; background: #fff !important; }
+
+.status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.status-dot-pulse {
+    width: 12px; height: 12px; border-radius: 50%;
+    display: inline-block; position: relative;
+}
+.status-dot-pulse::after {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; border-radius: 50%;
+    background: inherit; opacity: 0.6;
+    animation: rc-pulse 2s infinite;
+}
+
+@keyframes rc-pulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(3); opacity: 0; }
+}
+
+/* AVATARS */
+.avatar-sm {
+    width: 32px; height: 32px;
+    font-size: 0.75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* RECEPTION TABLE (for modals/specific lists) */
+.rc-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.rc-table thead th {
+    background: #F1F5F9; padding: .75rem 1rem;
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    color: #64748B; border-bottom: 2px solid #E2E8F0;
+}
+.rc-table tbody td { padding: .75rem 1rem; border-bottom: 1px solid #F1F5F9; font-size: .8rem; }
+
+.rc-badge-status {
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+
+

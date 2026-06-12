@@ -1,0 +1,146 @@
+===========================================================================
+GUIA DE EXPOSICION LINEA POR LINEA - ALUMNO 2: ATENCION MEDICA
+===========================================================================
+
+Este archivo contiene el desglose y la explicacion exacta de cada linea de 
+codigo para tus dos historias de usuario (HU 3: Registro de Evolucion Medica 
+y HU 4: Emision de Receta Digital).
+Ambas ocurren en el mismo metodo principal cuando el medico termina la consulta.
+
+---------------------------------------------------------------------------
+🩺 HISTORIA DE USUARIO 3 y 4: Evolucion Medica y Receta Digital
+---------------------------------------------------------------------------
+
+Esta funcionalidad permite al medico registrar sus notas clinicas (evolucion)
+y generar una receta digital con medicamentos al finalizar la atencion.
+
+1. EXPLICACION LINEA POR LINEA DEL BACKEND (Java)
+Ubicacion: MedicoController.java (Lineas 127-176)
+
+[Codigo fuente]:
+127:    @PostMapping("/consulta/completar")
+128:    @Transactional
+129:    public String completarConsulta(@RequestParam Integer idCita,
+130:                                    @RequestParam(required = false) String notasMedicas,
+131:                                    @RequestParam(value = "med_nombre", required = false) List<String> medNombres,
+132:                                    // ... otros parametros de medicamentos omitidos por brevedad
+136:                                    Principal principal) {
+137:        
+138:        Medico medico = getMedicoAutenticado(principal);
+139:        if (medico == null) return "redirect:/login";
+140:
+141:        Cita cita = citaRepository.findById(idCita).orElse(null);
+142:        if (cita != null && cita.getMedico().getId().equals(medico.getId())) {
+143:            cita.setEstado("Completada");
+144:            if (notasMedicas != null && !notasMedicas.isBlank()) {
+145:                cita.setNotasMedicas(notasMedicas);
+146:            }
+147:            citaRepository.save(cita);
+148:
+149:            if (medNombres != null && !medNombres.isEmpty()) {
+150:                Receta receta = Receta.builder()
+151:                        .codigo("R-" + System.currentTimeMillis() % 1000000)
+152:                        .paciente(cita.getPaciente())
+153:                        .medico(medico)
+154:                        .fechaEmision(LocalDate.now())
+155:                        .estado("Activa")
+156:                        .build();
+157:                
+158:                receta = recetaRepository.save(receta);
+159:                for (int i = 0; i < medNombres.size(); i++) {
+160:                    if (medNombres.get(i) != null && !medNombres.get(i).isBlank()) {
+161:                        MedicamentoPrescrito mp = MedicamentoPrescrito.builder()
+162:                                .receta(receta)
+163:                                .nombre(medNombres.get(i))
+164:                                // ... asignacion de dosis, frecuencia, duracion (omitido)
+168:                                .build();
+169:                        medicamentoPrescritoRepository.save(mp);
+170:                    }
+171:                }
+172:            }
+173:            log.info("[Médico] Cita {} completada por {}", idCita, medico.getNombres());
+174:        }
+175:        return "redirect:/medico/inicio?exito";
+176:    }
+
+[Detalle linea por linea]:
+* Lineas 127 y 128: [@PostMapping y @Transactional]
+  -> @PostMapping indica que la web enviara los datos del formulario por el metodo seguro POST.
+  -> @Transactional es el "Todo o Nada". Si ocurre un error guardando un medicamento de la receta, 
+     cancela la operacion completa y no guarda nada (ni siquiera las notas) para evitar que la 
+     base de datos quede inconsistente.
+* Lineas 129 a 136: [public String completarConsulta(...)]
+  -> Se reciben todos los campos del formulario web. Destaca "med_nombre" que es una "List<String>", 
+     lo que significa que el formulario puede enviar multiples medicamentos a la vez.
+* Linea 138 y 139: [Medico medico = getMedicoAutenticado(principal);]
+  -> Verifica por seguridad (usando Spring Security) quien es el medico que esta conectado en el sistema.
+* Linea 141 y 142: [Cita cita = citaRepository.findById...]
+  -> Busca la cita y valida que exista y que pertenezca exactamente a ese medico (seguridad para que 
+     un medico no pueda alterar la cita de otro doctor).
+* Lineas 143 a 147: [cita.setEstado("Completada"); ... citaRepository.save(cita);]
+  -> Esta es la **HU 3 (Evolucion)**. Se actualiza el estado, se guardan las notas medicas escritas 
+     por el doctor y se manda el comando UPDATE a la base de datos.
+* Linea 149: [if (medNombres != null && !medNombres.isEmpty()) {]
+  -> Esta es la **HU 4 (Receta)**. Si el doctor agrego al menos un medicamento en la pantalla, 
+     se inicia la creacion de la receta.
+* Lineas 150 a 156: [Receta receta = Receta.builder()...]
+  -> Se usa el patron Builder para crear el "cabezal" de la receta, generandole un codigo unico 
+     basado en el tiempo actual (milisegundos) y vinculandolo al paciente y al medico de la cita.
+* Linea 158: [receta = recetaRepository.save(receta);]
+  -> Se guarda la cabecera de la receta en la base de datos para obtener su ID autogenerado.
+* Lineas 159 a 171: [for (int i = 0; i < medNombres.size(); i++) { ...]
+  -> Un bucle recorre todos los medicamentos agregados en el Frontend. Por cada uno, crea un objeto 
+     "MedicamentoPrescrito" (el detalle de la receta), lo vincula a la receta principal y lo guarda.
+* Linea 173: [log.info(...)]
+  -> Deja un registro en el archivo de auditoria (consola/logs) del servidor indicando que este medico 
+     ha finalizado su consulta con exito.
+* Linea 175: [return "redirect:/medico/inicio?exito";]
+  -> Devuelve al medico a su panel principal mostrando el aviso de exito.
+
+2. EXPLICACION LINEA POR LINEA DEL FRONTEND (HTML / Thymeleaf)
+Ubicacion: consulta.html (Formulario Principal y Plantilla de Medicamento)
+
+[Codigo fuente - Evolucion y Receta]:
+145:    <form th:action="@{/medico/consulta/completar}" method="post" id="formConsulta">
+146:        <input type="hidden" name="idCita" th:value="${cita.idCita}">
+...
+184:        <textarea name="notasMedicas" class="form-control hce-textarea" rows="8" required th:text="${cita.notasMedicas}"></textarea>
+...
+280:    <template id="med-item-template">
+281:        <div class="med-item animate__animated animate__fadeIn">
+282:            <button type="button" class="btn-remove" onclick="this.closest('.med-item').remove(); checkEmptyMeds();"><i class="bi bi-x-circle"></i></button>
+284:            <input type="text" name="med_nombre" class="form-control form-control-sm" required onkeyup="buscarProducto(this)">
+290:            <div class="col-4"><input type="text" name="med_dosis" class="form-control form-control-sm" placeholder="Dosis"></div>
+296:    </template>
+
+[Detalle linea por linea]:
+* Linea 145: [<form th:action="@{/medico/consulta/completar}" method="post">]
+  -> Inicia el gran formulario que envuelve toda la consulta. Al enviar, apunta al Backend 
+     que acabamos de explicar.
+* Linea 146: [<input type="hidden" name="idCita"...>]
+  -> Oculto a la vista del medico, pero fundamental: envia el ID de la cita actual para 
+     que el backend sepa que cita se esta completando.
+* Linea 184: [<textarea name="notasMedicas"...>]
+  -> El cuadro de texto principal donde el medico escribe la evolucion. El atributo "required" 
+     obliga a que el medico escriba algo antes de poder guardar.
+* Linea 280: [<template id="med-item-template">]
+  -> Una etiqueta <template> nativa de HTML5. Su contenido es invisible al cargar la pagina, 
+     pero sirve como "molde" para que JavaScript clone y pegue cajas de medicamentos al hacer 
+     clic en "Agregar Medicamento".
+* Linea 284: [<input type="text" name="med_nombre"... onkeyup="buscarProducto(this)">]
+  -> Campo para el nombre del medicamento. El evento "onkeyup" dispara una busqueda en 
+     tiempo real en la farmacia (API) cada vez que el medico tipea una letra.
+
+
+3. IMPACTO EN BASE DE DATOS (Las tablas afectadas)
+---------------------------------------------------------------------------
+Cuando este codigo se ejecuta, ocurren 3 cosas en la BD:
+1. Tabla `citas`: Se hace un UPDATE de `estado` a "Completada" y se guarda el texto en `notas_medicas`.
+2. Tabla `recetas`: Se hace un INSERT con los datos base de la receta (ID paciente, ID medico).
+3. Tabla `medicamentos_prescritos`: Se hace un INSERT multiple, agregando una fila por 
+   cada medicamento, dosis y frecuencia que el medico receto.
+
+===========================================================================
+¡Exitos en tu sustentacion! Esta guia te garantiza defender el codigo a nivel
+tecnico y de negocio de forma impecable.
+===========================================================================

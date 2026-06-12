@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Citas - ClinicX Admin</title></head>
+<body>
+    <div th:fragment="cuerpo">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h4 class="fw-bold mb-0">Gestión de Citas</h4>
+        </div>
+
+        <div class="ad-card">
+            <div class="ad-card-body p-0">
+                <table class="ad-table" id="tablaCitas" th:if="${!citas.isEmpty()}">
+                    <thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Paciente</th><th>Médico</th><th>Motivo</th><th>Estado</th></tr></thead>
+                    <tbody>
+                        <tr th:each="c : ${citas}">
+                            <td class="fw-bold" th:text="'C-' + ${c.idCita}">-</td>
+                            <td th:text="${c.fechaCita.format(T(java.time.format.DateTimeFormatter).ofPattern('dd/MM/yyyy'))}">-</td>
+                            <td th:text="${c.horaCita}">--:--</td>
+                            <td th:text="${c.paciente.nombres + ' ' + c.paciente.apellidos}">Paciente</td>
+                            <td th:text="${'Dr. ' + c.medico.nombres + ' ' + c.medico.apellidos}">Médico</td>
+                            <td class="text-muted" th:text="${c.motivo != null ? c.motivo : '-'}">-</td>
+                            <td>
+                                <span class="ad-badge-status"
+                                      th:text="${c.estado}"
+                                      th:style="${c.estado == 'Completada'} ? 'background:#D1FAE5;color:#059669;' : (${c.estado == 'Pendiente'} ? 'background:#FEF3C7;color:#D97706;' : (${c.estado == 'Confirmada'} ? 'background:#DBEAFE;color:#2563EB;' : 'background:#FEE2E2;color:#DC2626;'))">
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${citas.isEmpty()}" class="text-center py-5">
+                    <i class="bi bi-calendar-x" style="font-size:3rem;color:var(--ad-muted);"></i>
+                    <p class="text-muted mt-3">No hay citas registradas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
