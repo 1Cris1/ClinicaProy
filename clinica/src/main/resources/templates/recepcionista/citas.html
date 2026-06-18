@@ -131,7 +131,7 @@
                                 <span th:if="${c.estado == 'Cancelada'}" class="app-badge badge-danger-premium">Cancelada</span>
                             </td>
                             <td>
-                                <div class="d-flex gap-1">
+                                <div class="d-flex gap-1 align-items-center">
                                     <button class="rc-btn-action" style="background: #D1FAE5; color: #065F46;" 
                                             th:attr="data-dni=${c.paciente.dni}" onclick="acreditarSeguro(this)">
                                         <i class="bi bi-shield-fill-check me-1"></i> Acreditar
@@ -139,6 +139,9 @@
                                     <button th:if="${c.estado == 'Pendiente'}" class="rc-btn-action" th:attr="data-id=${c.idCita}" onclick="checkIn(this)">
                                         <i class="bi bi-check-circle"></i>
                                     </button>
+                                    <a th:if="${c.estado == 'Confirmada' and c.triaje == null}" th:href="@{/recepcionista/triaje(citaId=${c.idCita})}" class="rc-btn-action text-decoration-none d-inline-flex align-items-center justify-content-center" style="background: #FEF3C7; color: #D97706; padding: 4px 8px; font-size: 0.75rem;" title="Registrar Triaje">
+                                        <i class="bi bi-heart-pulse me-1"></i> Triaje
+                                    </a>
                                     <button class="rc-btn-action" th:attr="data-id=${c.idCita}, data-fecha=${c.fechaCita}, data-hora=${c.horaCita}, data-estado=${c.estado}" onclick="editarCita(this)">
                                         <i class="bi bi-pencil"></i>
                                     </button>

@@ -967,6 +967,7 @@ function toggleFullscreen(btn) {
     var titles = {
         inicio: 'Panel de Recepción',
         citas: 'Agenda de Consultas',
+        triaje: 'Registro de Triaje',
         pacientes: 'Directorio de Pacientes',
         medicos: 'Cuerpo Médico',
         pagos: 'Facturación y Pagos',

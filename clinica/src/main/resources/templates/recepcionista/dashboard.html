@@ -108,7 +108,7 @@
                                         </td>
                                         <td class="pe-4 text-center">
                                             <!-- EXPOSICIÓN MIGUEL: Este 'th:if' es clave. Oculta el formulario de Check-in si el paciente ya fue procesado, evitando que un recepcionista dé doble clic o genere errores en sala de espera -->
-                                            <div class="d-flex justify-content-center gap-1">
+                                            <div class="d-flex justify-content-center gap-1 align-items-center">
                                                 <form th:if="${cita.estado == 'Pendiente'}" th:action="@{/recepcionista/citas/checkin}" method="post" class="d-inline">
                                                     <!-- Campo oculto para enviar el ID de la cita -->
                                                     <input type="hidden" name="idCita" th:value="${cita.idCita}">
@@ -117,12 +117,18 @@
                                                         Check-in <i class="bi bi-arrow-right-short"></i>
                                                     </button>
                                                 </form>
+                                                <!-- Registrar Triaje si la cita está Confirmada y no tiene triaje -->
+                                                <a th:if="${cita.estado == 'Confirmada' and cita.triaje == null}" th:href="@{/recepcionista/triaje(citaId=${cita.idCita})}" class="btn btn-warning text-white btn-sm rounded-pill px-2 fw-bold shadow-sm" style="font-size: 0.7rem;" title="Registrar Triaje">
+                                                    Triaje <i class="bi bi-heart-pulse"></i>
+                                                </a>
                                                 <!-- EXPOSICIÓN MIGUEL: Consumo Asíncrono. Este botón dispara fetch() para traer el historial en formato JSON. -->
                                                 <button class="btn btn-light btn-sm rounded-pill px-2 shadow-sm text-primary" style="font-size: 0.7rem;" th:attr="data-id=${cita.paciente.id}, data-nombre=${cita.paciente.nombres + ' ' + cita.paciente.apellidos}" onclick="verHistorial(this)" title="Ver Historial Clínico">
                                                     <i class="bi bi-clock-history"></i>
                                                 </button>
                                             </div>
-                                            <span th:if="${cita.estado != 'Pendiente'}" class="text-success fw-bold small d-block mt-1"><i class="bi bi-check-all"></i> Procesado</span>
+                                            <span th:if="${cita.estado == 'Confirmada' and cita.triaje != null}" class="text-success fw-bold small d-block mt-1" style="font-size: 0.75rem;"><i class="bi bi-check-circle-fill"></i> Triado</span>
+                                            <span th:if="${cita.estado == 'Completada'}" class="text-success fw-bold small d-block mt-1" style="font-size: 0.75rem;"><i class="bi bi-check-all"></i> Atendido</span>
+                                            <span th:if="${cita.estado == 'Cancelada'}" class="text-danger fw-bold small d-block mt-1" style="font-size: 0.75rem;"><i class="bi bi-x-circle-fill"></i> Cancelado</span>
                                         </td>
                                     </tr>
                                 </tbody>

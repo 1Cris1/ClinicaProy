@@ -12,5 +12,6 @@ public class PedidoRequest {
     public static class ItemPedido {
         private Integer idProducto;
         private Integer cantidad;
+        private String presentacion;
     }
 }

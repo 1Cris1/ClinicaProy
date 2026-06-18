@@ -418,6 +418,12 @@ public class PacienteController {
             if (producto != null) {
                 BigDecimal precioFinal = producto.getPrecioDescuento() != null ? producto.getPrecioDescuento()
                         : producto.getPrecio();
+                
+                // Si la presentación elegida es "Unidad" (Blíster), el precio es la décima parte de la caja
+                if ("Unidad".equalsIgnoreCase(item.getPresentacion())) {
+                    precioFinal = precioFinal.divide(new BigDecimal(10), 2, java.math.RoundingMode.HALF_UP);
+                }
+
                 BigDecimal subtotal = precioFinal.multiply(new BigDecimal(item.getCantidad()));
                 total = total.add(subtotal);
 
@@ -433,7 +439,7 @@ public class PacienteController {
                 // Add to Mercado Pago items list
                 PreferenceItemRequest mpItem = PreferenceItemRequest.builder()
                         .id(producto.getId().toString())
-                        .title(producto.getNombre())
+                        .title(producto.getNombre() + ( "Unidad".equalsIgnoreCase(item.getPresentacion()) ? " (Unidad)" : " (Caja)" ))
                         .quantity(item.getCantidad())
                         .unitPrice(precioFinal)
                         .currencyId("PEN")

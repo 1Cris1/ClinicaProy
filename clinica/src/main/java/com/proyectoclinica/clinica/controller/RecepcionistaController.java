@@ -24,6 +24,9 @@ import com.proyectoclinica.clinica.modules.integraciones.service.GoogleCalendarS
 import com.proyectoclinica.clinica.modules.farmacia.repository.PedidoRepository;
 import com.proyectoclinica.clinica.modules.farmacia.models.Pedido;
 
+import com.proyectoclinica.clinica.modules.triaje.models.Triaje;
+import com.proyectoclinica.clinica.modules.triaje.repository.TriajeRepository;
+
 import java.security.Principal;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -46,6 +49,7 @@ public class RecepcionistaController {
     private final GoogleCalendarService googleCalendarService;
     private final SedeRepository sedeRepository;
     private final PedidoRepository pedidoRepository;
+    private final TriajeRepository triajeRepository;
 
     private static final String LAYOUT = "layout-recepcionista";
 
@@ -393,4 +397,50 @@ public class RecepcionistaController {
         }).collect(Collectors.toList());
         return ResponseEntity.ok(responseList);
     }
+
+    @GetMapping("/triaje")
+    public String verTriaje(@RequestParam(required = false) Integer citaId, Model model) {
+        LocalDate hoy = LocalDate.now();
+        List<Cita> citasConfirmadasSinTriaje = citaRepository.findByFechaCitaOrderByHoraCitaAsc(hoy).stream()
+                .filter(c -> "Confirmada".equals(c.getEstado()))
+                .filter(c -> c.getTriaje() == null)
+                .collect(Collectors.toList());
+
+        model.addAttribute("citas", citasConfirmadasSinTriaje);
+        model.addAttribute("citaSeleccionadaId", citaId);
+        model.addAttribute("pageTitle", "Registro de Triaje");
+        model.addAttribute("view", "recepcionista/triaje");
+        return LAYOUT;
+    }
+
+    @PostMapping("/triaje/guardar")
+    @org.springframework.transaction.annotation.Transactional
+    public String guardarTriaje(@RequestParam Integer idCita,
+                                @RequestParam BigDecimal peso,
+                                @RequestParam BigDecimal talla,
+                                @RequestParam String presionArterial,
+                                @RequestParam BigDecimal temperatura,
+                                @RequestParam Integer frecuenciaCardiaca,
+                                @RequestParam Integer saturacionOxigeno) {
+        Cita cita = citaRepository.findById(idCita).orElse(null);
+        if (cita != null) {
+            Triaje triaje = Triaje.builder()
+                    .cita(cita)
+                    .peso(peso)
+                    .talla(talla)
+                    .presionArterial(presionArterial)
+                    .temperatura(temperatura)
+                    .frecuenciaCardiaca(frecuenciaCardiaca)
+                    .saturacionOxigeno(saturacionOxigeno)
+                    .fechaRegistro(LocalDateTime.now())
+                    .build();
+            triajeRepository.save(triaje);
+
+            cita.setTriaje(triaje);
+            citaRepository.save(cita);
+            return "redirect:/recepcionista/triaje?exito";
+        }
+        return "redirect:/recepcionista/triaje?error";
+    }
 }
+

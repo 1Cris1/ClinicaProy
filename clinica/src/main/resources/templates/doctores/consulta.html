@@ -157,24 +157,38 @@
                             <!-- Columna 1: Registro y Diagnóstico -->
                             <div class="col-md-7">
                                 <!-- Triaje Rápido -->
-                                <div class="hce-form-card mb-4 shadow-sm">
+                                <div class="hce-form-card mb-4 shadow-sm" style="background: #f8fafc; border-left: 4px solid #8b5cf6;">
+                                    <h6 class="fw-bold mb-3" style="font-size: 0.8rem; color: #475569;">
+                                        <i class="bi bi-heart-pulse-fill text-danger me-1"></i> Signos Vitales (Triaje Inicial)
+                                    </h6>
                                     <div class="row g-3">
                                         <div class="col-md-3">
                                             <label class="x-small fw-bold text-muted text-uppercase">Peso (kg)</label>
-                                            <input type="number" step="0.1" name="peso" class="form-control hce-input" placeholder="0.0">
+                                            <input type="number" step="0.1" name="peso" class="form-control hce-input" placeholder="0.0" 
+                                                   th:value="${cita.triaje != null ? cita.triaje.peso : ''}" 
+                                                   th:readonly="${cita.triaje != null}">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="x-small fw-bold text-muted text-uppercase">Talla (cm)</label>
-                                            <input type="number" name="talla" class="form-control hce-input" placeholder="0">
+                                            <label class="x-small fw-bold text-muted text-uppercase">Talla (m)</label>
+                                            <input type="number" step="0.01" name="talla" class="form-control hce-input" placeholder="0.00" 
+                                                   th:value="${cita.triaje != null ? cita.triaje.talla : ''}" 
+                                                   th:readonly="${cita.triaje != null}">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="x-small fw-bold text-muted text-uppercase">Temp (°C)</label>
-                                            <input type="number" step="0.1" name="temperatura" class="form-control hce-input" placeholder="36.5">
+                                            <input type="number" step="0.1" name="temperatura" class="form-control hce-input" placeholder="36.5" 
+                                                   th:value="${cita.triaje != null ? cita.triaje.temperatura : ''}" 
+                                                   th:readonly="${cita.triaje != null}">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="x-small fw-bold text-muted text-uppercase">P. Art.</label>
-                                            <input type="text" name="presion" class="form-control hce-input" placeholder="120/80">
+                                            <input type="text" name="presion" class="form-control hce-input" placeholder="120/80" 
+                                                   th:value="${cita.triaje != null ? cita.triaje.presionArterial : ''}" 
+                                                   th:readonly="${cita.triaje != null}">
                                         </div>
+                                    </div>
+                                    <div th:if="${cita.triaje != null}" class="mt-2 text-muted" style="font-size: 0.7rem;">
+                                        <i class="bi bi-info-circle-fill text-success"></i> Registrado por recepción el <span th:text="${#temporals.format(cita.triaje.fechaRegistro, 'dd/MM/yyyy HH:mm')}"></span>.
                                     </div>
                                 </div>
 
