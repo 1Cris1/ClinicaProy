@@ -240,15 +240,33 @@ public class MedicoController {
     // El médico actualiza su propia disponibilidad desde su perfil. El controlador captura los datos, busca su entidad y hace un save().
     @org.springframework.transaction.annotation.Transactional
     @PostMapping("/horario/actualizar")
-    public String actualizarHorario(@RequestParam(required = false) String horarioLv,
-                                    @RequestParam(required = false) String horarioSabado,
+    public String actualizarHorario(@RequestParam(required = false) String inicioLv,
+                                    @RequestParam(required = false) String finLv,
+                                    @RequestParam(required = false) Boolean noLv,
+                                    @RequestParam(required = false) String inicioSabado,
+                                    @RequestParam(required = false) String finSabado,
+                                    @RequestParam(required = false) Boolean noSabado,
                                     @RequestParam(required = false) Integer duracionCita,
                                     Principal principal) {
         Medico medico = getMedicoAutenticado(principal);
         if (medico == null) return "redirect:/login";
 
-        medico.setHorarioLv(horarioLv != null && !horarioLv.isBlank() ? horarioLv : "No disponible");
-        medico.setHorarioSabado(horarioSabado != null && !horarioSabado.isBlank() ? horarioSabado : "No disponible");
+        if (noLv != null && noLv) {
+            medico.setHorarioLv("No disponible");
+        } else if (inicioLv != null && !inicioLv.isBlank() && finLv != null && !finLv.isBlank()) {
+            medico.setHorarioLv(inicioLv + " - " + finLv);
+        } else {
+            medico.setHorarioLv("No disponible");
+        }
+
+        if (noSabado != null && noSabado) {
+            medico.setHorarioSabado("No disponible");
+        } else if (inicioSabado != null && !inicioSabado.isBlank() && finSabado != null && !finSabado.isBlank()) {
+            medico.setHorarioSabado(inicioSabado + " - " + finSabado);
+        } else {
+            medico.setHorarioSabado("No disponible");
+        }
+
         if (duracionCita != null && duracionCita > 0) {
             medico.setDuracionCita(duracionCita);
         }
