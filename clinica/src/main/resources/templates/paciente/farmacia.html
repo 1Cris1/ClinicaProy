@@ -521,11 +521,10 @@
                         Swal.fire({
                             icon: 'success',
                             title: '¡Pedido Generado!',
-                            text: 'Redirigiendo a Mercado Pago para realizar el pago de forma segura...',
-                            timer: 2000,
-                            showConfirmButton: false
+                            text: data.message || 'Pedido finalizado, recoger en físico y cancelar en la clínica',
+                            confirmButtonText: 'Entendido'
                         }).then(() => {
-                            window.location.href = data.checkoutUrl;
+                            window.location.reload();
                         });
                     } else {
                         Swal.fire('Error', data.message || 'Error al procesar la compra', 'error');

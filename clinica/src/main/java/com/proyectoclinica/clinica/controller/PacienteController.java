@@ -31,7 +31,6 @@ import com.proyectoclinica.clinica.modules.citas.models.Cita;
 import com.proyectoclinica.clinica.modules.paciente.models.Paciente;
 import com.proyectoclinica.clinica.modules.recursos.models.Medico;
 import com.proyectoclinica.clinica.modules.recursos.models.Servicio;
-import com.proyectoclinica.clinica.service.MercadoPagoService;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.resources.preference.Preference;
 
@@ -56,8 +55,6 @@ public class PacienteController {
     private final com.proyectoclinica.clinica.modules.laboratorio.repository.ResultadoLaboratorioRepository resultadoLaboratorioRepository;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
-    private final MercadoPagoService mercadoPagoService;
-
     private static final String LAYOUT = "layout-paciente";
 
     @Value("${powerbi.base.url:}")
@@ -450,23 +447,10 @@ public class PacienteController {
         pedido.setTotal(total);
         pedidoRepository.save(pedido);
 
-        try {
-            Preference preference = mercadoPagoService.crearPreference(
-                    total.doubleValue(),
-                    "Medicamentos ClinicX - Pedido #" + pedido.getId(),
-                    pedido.getId().toString(),
-                    mpItems
-            );
-            return ResponseEntity.ok(Map.of(
-                    "success", true,
-                    "checkoutUrl", preference.getInitPoint(),
-                    "pedidoId", pedido.getId()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
-                    "success", false,
-                    "message", "Error al generar la preferencia de Mercado Pago: " + e.getMessage()
-            ));
-        }
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Pedido finalizado, recoger en físico y cancelar en la clínica",
+                "pedidoId", pedido.getId()
+        ));
     }
 }
