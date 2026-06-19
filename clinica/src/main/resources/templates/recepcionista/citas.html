@@ -142,7 +142,7 @@
                                     <a th:if="${c.estado == 'Confirmada' and c.triaje == null}" th:href="@{/recepcionista/triaje(citaId=${c.idCita})}" class="rc-btn-action text-decoration-none d-inline-flex align-items-center justify-content-center" style="background: #FEF3C7; color: #D97706; padding: 4px 8px; font-size: 0.75rem;" title="Registrar Triaje">
                                         <i class="bi bi-heart-pulse me-1"></i> Triaje
                                     </a>
-                                    <button class="rc-btn-action" th:attr="data-id=${c.idCita}, data-fecha=${c.fechaCita}, data-hora=${c.horaCita}, data-estado=${c.estado}" onclick="editarCita(this)">
+                                    <button class="rc-btn-action" th:attr="data-id=${c.idCita}, data-fecha=${c.fechaCita}, data-hora=${c.horaCita}, data-estado=${c.estado}" onclick="editarCita(this)" title="Reagendar Cita">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                 </div>
@@ -216,7 +216,7 @@
         <!-- Modal Editar Cita -->
         <div class="modal fade" id="modalEditarCita" tabindex="-1">
             <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
-                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Cita</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Reagendar Cita</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <form th:action="@{/recepcionista/citas/editar}" method="post">
                         <input type="hidden" name="idCita" id="editIdCita">
@@ -246,7 +246,7 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Guardar Cambios</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Reagendar</button>
                 </div>
                     </form>
             </div></div>
