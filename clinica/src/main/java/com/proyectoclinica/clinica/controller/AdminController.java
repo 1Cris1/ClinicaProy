@@ -648,12 +648,41 @@ public class AdminController {
         return "redirect:/admin/productos?exito";
     }
 
+    @PostMapping("/productos/editar")
+    public String editarProducto(@RequestParam Integer id,
+                                 @RequestParam String nombre,
+                                 @RequestParam(required = false) String descripcion,
+                                 @RequestParam BigDecimal precio,
+                                 @RequestParam(required = false) BigDecimal precioDescuento,
+                                 @RequestParam String categoria,
+                                 @RequestParam Integer stock,
+                                 @RequestParam String estado,
+                                 @RequestParam(required = false) String imagenUrl) {
+        Producto producto = productoRepository.findById(id).orElseThrow();
+        producto.setNombre(nombre);
+        producto.setDescripcion(descripcion);
+        producto.setPrecio(precio);
+        producto.setPrecioDescuento(precioDescuento);
+        producto.setCategoria(categoria);
+        producto.setStock(stock);
+        producto.setEstado(estado);
+        producto.setImagenUrl(imagenUrl);
+        productoRepository.save(producto);
+        return "redirect:/admin/productos?editado";
+    }
+
+    @GetMapping("/productos/eliminar")
+    public String eliminarProducto(@RequestParam Integer id) {
+        productoRepository.deleteById(id);
+        return "redirect:/admin/productos?eliminado";
+    }
+
     // ========== USUARIOS ==========
     @GetMapping("/usuarios")
     public String listarUsuarios(Model model) {
         log.info("[Admin] Acceso a Gestión de Usuarios");
         model.addAttribute("usuarios", usuarioRepository.findAll());
-        model.addAttribute("pageTitle", "Gestión de Usuarios");
+        model.addAttribute("pageTitle", "Centro de Control");
         model.addAttribute("view", "admin/usuarios");
         return LAYOUT;
     }

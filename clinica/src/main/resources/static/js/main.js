@@ -24,10 +24,10 @@
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
         var titles = {
-            dashboard: 'Dashboard', pacientes: 'Pacientes', medicos: 'Médicos',
+            dashboard: 'Dashboard', usuarios: 'Centro de Control', pacientes: 'Pacientes', medicos: 'Médicos',
             recepcionistas: 'Recepcionistas', citas: 'Citas', especialidades: 'Especialidades',
-            servicios: 'Servicios', sedes: 'Sedes', promociones: 'Promociones',
-            reportes: 'Reportes', configuracion: 'Configuración'
+            servicios: 'Servicios', productos: 'Farmacia', susalud: 'Catálogo SUSALUD', sedes: 'Sedes',
+            promociones: 'Promociones', reportes: 'Reportes', configuracion: 'Configuración'
         };
         var isRoot = (path === '/admin' || path === '/admin/');
         var activePage = isRoot
