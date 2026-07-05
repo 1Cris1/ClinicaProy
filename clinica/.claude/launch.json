@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "clinica-app",
+      "runtimeExecutable": ".\\mvnw.cmd",
+      "runtimeArgs": ["spring-boot:run"],
+      "port": 8080
+    },
+    {
+      "name": "sqlserver",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "docker/clinica.composer.yaml", "up"],
+      "port": 1434
+    }
+  ]
+}
