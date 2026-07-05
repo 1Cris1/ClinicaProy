@@ -3,8 +3,20 @@
   "configurations": [
     {
       "name": "clinica-app",
-      "runtimeExecutable": ".\\mvnw.cmd",
-      "runtimeArgs": ["spring-boot:run"],
+      "runtimeExecutable": "docker",
+      "runtimeArgs": [
+        "run",
+        "--rm",
+        "--name",
+        "clinicx_app",
+        "-p",
+        "8080:8080",
+        "--add-host",
+        "host.docker.internal:host-gateway",
+        "-e",
+        "SPRING_DATASOURCE_URL=jdbc:sqlserver://host.docker.internal:1434;databaseName=bd_clinica;encrypt=true;trustServerCertificate=true;",
+        "clinicx-app"
+      ],
       "port": 8080
     },
     {
