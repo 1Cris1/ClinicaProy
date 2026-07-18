@@ -61,7 +61,7 @@
             <td>
                 <div class="position-relative">
                     <input type="text" name="med_nombre" class="form-control med-input bg-light" 
-                           placeholder="Buscar medicamento..." required onkeyup="buscarProducto(this)">
+                           placeholder="Buscar medicamento..." onkeyup="buscarProducto(this)">
                     <div class="product-results list-group d-none" style="position: absolute; z-index: 1000; width: 100%;"></div>
                 </div>
                 <input type="text" name="med_instrucciones" class="form-control form-control-sm border-0 bg-transparent mt-1 text-muted" 
@@ -89,10 +89,27 @@
     </div>
 
     <!-- HCE Single Screen Layout -->
-    <div th:if="${cita != null}" class="hce-container animate__animated animate__fadeIn">
-        <div class="row g-0 h-100">
+    <div th:if="${cita != null}"
+    class="hce-container animate__animated animate__fadeIn"
+    style="width:100%; display:block;">
+        <div style="
+        display:flex !important;
+        flex-direction:row !important;
+        flex-wrap:nowrap !important;
+        align-items:stretch !important;
+        width:100% !important;
+        min-height:calc(100vh - 100px);
+        ">
             <!-- Sidebar Izquierda: Antecedentes (Siempre Visible) -->
-            <div class="col-lg-3 hce-sidebar border-end bg-white">
+            <div class="hce-sidebar border-end bg-white"
+            style="
+            display:block !important;
+            flex:0 0 350px !important;
+            width:350px !important;
+            min-width:350px !important;
+            max-width:350px !important;
+            overflow-y:auto;
+            ">
                 <div class="p-4">
                     <div class="text-center mb-4">
                         <div class="mx-auto mb-3 hce-avatar shadow-sm">
@@ -125,7 +142,8 @@
                         </div>
                         <div class="d-flex justify-content-between py-2 border-bottom border-light x-small">
                             <span class="text-muted">Edad</span>
-                            <span class="fw-bold" th:text="${cita.paciente.fechaNacimiento != null ? #temporals.between(cita.paciente.fechaNacimiento, T(java.time.LocalDate).now(), T(java.time.temporal.ChronoUnit).YEARS) + ' años' : '-'}">-</span>
+                            <span class="fw-bold"
+                            th:text="${edadPaciente != null ? edadPaciente + ' años' : '-'}">-</span>
                         </div>
                     </div>
 
@@ -140,9 +158,38 @@
             </div>
 
             <!-- Panel Central: Consulta Activa -->
-            <div class="col-lg-9 hce-main bg-light">
-                <div class="p-4">
-                    <form th:action="@{/medico/consulta/completar}" method="post" id="formConsulta">
+            <div class="consulta-formulario bg-light"
+            style="
+            display:block !important;
+            position:static !important;
+            flex:1 1 0 !important;
+            width:auto !important;
+            min-width:0 !important;
+            height:auto !important;
+            min-height:calc(100vh - 100px);
+            overflow:visible !important;
+            visibility:visible !important;
+            opacity:1 !important;
+            transform:none !important;
+            ">
+                <div class="p-4"
+                style="
+                display:block !important;
+                position:static !important;
+                width:100% !important;
+                visibility:visible !important;
+                opacity:1 !important;
+                ">
+                    <form th:action="@{/medico/consulta/completar}"
+                    method="post"
+                    id="formConsulta"
+                    style="
+                    display:block !important;
+                    position:static !important;
+                    width:100% !important;
+                    visibility:visible !important;
+                    opacity:1 !important;
+                    ">
                         <input type="hidden" name="idCita" th:value="${cita.idCita}">
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -251,9 +298,32 @@
 
     <!-- Estilos Premium para HCE Single Screen -->
     <style>
-        .hce-container { height: calc(100vh - 100px); background: #f8fafc; }
-        .hce-sidebar { height: 100%; overflow-y: auto; }
-        .hce-main { height: 100%; overflow-y: auto; }
+
+    .hce-container {
+        width: 100% !important;
+        min-height: calc(100vh - 100px);
+        background: #f8fafc;
+        display: block !important;
+        overflow-x: auto;
+    }
+    
+
+    .hce-sidebar {
+        width: 350px !important;
+        min-width: 350px !important;
+        min-height: calc(100vh - 100px);
+        overflow-y: auto;
+        display: block !important;
+    }
+    .consulta-formulario {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+        min-height: calc(100vh - 100px);
+        background: #f8fafc;
+    }
+
+
         .hce-avatar { width: 80px; height: 80px; border-radius: 24px; background: linear-gradient(135deg, #3B82F6, #60A5FA); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 800; }
         .hce-section-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #64748B; margin-bottom: 1rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
         .hce-card { border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); transition: all 0.2s; }
@@ -285,7 +355,7 @@
             </button>
             <div class="position-relative mb-2">
                 <input type="text" name="med_nombre" class="form-control form-control-sm border-0 bg-white shadow-sm" 
-                       placeholder="Nombre del medicamento..." required onkeyup="buscarProducto(this)">
+                       placeholder="Nombre del medicamento..." onkeyup="buscarProducto(this)">
                 <div class="product-results list-group d-none shadow" style="position: absolute; z-index: 1000; width: 100%;"></div>
                 <div class="stock-status"></div>
             </div>
@@ -493,6 +563,5 @@
             }
         </script>
     </th:block>
-</div>
 </body>
 </html>

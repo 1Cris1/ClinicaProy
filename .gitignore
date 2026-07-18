@@ -40,3 +40,5 @@ node_modules/
 
 ### Large Datasets ###
 clinica/data/*.csv
+tokens/
+clinica/data/bd_clinica.sql

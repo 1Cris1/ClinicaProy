@@ -4,11 +4,52 @@
 <body>
     <div th:fragment="cuerpo">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <h4 class="fw-bold mb-0">Mi Agenda de Hoy</h4>
-            <div class="d-flex gap-2 align-items-center">
-                <span class="fw-bold small" th:text="${fechaFormateada}">-</span>
-            </div>
-        </div>
+
+    <h4 class="fw-bold mb-0">
+        Mi Agenda de Hoy
+    </h4>
+
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+
+        <button type="button"
+                class="btn btn-outline-primary rounded-pill px-3"
+                data-bs-toggle="modal"
+                data-bs-target="#modalPacientesSala">
+
+            <i class="bi bi-people-fill me-1"></i>
+
+            Pacientes en sala
+
+            <span class="badge bg-primary ms-1"
+                  th:text="${totalPacientesEnSala}">
+                0
+            </span>
+        </button>
+
+        <span class="fw-bold small"
+              th:text="${fechaFormateada}">
+            -
+        </span>
+
+    </div>
+</div>
+
+
+<div th:if="${param.consulta != null}"
+     class="alert alert-success alert-dismissible fade show mb-4"
+     role="alert">
+
+    <i class="bi bi-check-circle-fill me-2"></i>
+
+    <strong>Consulta finalizada correctamente.</strong>
+    Los datos clínicos fueron guardados y la cita fue marcada como completada.
+
+    <button type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Cerrar">
+    </button>
+</div>
 
         <!-- Citas List -->
         <div class="doc-card">
@@ -24,41 +65,388 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="c : ${citasSemana}">
-                            <td class="fw-bold text-muted" th:text="${c.horaCita}">-</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div style="width:30px;height:30px;background:linear-gradient(135deg,#0D9488,#2DD4BF);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                        <span style="font-size:.65rem;font-weight:700;color:#fff;"
-                                              th:text="${#strings.substring(c.paciente.nombres,0,1) + #strings.substring(c.paciente.apellidos,0,1)}">P</span>
-                                    </div>
-                                    <span class="small fw-bold" th:text="${c.paciente.nombres + ' ' + c.paciente.apellidos}">Paciente</span>
-                                </div>
-                            </td>
-                            <td class="text-muted small" th:text="${c.motivo}">-</td>
-                            <td>
-                                <span class="doc-badge-status"
-                                      th:text="${c.estado}"
-                                      th:style="${c.estado == 'Completada'} ? 'background:#D1FAE5;color:#059669;' : (${c.estado == 'Pendiente'} ? 'background:#CCFBF1;color:#0F766E;' : 'background:#FEF3C7;color:#D97706;')"></span>
-                            </td>
-                            <td>
-                                <a th:if="${c.estado != 'Completada'}" th:href="@{/medico/consulta}"
-                                   class="btn btn-sm rounded-pill px-3 fw-bold" style="background:var(--doc-primary);color:#fff;font-size:.7rem;">
-                                    Atender
-                                </a>
-                                <span class="text-muted small" th:if="${c.estado == 'Completada'}"><i class="bi bi-check-circle-fill text-success"></i></span>
-                            </td>
-                        </tr>
-                        <tr th:if="${citasSemana.isEmpty()}">
-                            <td colspan="5" class="text-center py-5">
-                                <i class="bi bi-calendar-x text-muted" style="font-size:2rem;"></i>
-                                <p class="text-muted mt-2">No tienes citas programadas para el día de hoy.</p>
-                            </td>
-                        </tr>
-                    </tbody>
+
+    <!-- Citas de la mañana -->
+    <tr th:each="c : ${citasManana}">
+        <td class="fw-bold text-muted"
+            th:text="${c.horaCita}">
+            -
+        </td>
+
+        <td>
+            <div class="d-flex align-items-center gap-2">
+                <div style="
+                    width:30px;
+                    height:30px;
+                    background:linear-gradient(135deg,#0D9488,#2DD4BF);
+                    border-radius:7px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    flex-shrink:0;
+                ">
+                    <span style="font-size:.65rem;font-weight:700;color:#fff;"
+                          th:text="${#strings.substring(c.paciente.nombres,0,1)
+                          + #strings.substring(c.paciente.apellidos,0,1)}">
+                        P
+                    </span>
+                </div>
+
+                <span class="small fw-bold"
+                      th:text="${c.paciente.nombres + ' ' + c.paciente.apellidos}">
+                    Paciente
+                </span>
+            </div>
+        </td>
+
+        <td class="text-muted small"
+            th:text="${c.motivo}">
+            -
+        </td>
+
+        <td>
+            <span class="doc-badge-status"
+                  th:text="${c.estado}"
+                  th:style="${c.estado == 'Completada'}
+                    ? 'background:#D1FAE5;color:#059669;'
+                    : (${c.estado == 'Pendiente'}
+                        ? 'background:#CCFBF1;color:#0F766E;'
+                        : 'background:#FEF3C7;color:#D97706;')">
+            </span>
+        </td>
+
+        <td>
+    <!-- Solo puede atender cuando el paciente ya llegó -->
+    <a th:if="${#strings.equalsIgnoreCase(c.estado, 'Confirmada')}"
+       th:href="@{/medico/consulta(idCita=${c.idCita})}"
+       class="btn btn-sm rounded-pill px-3 fw-bold"
+       style="background:var(--doc-primary);color:#fff;font-size:.7rem;">
+        Atender
+    </a>
+
+    <!-- Cita pendiente: el paciente todavía no llegó -->
+    <span th:if="${#strings.equalsIgnoreCase(c.estado, 'Pendiente')}"
+          class="text-muted small">
+        <i class="bi bi-clock me-1"></i>
+        Esperando llegada
+    </span>
+
+    <!-- Cita cancelada -->
+    <span th:if="${#strings.equalsIgnoreCase(c.estado, 'Cancelada')}"
+          class="text-danger small">
+        <i class="bi bi-x-circle-fill me-1"></i>
+        Cancelada
+    </span>
+
+    <!-- Consulta ya terminada -->
+    <span th:if="${#strings.equalsIgnoreCase(c.estado, 'Completada')}"
+          class="text-success small">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        Atendida
+    </span>
+</td>
+
+
+    </tr>
+
+    <!-- Horario de descanso -->
+    <tr th:if="${!citasSemana.isEmpty()}"
+        style="background:#FFF7ED;">
+
+        <td class="fw-bold"
+            style="color:#C2410C;">
+            12:00–13:00
+        </td>
+
+        <td colspan="3">
+            <div class="d-flex align-items-center gap-2"
+                 style="color:#C2410C;">
+
+                <div style="
+                    width:30px;
+                    height:30px;
+                    border-radius:7px;
+                    background:#FFEDD5;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                ">
+                    <i class="bi bi-cup-hot-fill"></i>
+                </div>
+
+                <div>
+                    <span class="fw-bold small">
+                        Horario de descanso
+                    </span>
+
+                    <small class="d-block"
+                           style="color:#9A3412;">
+                        Pausa de almuerzo del médico
+                    </small>
+                </div>
+            </div>
+        </td>
+
+        <td>
+            <span class="badge rounded-pill"
+                  style="background:#FFEDD5;color:#C2410C;">
+                Descanso
+            </span>
+        </td>
+    </tr>
+
+    <!-- Citas de la tarde -->
+    <tr th:each="c : ${citasTarde}">
+        <td class="fw-bold text-muted"
+            th:text="${c.horaCita}">
+            -
+        </td>
+
+        <td>
+            <div class="d-flex align-items-center gap-2">
+                <div style="
+                    width:30px;
+                    height:30px;
+                    background:linear-gradient(135deg,#0D9488,#2DD4BF);
+                    border-radius:7px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    flex-shrink:0;
+                ">
+                    <span style="font-size:.65rem;font-weight:700;color:#fff;"
+                          th:text="${#strings.substring(c.paciente.nombres,0,1)
+                          + #strings.substring(c.paciente.apellidos,0,1)}">
+                        P
+                    </span>
+                </div>
+
+                <span class="small fw-bold"
+                      th:text="${c.paciente.nombres + ' ' + c.paciente.apellidos}">
+                    Paciente
+                </span>
+            </div>
+        </td>
+
+        <td class="text-muted small"
+            th:text="${c.motivo}">
+            -
+        </td>
+
+        <td>
+            <span class="doc-badge-status"
+                  th:text="${c.estado}"
+                  th:style="${c.estado == 'Completada'}
+                    ? 'background:#D1FAE5;color:#059669;'
+                    : (${c.estado == 'Pendiente'}
+                        ? 'background:#CCFBF1;color:#0F766E;'
+                        : 'background:#FEF3C7;color:#D97706;')">
+            </span>
+        </td>
+
+        <td>
+    <a th:if="${#strings.equalsIgnoreCase(c.estado, 'Confirmada')}"
+       th:href="@{/medico/consulta(idCita=${c.idCita})}"
+       class="btn btn-sm rounded-pill px-3 fw-bold"
+       style="background:var(--doc-primary);color:#fff;font-size:.7rem;">
+        Atender
+    </a>
+
+    <span th:if="${#strings.equalsIgnoreCase(c.estado, 'Pendiente')}"
+          class="text-muted small">
+        <i class="bi bi-clock me-1"></i>
+        Esperando llegada
+    </span>
+
+    <span th:if="${#strings.equalsIgnoreCase(c.estado, 'Cancelada')}"
+          class="text-danger small">
+        <i class="bi bi-x-circle-fill me-1"></i>
+        Cancelada
+    </span>
+
+    <span th:if="${#strings.equalsIgnoreCase(c.estado, 'Completada')}"
+          class="text-success small">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        Atendida
+    </span>
+</td>
+
+    </tr>
+
+    <!-- Sin citas -->
+    <tr th:if="${citasSemana.isEmpty()}">
+        <td colspan="5"
+            class="text-center py-5">
+
+            <i class="bi bi-calendar-x text-muted"
+               style="font-size:2rem;"></i>
+
+            <p class="text-muted mt-2">
+                No tienes citas programadas para el día de hoy.
+            </p>
+        </td>
+    </tr>
+
+</tbody>
                 </table>
             </div>
         </div>
+
+        <!-- Modal de pacientes en sala de espera -->
+<div class="modal fade"
+     id="modalPacientesSala"
+     tabindex="-1"
+     aria-labelledby="modalPacientesSalaLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header border-bottom">
+
+                <div>
+                    <h5 class="modal-title fw-bold"
+                        id="modalPacientesSalaLabel">
+
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        Pacientes en sala de espera
+                    </h5>
+
+                    <p class="text-muted small mb-0 mt-1">
+                        Pacientes que ya confirmaron su llegada a la clínica.
+                    </p>
+                </div>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body p-0">
+
+                <!-- Con pacientes en sala -->
+                <div class="table-responsive"
+                     th:if="${!pacientesEnSala.isEmpty()}">
+
+                    <table class="table align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Estado</th>
+                                <th>Hora</th>
+                                <th>Paciente</th>
+                                <th>Motivo</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr th:each="c : ${pacientesEnSala}">
+
+                                <td>
+                                    <span class="badge rounded-pill"
+                                          style="background:#D1FAE5;color:#047857;">
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+                                        En sala
+                                    </span>
+                                </td>
+
+                                <td class="fw-bold"
+                                    th:text="${c.horaCita}">
+                                    08:30
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+
+                                        <div style="
+                                            width:34px;
+                                            height:34px;
+                                            border-radius:8px;
+                                            background:linear-gradient(135deg,#0D9488,#2DD4BF);
+                                            display:flex;
+                                            align-items:center;
+                                            justify-content:center;
+                                        ">
+                                            <span style="
+                                                color:#fff;
+                                                font-size:.7rem;
+                                                font-weight:700;
+                                            "
+                                            th:text="${#strings.substring(c.paciente.nombres,0,1)
+                                                + #strings.substring(c.paciente.apellidos,0,1)}">
+                                                PP
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <p class="fw-bold small mb-0"
+                                               th:text="${c.paciente.nombres
+                                                   + ' '
+                                                   + c.paciente.apellidos}">
+                                                Paciente
+                                            </p>
+
+                                            <small class="text-muted"
+                                                   th:text="${'DNI: ' + c.paciente.dni}">
+                                                DNI
+                                            </small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-muted small"
+                                    th:text="${c.motivo}">
+                                    Motivo
+                                </td>
+
+                                <td>
+                                    <a th:href="@{/medico/consulta(idCita=${c.idCita})}"
+                                       class="btn btn-sm btn-primary rounded-pill px-3">
+                                        Atender
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Sin pacientes en sala -->
+                <div th:if="${pacientesEnSala.isEmpty()}"
+                     class="text-center py-5">
+
+                    <i class="bi bi-person-x text-muted"
+                       style="font-size:3rem;"></i>
+
+                    <h6 class="fw-bold mt-3">
+                        No hay pacientes en sala
+                    </h6>
+
+                    <p class="text-muted mb-0">
+                        Todavía ningún paciente ha confirmado su llegada.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="modal-footer border-top">
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
     </div>
 </body>
 </html>

@@ -65,51 +65,170 @@
             </div>
 
             <div class="doc-card">
-                <div class="doc-card-header d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0" style="font-size:.85rem;"><i class="bi bi-clock me-1"></i>Horarios de Atención (Turnos)</h6>
-                    <span th:if="${param.success}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Actualizado</span>
+    <div class="doc-card-header d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0" style="font-size:.85rem;">
+            <i class="bi bi-clock me-1"></i>
+            Horarios de Atención (Turnos)
+        </h6>
+
+        <span th:if="${param.success}"
+              class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            Actualizado
+        </span>
+    </div>
+
+    <div class="doc-card-body">
+        <form th:action="@{/medico/horario/actualizar}" method="post">
+
+            <div class="row g-3">
+
+                <!-- Lunes a viernes -->
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold">
+                        Lunes a Viernes
+                    </label>
+
+                    <input type="text"
+                           name="horarioLv"
+                           class="form-control form-control-sm border-primary-subtle"
+                           placeholder="Ej: 08:00 AM - 02:00 PM"
+                           required
+                           th:value="${medico?.horarioLv != null and medico.horarioLv != 'No disponible'
+                               ? medico.horarioLv
+                               : ''}">
                 </div>
-                <div class="doc-card-body">
-                    <form th:action="@{/medico/horario/actualizar}" method="post">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted fw-bold">Lunes a Viernes</label>
-                                <input type="text" name="horarioLv" class="form-control form-control-sm border-primary-subtle" placeholder="Ej: 08:00 AM - 02:00 PM o No disponible"
-                                       th:value="${medico?.horarioLv != null ? (medico.horarioLv == 'No disponible' ? '' : medico.horarioLv) : ''}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted fw-bold">Sábados</label>
-                                <input type="text" name="horarioSabado" class="form-control form-control-sm border-primary-subtle" placeholder="Ej: 09:00 AM - 01:00 PM o No disponible"
-                                       th:value="${medico?.horarioSabado != null ? (medico.horarioSabado == 'No disponible' ? '' : medico.horarioSabado) : ''}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted fw-bold">Duración por Cita (minutos)</label>
-                                <select name="duracionCita" class="form-select form-select-sm border-primary-subtle">
-                                    <option value="15" th:selected="${medico?.duracionCita == 15}">15 minutos</option>
-                                    <option value="20" th:selected="${medico?.duracionCita == 20}">20 minutos</option>
-                                    <option value="30" th:selected="${medico?.duracionCita == 30}">30 minutos</option>
-                                    <option value="45" th:selected="${medico?.duracionCita == 45}">45 minutos</option>
-                                    <option value="60" th:selected="${medico?.duracionCita == 60}">60 minutos</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted fw-bold">Satisfacción</label>
-                                <input type="text" class="form-control form-control-sm bg-light" readonly
-                                       th:value="${medico?.satisfaccion != null ? medico.satisfaccion + '/5.0' : '-'}">
-                            </div>
-                            <div class="col-12 mt-3 text-end">
-                                <button type="submit" class="btn btn-sm btn-primary px-4 fw-bold shadow-sm rounded-pill">
-                                    <i class="bi bi-save me-1"></i> Guardar Turnos
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+
+                <!-- Switch sábado -->
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold d-block">
+                        Atención los sábados
+                    </label>
+
+                    <div class="form-check form-switch mt-2">
+                        <input class="form-check-input"
+       type="checkbox"
+       role="switch"
+       id="atenderSabado"
+       name="atenderSabado"
+       value="true"
+       th:checked="${medico?.horarioSabado != null
+           and medico.horarioSabado != 'No disponible'}"
+       onchange="
+           const contenedor = document.getElementById('contenedorHorarioSabado');
+           const campo = document.getElementById('horarioSabado');
+
+           if (this.checked) {
+               contenedor.style.display = '';
+               campo.disabled = false;
+               campo.required = true;
+           } else {
+               contenedor.style.display = 'none';
+               campo.disabled = true;
+               campo.required = false;
+               campo.value = '';
+           }
+       ">
+
+                        <label class="form-check-label fw-semibold"
+                               for="atenderSabado">
+                            Atender sábados
+                        </label>
+                    </div>
                 </div>
+
+                <!-- Horario sábado -->
+                <div class="col-md-6"
+     id="contenedorHorarioSabado"
+     th:style="${medico?.horarioSabado == null or medico.horarioSabado == 'No disponible'
+         ? 'display:none;'
+         : ''}">
+
+                    <label class="form-label small text-muted fw-bold">
+                        Horario del sábado
+                    </label>
+
+                    <input type="text"
+                           id="horarioSabado"
+                           name="horarioSabado"
+                           class="form-control form-control-sm border-primary-subtle"
+                           placeholder="Ej: 09:00 AM - 01:00 PM"
+                           th:value="${medico?.horarioSabado != null
+                               and medico.horarioSabado != 'No disponible'
+                               ? medico.horarioSabado
+                               : ''}">
+                </div>
+
+                <!-- Duración -->
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold">
+                        Duración por cita
+                    </label>
+
+                    <select name="duracionCita"
+                            class="form-select form-select-sm border-primary-subtle"
+                            required>
+
+                        <option value="15"
+                                th:selected="${medico?.duracionCita == 15}">
+                            15 minutos
+                        </option>
+
+                        <option value="20"
+                                th:selected="${medico?.duracionCita == 20}">
+                            20 minutos
+                        </option>
+
+                        <option value="30"
+                                th:selected="${medico?.duracionCita == 30}">
+                            30 minutos
+                        </option>
+
+                        <option value="45"
+                                th:selected="${medico?.duracionCita == 45}">
+                            45 minutos
+                        </option>
+
+                        <option value="60"
+                                th:selected="${medico?.duracionCita == 60}">
+                            60 minutos
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Satisfacción -->
+                <div class="col-md-6">
+                    <label class="form-label small text-muted fw-bold">
+                        Satisfacción
+                    </label>
+
+                    <input type="text"
+                           class="form-control form-control-sm bg-light"
+                           readonly
+                           th:value="${medico?.satisfaccion != null
+                               ? medico.satisfaccion + '/5.0'
+                               : '-'}">
+                </div>
+
+                <!-- Botón -->
+                <div class="col-12 mt-3 text-end">
+                    <button type="submit"
+                            class="btn btn-sm btn-primary px-4 fw-bold shadow-sm rounded-pill">
+
+                        <i class="bi bi-save me-1"></i>
+                        Guardar turnos
+                    </button>
+                </div>
+
             </div>
+        </form>
+    </div>
+</div>
         </div>
     </div>
 
 </div>
+
 </body>
 </html>
 

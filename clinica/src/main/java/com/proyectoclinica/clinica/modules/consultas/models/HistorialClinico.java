@@ -39,4 +39,15 @@ public class HistorialClinico {
     private String diagnostico;
     private String tratamiento;
     private String observaciones;
+
+    @Column(name = "peso")
+    private Double peso;
+    @Column(name = "talla")
+    private Double talla;
+    @Column(name = "temperatura")
+    private Double temperatura;
+    @Column(name = "presion_arterial")
+    private String presionArterial;
+    @Column(name = "codigo_diagnostico")
+    private String codigoDiagnostico;
 }
