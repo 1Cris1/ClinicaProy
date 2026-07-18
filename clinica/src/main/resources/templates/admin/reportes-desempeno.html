@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<div th:fragment="cuerpo"
+     style="width: 100%; max-width: none;">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <div>
+            <h2 class="fw-bold mb-1">
+                Gestión de Atención y Desempeño Clínico
+            </h2>
+
+            <p class="text-muted mb-0">
+                Indicadores estadísticos de citas, pacientes, médicos y especialidades.
+            </p>
+        </div>
+
+        <a th:href="@{/admin/reportes}"
+           class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i>
+            Volver a reportes
+        </a>
+    </div>
+
+    <section style="
+        width: 100%;
+        max-width: none;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    ">
+
+        <div style="
+            padding: 14px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        ">
+            <h5 class="fw-bold mb-0">
+                Dashboard | Gestión de Atención y Desempeño Clínico
+            </h5>
+
+            <small class="text-muted">
+                Información obtenida desde SQL Server mediante Power BI
+            </small>
+        </div>
+
+        <div class="powerbi-crop">
+            <iframe
+            title="Dashboard Gestión de Atención y Desempeño Clínico"
+            src="https://app.powerbi.com/view?r=eyJrIjoiYjE3ZmJhOGUtMzFhOS00MWM2LWI4Y2QtMmNiYmQ2MWJlZWE0IiwidCI6ImM0YTY2YzM0LTJiYjctNDUxZi04YmUxLWIyYzI2YTQzMDE1OCIsImMiOjR9&pageView=fitToWidth"
+            frameborder="0"
+            allowfullscreen="true">
+        </iframe>
+    </div>
+
+    </section>
+
+</div>
+
+<th:block th:fragment="scripts"></th:block>
+
+</body>
+</html>

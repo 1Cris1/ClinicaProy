@@ -21,6 +21,20 @@
             sidebarOpen.value = false;
         });
 
+            /* --- SUBMENÚ DE REPORTES --- */
+            const reportesMenuToggle = document.getElementById('reportesMenuToggle');
+            if (reportesMenuToggle) {
+                const reportesDropdown =
+                reportesMenuToggle.closest('.app-nav-dropdown');
+                reportesMenuToggle.addEventListener('click', function() {
+                    if (reportesDropdown) {
+                        reportesDropdown.classList.toggle('open');
+                    }
+                });
+                }
+
+
+                
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
         var titles = {
@@ -816,6 +830,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (back1) back1.addEventListener('click', goBack);
         if (back2) back2.addEventListener('click', goBack);
         if (finishBtn) finishBtn.addEventListener('click', finish);
+
+        
     });
 
 /* =========================================

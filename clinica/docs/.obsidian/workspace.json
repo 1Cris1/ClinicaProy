@@ -1,0 +1,218 @@
+{
+  "main": {
+    "id": "9fdff72fdb1965ba",
+    "type": "split",
+    "children": [
+      {
+        "id": "5f127d1c3a943335",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6f3319da5f7595f6",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Vista gráfica"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e7640a6197490f19",
+    "type": "split",
+    "children": [
+      {
+        "id": "406abdf81c6e309a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2908b5d441b3fba9",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Explorador de archivos"
+            }
+          },
+          {
+            "id": "8b3c1709e0e5e115",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Buscar"
+            }
+          },
+          {
+            "id": "b202329de1bd6db0",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Marcadores"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "8874ab8779547a8c",
+    "type": "split",
+    "children": [
+      {
+        "id": "4f3b0c4ce406e291",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7cc37e27d70ffc0e",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Enlaces entrantes"
+            }
+          },
+          {
+            "id": "c2a7e8b6339a5c3f",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Enlaces salientes"
+            }
+          },
+          {
+            "id": "e9c155533fe9dafe",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Etiquetas"
+            }
+          },
+          {
+            "id": "6ec3fd0993414b86",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Todas las propiedades"
+            }
+          },
+          {
+            "id": "f374254f6b716328",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Esquema"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Abrir selector rápido": false,
+      "canvas:Crear nuevo lienzo": false,
+      "graph:Abrir vista gráfica": false,
+      "daily-notes:Abrir la nota de hoy": false,
+      "templates:Insertar plantilla": false,
+      "command-palette:Abrir paleta de comandos": false,
+      "bases:Crear nueva base": false
+    }
+  },
+  "active": "6f3319da5f7595f6",
+  "lastOpenFiles": [
+    "06 Integraciones/Integraciones Externas.md",
+    "guia_exposicion_maestra.md",
+    "evaluacion_tecnologias.md.tmp.36308.44304e40a6fe",
+    "evaluacion_tecnologias.md.tmp.36308.99febc6867a1",
+    "05 Seguridad/Seguridad.md",
+    "08 Academico/Guía de Exposición.md",
+    "01 Arquitectura/Patrones de Diseño.md",
+    "06 Integraciones/Google Calendar.md",
+    "08 Academico/Guía de Exposición.md.tmp.36308.ead7fec61c61",
+    "08 Academico/Equipo y Responsabilidades.md",
+    "08 Academico/Equipo y Responsabilidades.md.tmp.36308.6946afbef5ca",
+    "08 Academico/Historias de Usuario.md",
+    "08 Academico/Historias de Usuario.md.tmp.36308.11e6eca405a6",
+    "08 Academico/Documentación Académica.md",
+    "08 Academico",
+    "07 Infraestructura/Infraestructura y Despliegue.md",
+    "07 Infraestructura/Infraestructura y Despliegue.md.tmp.36308.cc2fd7341160",
+    "07 Infraestructura",
+    "06 Integraciones/TEDEF y DIGEMID.md",
+    "06 Integraciones/TEDEF y DIGEMID.md.tmp.36308.565f4c42f05b",
+    "06 Integraciones/Power BI.md",
+    "06 Integraciones/OpenFDA.md",
+    "06 Integraciones/CIE-11 OMS.md",
+    "06 Integraciones/Google Calendar.md.tmp.36308.231cab7f1d49",
+    "06 Integraciones/FHIR.md",
+    "06 Integraciones/API Perú y SUSALUD.md",
+    "05 Seguridad/Recuperación de Contraseña.md",
+    "04 Roles y Vistas/API REST.md",
+    "04 Roles y Vistas/Portal Público.md",
+    "04 Roles y Vistas/Rol Laboratorio.md",
+    "04 Roles y Vistas/Rol Administrador.md",
+    "04 Roles y Vistas/Rol Recepcionista.md",
+    "04 Roles y Vistas/Rol Médico.md",
+    "04 Roles y Vistas/Rol Paciente.md",
+    "04 Roles y Vistas/Roles del Sistema.md",
+    "03 Base de Datos/Datos Semilla.md"
+  ]
+}

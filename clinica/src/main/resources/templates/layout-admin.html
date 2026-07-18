@@ -77,15 +77,43 @@
             </a>
 
             <div class="app-sidebar-label mt-2">Sistema</div>
-            <a th:href="@{/admin/reportes}" th:class="${#strings.contains(view, 'reportes')} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes">
-                <i class="bi bi-graph-up-arrow"></i> Reportes
-            </a>
-            <a th:href="@{/admin/configuracion}" th:class="${#strings.contains(view, 'configuracion')} ? 'app-nav-link active' : 'app-nav-link'" data-page="configuracion">
-                <i class="bi bi-gear-fill"></i> Configuración
-            </a>
-        </div>
+            <!-- Menú desplegable de Reportes -->
+             <div class="app-nav-dropdown"
+             th:classappend="${view != null and #strings.contains(view, 'reportes')} ? ' open' : ''">
+             <button type="button"
+             class="app-nav-link app-nav-dropdown-toggle"
+             id="reportesMenuToggle">
+             <span class="app-nav-dropdown-label">
+                <i class="bi bi-graph-up-arrow"></i>
+                Reportes
+            </span>
+            <i class="bi bi-chevron-down app-nav-dropdown-arrow"></i>
+        </button>
+        <div class="app-nav-submenu">
+            <a th:href="@{/admin/reportes}"
+            class="app-nav-sublink"
+            th:classappend="${view == 'admin/reportes'} ? ' active' : ''">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span>Reportes y Estadísticas</span>
+        </a>
+        <a th:href="@{/admin/reportes/desempeno-clinico}"
+        class="app-nav-sublink"
+        th:classappend="${view == 'admin/reportes-desempeno'} ? ' active' : ''">
+        <i class="bi bi-speedometer2"></i>
+        <span>Gestión de Atención y Desempeño Clínico</span>
+    </a>
+</div>
+</div>
+<a th:href="@{/admin/configuracion}"
+th:class="${#strings.contains(view, 'configuracion')} ? 'app-nav-link active' : 'app-nav-link'"
+data-page="configuracion">
+<i class="bi bi-gear-fill"></i>
+Configuración
+</a>
 
-        <div class="app-sidebar-footer">
+
+</div>
+<div class="app-sidebar-footer">
             <a th:href="@{/}" class="app-nav-link text-danger">
                 <i class="bi bi-box-arrow-left"></i> Salir al Portal
             </a>
