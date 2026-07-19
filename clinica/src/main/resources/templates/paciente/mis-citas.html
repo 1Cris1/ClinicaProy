@@ -26,7 +26,7 @@
         <!-- Custom Tabs Navigation -->
         <div class="d-flex gap-2 mb-4 p-1 bg-light rounded-pill w-fit-content overflow-auto" style="max-width:100%;">
             <button class="app-btn py-2 px-4 rounded-pill border-0 transition-all shadow-sm" id="btn-proximas" data-tab="proximas" onclick="switchTab('proximas')" style="background:var(--primary); color:white;">
-                Próximas <span class="badge rounded-pill ms-1 bg-white text-primary" th:text="${citas != null ? #lists.size(citas.?[estado == 'Pendiente' or estado == 'Confirmada']) : 0}">0</span>
+                Próximas <span class="badge rounded-pill ms-1 bg-white text-primary" th:text="${citas != null ? #lists.size(citas.?[estado == 'Programada' or estado == 'Pendiente' or estado == 'Confirmada']) : 0}">0</span>
             </button>
             <button class="app-btn py-2 px-4 rounded-pill border-0 transition-all hover-translate" id="btn-completadas" data-tab="completadas" onclick="switchTab('completadas')" style="background:transparent; color:var(--text-muted);">
                 Completadas <span class="badge rounded-pill ms-1 bg-secondary text-white" th:text="${citas != null ? #lists.size(citas.?[estado == 'Completada']) : 0}">0</span>
@@ -40,14 +40,14 @@
         <div class="tab-content">
             <!-- Próximas -->
             <div id="panel-proximas" class="tab-pane-active animate-fade-in">
-                <div th:if="${citas == null or #lists.isEmpty(citas.?[estado == 'Pendiente' or estado == 'Confirmada'])}" class="app-card py-5 text-center border-0">
+                <div th:if="${citas == null or #lists.isEmpty(citas.?[estado == 'Programada' or estado == 'Pendiente' or estado == 'Confirmada'])}" class="app-card py-5 text-center border-0">
                     <div class="opacity-25 mb-3" style="font-size:3.5rem;"><i class="bi bi-calendar-x"></i></div>
                     <p class="mb-1 fw-bold">No tienes citas próximas</p>
                     <p class="text-muted small mb-4">Agenda una nueva cita para recibir atención médica especializada.</p>
                     <a th:href="@{/paciente/agendar}" class="app-btn bg-primary text-white border-0 px-4">Agendar Cita Ahora</a>
                 </div>
 
-                <div class="app-card mb-3 border-0 shadow-sm-hover transition-all" th:each="cita : ${citas}" th:if="${cita.estado == 'Pendiente' or cita.estado == 'Confirmada'}">
+                <div class="app-card mb-3 border-0 shadow-sm-hover transition-all" th:each="cita : ${citas}" th:if="${cita.estado == 'Programada' or cita.estado == 'Pendiente' or cita.estado == 'Confirmada'}">
                     <div class="app-card-body p-4">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                             <div class="d-flex align-items-center gap-4">
@@ -67,7 +67,11 @@
                             <div class="d-flex align-items-center gap-3">
                                 <span th:if="${cita.estado == 'Confirmada'}" class="app-badge" style="background:#DCFCE7; color:#15803D;">Confirmada</span>
                                 <span th:if="${cita.estado == 'Pendiente'}" class="app-badge" style="background:#FEF3C7; color:#B45309;">Pendiente</span>
-                                
+                                <span th:if="${cita.estado == 'Programada'}"
+                                            class="app-badge"
+                                            style="background:#DBEAFE; color:#1D4ED8;">
+                                            Programada
+                                </span>
                                 <a th:href="@{/paciente/agendar(id_cita=${cita.idCita})}" class="app-btn bg-white text-primary border-primary px-3 py-1" style="font-size:.75rem;">
                                     <i class="bi bi-calendar2-range me-1"></i> Re-agendar
                                 </a>

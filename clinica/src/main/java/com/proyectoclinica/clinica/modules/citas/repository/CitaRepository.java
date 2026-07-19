@@ -37,7 +37,7 @@ public interface CitaRepository extends JpaRepository<Cita, Integer> {
     long countPacientesDistintosByMedico(@Param("idMedico") Integer idMedico);
     @Query("SELECT p FROM Paciente p WHERE p.id IN (SELECT DISTINCT c.paciente.id FROM Cita c WHERE c.medico.id = :idMedico)")
     List<Paciente> findPacientesByMedico(@Param("idMedico") Integer idMedico);
-    @Query("SELECT c FROM Cita c WHERE c.medico.id = :idMedico AND c.fechaCita >= CURRENT_DATE AND c.estado = 'Pendiente' ORDER BY c.fechaCita ASC, c.horaCita ASC LIMIT 1")
+    @Query("SELECT c FROM Cita c WHERE c.medico.id = :idMedico AND c.fechaCita >= CURRENT_DATE AND (c.estado = 'Programada' OR c.estado = 'Pendiente' OR c.estado = 'Confirmada') ORDER BY c.fechaCita ASC, c.horaCita ASC LIMIT 1")
     Cita findSiguienteCitaMedico(@Param("idMedico") Integer idMedico);
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.medico.id = :idMedico AND YEAR(c.fechaCita) = YEAR(CURRENT_DATE) AND MONTH(c.fechaCita) = MONTH(CURRENT_DATE) AND c.estado = 'Completada'")
     long countConsultasMesActual(@Param("idMedico") Integer idMedico);
@@ -45,8 +45,8 @@ public interface CitaRepository extends JpaRepository<Cita, Integer> {
     long countNotasMesActual(@Param("idMedico") Integer idMedico);
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.paciente.id = :idPaciente AND YEAR(c.fechaCita) = YEAR(CURRENT_DATE) AND c.estado = 'Completada'")
     long countConsultasAnioActual(@Param("idPaciente") Integer idPaciente);
-    @Query("SELECT COUNT(c) FROM Cita c WHERE c.paciente.id = :idPaciente AND (c.estado = 'Pendiente' OR c.estado = 'Confirmada')")
+    @Query("SELECT COUNT(c) FROM Cita c WHERE c.paciente.id = :idPaciente AND (c.estado = 'Programada' OR c.estado = 'Pendiente' OR c.estado = 'Confirmada')")
     long countCitasPendientes(@Param("idPaciente") Integer idPaciente);
-    @Query("SELECT c FROM Cita c WHERE c.paciente.id = :idPaciente AND c.fechaCita >= CURRENT_DATE AND (c.estado = 'Pendiente' OR c.estado = 'Confirmada') ORDER BY c.fechaCita ASC, c.horaCita ASC LIMIT 1")
+    @Query("SELECT c FROM Cita c WHERE c.paciente.id = :idPaciente AND c.fechaCita >= CURRENT_DATE AND (c.estado = 'Programada' OR c.estado = 'Pendiente' OR c.estado = 'Confirmada') ORDER BY c.fechaCita ASC, c.horaCita ASC LIMIT 1")
     Cita findProximaCita(@Param("idPaciente") Integer idPaciente);
 }

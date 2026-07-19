@@ -49,5 +49,10 @@ public class UserDetailsImpl implements UserDetails {
 
     public String getRolBase() {
         return usuario.getRol().name();
+
     }
+
+    public Usuario getUsuario() {
+    return usuario;
+}
 }

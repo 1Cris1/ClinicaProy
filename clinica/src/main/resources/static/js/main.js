@@ -456,18 +456,141 @@
     };
 
     window.selectDoctor = function(el) {
-        document.querySelectorAll('.doctor-option').forEach(function(o) { o.classList.remove('selected'); });
-        el.classList.add('selected');
-        agendarData.doctor = el.dataset.doctor;
-        agendarData.sede = el.dataset.sede;
-        agendarData.id_medico = el.dataset.idMedico;
-    };
+    document.querySelectorAll('.doctor-option').forEach(function(o) {
+        o.classList.remove('selected');
+    });
+
+    el.classList.add('selected');
+
+    agendarData.doctor = el.dataset.doctor;
+    agendarData.sede = el.dataset.sede;
+    agendarData.id_medico = el.dataset.idMedico;
+
+    // NUEVO
+    agendarData.horarioLv = el.dataset.horariolv;
+    agendarData.horarioSab = el.dataset.horariosab;
+    agendarData.duracion = parseInt(el.dataset.duracion) || 30;
+
+    document.getElementById("citaSede").value = agendarData.sede;
+
+    if (document.getElementById("citaFecha").value) {
+        generateTimeSlots(document.getElementById("citaFecha").value);
+    }
+};
 
     window.selectTime = function(el) {
         document.querySelectorAll('.time-slot').forEach(function(b) { b.classList.remove('selected'); });
         el.classList.add('selected');
         agendarData.time = el.textContent.trim();
     };
+
+    const fecha = document.getElementById("citaFecha");
+
+if (fecha) {
+
+    fecha.addEventListener("change", function () {
+
+        generateTimeSlots(this.value);
+
+    });
+
+}
+
+
+    function generateTimeSlots(dateString) {
+
+    const grid = document.getElementById("horariosGrid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+
+    if (!dateString || !agendarData.id_medico) {
+        grid.innerHTML =
+            '<p class="text-muted small">Selecciona un médico y una fecha para ver los horarios disponibles.</p>';
+        return;
+    }
+
+    const parts = dateString.split("-");
+    if (parts.length !== 3) return;
+
+    const d = new Date(parts[0], parts[1]-1, parts[2]);
+    const day = d.getDay();
+
+    if (day === 0) {
+        grid.innerHTML =
+            '<p class="text-danger small fw-bold">No hay atención los domingos.</p>';
+        return;
+    }
+
+    let horario =
+        day === 6
+            ? agendarData.horarioSab
+            : agendarData.horarioLv;
+
+    if (!horario) {
+        grid.innerHTML =
+            '<p class="text-danger small">Doctor no disponible.</p>';
+        return;
+    }
+
+    let horas = horario.split("-");
+
+    if (horas.length !== 2) {
+        grid.innerHTML =
+            '<p class="text-danger small">Horario mal configurado.</p>';
+        return;
+    }
+
+    let inicio = horas[0].trim().split(":");
+    let fin = horas[1].trim().split(":");
+
+    let inicioMin =
+        parseInt(inicio[0]) * 60 +
+        parseInt(inicio[1]);
+
+    let finMin =
+        parseInt(fin[0]) * 60 +
+        parseInt(fin[1]);
+
+    let duracion =
+        agendarData.duracion || 30;
+
+    let html = "";
+
+    while (inicioMin + duracion <= finMin) {
+
+        let h = Math.floor(inicioMin / 60);
+        let m = inicioMin % 60;
+
+        let ampm = h >= 12 ? "PM" : "AM";
+        let h12 = h % 12;
+        if (h12 === 0) h12 = 12;
+
+        let texto =
+            (h12 < 10 ? "0" : "") +
+            h12 +
+            ":" +
+            (m < 10 ? "0" : "") +
+            m +
+            " " +
+            ampm;
+
+        html +=
+            '<button type="button" class="time-slot app-btn py-2 px-3 bg-white border" onclick="selectTime(this)">' +
+            texto +
+            "</button>";
+
+        inicioMin += duracion;
+    }
+
+    grid.innerHTML = html;
+
+    agendarData.time = "";
+
+    if (document.getElementById("hidden_hora")) {
+        document.getElementById("hidden_hora").value = "";
+    }
+}
 
     /* ===== HU04: Slide Animation entre pasos ===== */
     function slideToStep(fromStep, toStep, backwards) {
@@ -527,6 +650,7 @@
             var today = new Date().toISOString().split('T')[0];
             document.getElementById('citaFecha').min  = today;
             document.getElementById('citaFecha').value = today;
+            generateTimeSlots(today);
         }
     }
 
@@ -980,7 +1104,12 @@ function toggleFullscreen(btn) {
     document.querySelectorAll('[data-page]').forEach(function(link) {
         if (link.dataset.page === activePage) link.classList.add('active');
         else link.classList.remove('active');
+
+
+        
     });
+
+                
 
 })();
 

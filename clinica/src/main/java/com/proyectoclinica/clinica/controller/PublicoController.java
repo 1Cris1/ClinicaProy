@@ -242,6 +242,7 @@ public class PublicoController {
         } catch (DataIntegrityViolationException e) {
             return "redirect:/registro?error=duplicado";
         } catch (Exception e) {
+            e.printStackTrace();
             return "redirect:/registro?error=general";
         }
     }

@@ -55,4 +55,58 @@ public class EmailService {
             log.error("Error enviando correo de bienvenida a {}", to, e);
         }
     }
+
+    public void enviarCodigoVerificacion(String to, String nombreUsuario, String codigo) {
+    try {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        helper.setSubject("Código de verificación - ClinicX");
+
+        String htmlContent =
+                "<div style='font-family:Segoe UI,Arial,sans-serif;max-width:600px;margin:auto;padding:20px;border:1px solid #ddd;border-radius:10px'>" +
+
+                "<h2 style='color:#2563EB;text-align:center'>ClinicX</h2>" +
+
+                "<h3>Hola, " + nombreUsuario + "</h3>" +
+
+                "<p>Se ha detectado un intento de inicio de sesión en tu cuenta.</p>" +
+
+                "<p>Para continuar, ingresa el siguiente código de verificación:</p>" +
+
+                "<div style='text-align:center;margin:30px 0'>" +
+
+                "<span style='font-size:34px;font-weight:bold;letter-spacing:8px;color:#2563EB'>" +
+                codigo +
+                "</span>" +
+
+                "</div>" +
+
+                "<p><strong>Este código vence en 5 minutos.</strong></p>" +
+
+                "<p>Si tú no intentaste iniciar sesión, simplemente ignora este correo.</p>" +
+
+                "<hr>" +
+
+                "<p style='font-size:12px;color:gray;text-align:center'>ClinicX - Sistema de Gestión Médica</p>" +
+
+                "</div>";
+
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+
+        log.info("Código de verificación enviado a {}", to);
+
+    } catch (MessagingException e) {
+
+        log.error("Error enviando código de verificación", e);
+
+    }
+}
+
+
+
+
 }

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:fragment="cuerpo">
+
+<div class="container-fluid">
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h2 class="fw-bold mb-2">Nuestros Especialistas</h2>
+            <p class="text-muted mb-3">
+                Conoce a nuestro equipo médico altamente calificado.
+            </p>
+
+                    <div class="row g-3">
+
+            <div class="col-md-6">
+                <input id="buscarDoctor"
+                    type="text"
+                    class="form-control"
+                    placeholder="Buscar médico por nombre...">
+            </div>
+
+            <div class="col-md-4">
+
+                <select id="filtroEspecialidad" class="form-select">
+
+                    <option value="">Todas las especialidades</option>
+
+                    <option
+                        th:each="esp : ${especialidades}"
+                        th:value="${esp.nombre}"
+                        th:text="${esp.nombre}">
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+        </div>
+    </div>
+
+    <div class="row" id="listaMedicos">
+
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4 doctor-item"
+     th:each="medico : ${medicos}"
+     th:attr="data-especialidad=${medico.especialidad.nombre}">
+
+            <div class="card h-100 border-0 shadow-sm doctor-card">
+
+                <div class="doctor-image">
+
+                <img th:src="${medico.sexo == 'F'}
+                            ? '/img/doctores/doctor-mujer.webp'
+                            : '/img/doctores/doctor-hombre.webp'"
+                    class="card-img-top"
+                    style="height:280px;object-fit:cover;"
+                    alt="Doctor">
+
+                <div class="doctor-overlay">
+
+                    <a th:href="@{/paciente/agendar}"
+                    class="btn btn-primary rounded-pill px-4">
+
+                        <i class="bi bi-calendar-plus-fill me-2"></i>
+                        Agendar cita
+
+                    </a>
+
+                </div>
+
+                </div>
+
+                <div class="card-body">
+
+                    <h5 class="fw-bold text-dark mb-3"
+                        th:text="'Dr. ' + ${medico.nombres} + ' ' + ${medico.apellidos}">
+                        Doctor
+                    </h5>
+
+                    <span class="badge rounded-pill bg-primary px-3 py-2 mb-3"
+                        th:text="${medico.especialidad.nombre}">
+                    </span>
+
+                    <p class="mb-2">
+                        <i class="bi bi-patch-check-fill text-success"></i>
+                        <strong>CMP:</strong>
+                        <span th:text="${medico.cmp}"></span>
+                    </p>
+
+                    <p class="mb-2">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <span th:text="${medico.sede.nombre}"></span>
+                    </p>
+
+                    <p class="mb-2">
+                        <i class="bi bi-clock-fill text-warning"></i>
+                        <span th:text="${medico.horarioLv}"></span>
+                    </p>
+
+                    <p class="mb-3">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <span th:text="${medico.satisfaccion}"></span>
+                    </p>
+
+
+                <small class="text-muted">
+                    Consultorio:
+                    <span th:text="${medico.consultorio ?: 'No asignado'}"></span>
+                </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.doctor-card{
+transition:.25s;
+border-radius:18px;
+overflow:hidden;
+}
+
+.doctor-card:hover{
+transform:translateY(-8px);
+box-shadow:0 18px 35px rgba(0,0,0,.15)!important;
+}
+
+.doctor-image{
+    position: relative;
+    overflow: hidden;
+}
+
+.doctor-overlay{
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    opacity: 0;
+    transition: .35s;
+}
+
+.doctor-image:hover .doctor-overlay{
+    opacity: 1;
+}
+
+.doctor-overlay .btn{
+    transform: translateY(20px);
+    transition: .35s;
+}
+
+.doctor-image:hover .btn{
+    transform: translateY(0);
+}
+
+
+</style>
+
+</th:block>
+
+<th:block th:fragment="scripts">
+
+<script>
+
+const buscador = document.getElementById("buscarDoctor");
+const filtro = document.getElementById("filtroEspecialidad");
+
+function filtrarMedicos() {
+
+    const texto = buscador.value.toLowerCase().trim();
+    const especialidad = filtro.value.toLowerCase().trim();
+
+    document.querySelectorAll(".doctor-item").forEach(function(card){
+
+        const nombre = card.innerText.toLowerCase();
+        const esp = card.dataset.especialidad.toLowerCase();
+
+        const coincideNombre = nombre.includes(texto);
+
+        const coincideEspecialidad =
+            especialidad === "" ||
+            esp === especialidad;
+
+        if(coincideNombre && coincideEspecialidad){
+            card.style.display = "";
+        }else{
+            card.style.display = "none";
+        }
+
+    });
+
+}
+
+buscador.addEventListener("keyup", filtrarMedicos);
+
+filtro.addEventListener("change", filtrarMedicos);
+
+</script>
+
+</th:block> 
+
+</html>
