@@ -26,10 +26,10 @@ Este documento centraliza los 12 requerimientos oficiales del proyecto. A difere
 
 ## 👨‍💼 INTEGRANTE 2: Cristian (Administrador)
 
-### 1. Gestión de Especialidades Médicas
+### 1. Gestión de Productos del Catálogo de Farmacia
 
-- **Frontend:** clinica/src/main/resources/templates/admin/especialidades.html (CRUD interactivo con iconos y colores para el catálogo).
-- **Backend:** clinica/src/main/java/com/proyectoclinica/clinica/controller/AdminController.java (Buscar `@PostMapping("/especialidades/nuevo")` y `@PostMapping("/especialidades/editar")` donde se persisten y actualizan las especialidades médicas en la BD).
+- **Frontend:** [productos.html](file:///c:/Users/RYZEN/Desktop/ClinicaProy/clinica/src/main/resources/templates/admin/productos.html) (CRUD completo con formulario modal para registrar y editar medicamentos, integrando la carga directa de archivos desde la computadora sin utilizar URLs externas).
+- **Backend:** [AdminController.java](file:///c:/Users/RYZEN/Desktop/ClinicaProy/clinica/src/main/java/com/proyectoclinica/clinica/controller/AdminController.java) (Buscar los métodos `@GetMapping("/productos")` de listado, `@PostMapping("/productos/nuevo")` para registro, `@PostMapping("/productos/editar")` para edición, y `@GetMapping("/productos/eliminar")` para remoción mediante el uso de `ProductoRepository`).
 
 ### 2. Suspensión Dinámica de Cuentas (Spring Security)
 
@@ -37,7 +37,7 @@ Este documento centraliza los 12 requerimientos oficiales del proyecto. A difere
 - **Backend (Controlador):** clinica/src/main/java/com/proyectoclinica/clinica/controller/AdminController.java (Buscar @PostMapping("/usuarios/toggle-estado")).
 - **Backend (Core Seguridad):** clinica/src/main/java/com/proyectoclinica/clinica/security/UserDetailsImpl.java (Mostrar el método isEnabled() que bloquea accesos).
 
-### 3. Gestión del Tarifario (Servicios Médicos)
+### 3. Gestión del Servicios 
 
 - **Frontend:** clinica/src/main/resources/templates/admin/especialidades.html (o la vista correspondiente de servicios).
 - **Backend (Controlador):** clinica/src/main/java/com/proyectoclinica/clinica/controller/AdminController.java (Buscar los métodos del CRUD de servicios).
@@ -46,11 +46,11 @@ Este documento centraliza los 12 requerimientos oficiales del proyecto. A difere
 ---
 
 ## 🗂️ INTEGRANTE 3: Miguel (Recepcionista)
-
-### 1. Módulo de Pagos y Caja (Registro Manual de Pagos)
-
-- **Frontend:** clinica/src/main/resources/templates/recepcionista/pagos.html (Pestañas de control de cobro de consultas y pedidos de farmacia con sus respectivos filtros y estadísticas).
-- **Backend:** clinica/src/main/java/com/proyectoclinica/clinica/controller/RecepcionistaController.java (Buscar `@PostMapping("/pagos/nuevo")` y el uso de `PagoService` para persistir el pago, asignar número correlativo de comprobante y registrarlo en BD).
+Triaje
+- **Frontend:**
+  - Formulario de Registro: [triaje.html](file:///c:/Users/RYZEN/Desktop/ClinicaProy/clinica/src/main/resources/templates/recepcionista/triaje.html) (Formulario dinámico con validaciones de rangos saludables para registrar peso, talla, temperatura y presión arterial).
+  - Barra Lateral y Estilos: [layout-recepcionista.html](file:///c:/Users/RYZEN/Desktop/ClinicaProy/clinica/src/main/resources/templates/layout-recepcionista.html) y [main.js](file:///c:/Users/RYZEN/Desktop/ClinicaProy/clinica/src/main/resources/static/js/main.js) (Gestión de la navegación y la clase `.active` de la barra lateral).
+- **Backend:** [RecepcionistaController.java](file:///c:/Users/RYZEN/Desktop/ClinicaProy/clinica/src/main/java/com/proyectoclinica/clinica/controller/RecepcionistaController.java) (Buscar `@GetMapping("/triaje")` para la carga de citas pendientes y `@PostMapping("/triaje/guardar")` donde se valida e inserta la entidad `Triaje` en la base de datos).
 
 ### 2. Reagendamiento de Citas (Validación de Turnos)
 
@@ -58,7 +58,7 @@ Este documento centraliza los 12 requerimientos oficiales del proyecto. A difere
 - **Backend:** clinica/src/main/java/com/proyectoclinica/clinica/controller/RecepcionistaController.java
   - _Qué mostrar:_ Buscar el método @PostMapping("/citas/reagendar") y la lógica que impide cruces de horarios.
 
-### 3. Carga Asíncrona de Historial Clínico (AJAX / Fetch)
+### 3.  Historial Clínico (AJAX / Fetch)
 
 - **Frontend:** clinica/src/main/resources/templates/recepcionista/dashboard.html (Mostrar la función JavaScript  erHistorial() que consume la API).
 - **Backend:** clinica/src/main/java/com/proyectoclinica/clinica/controller/RecepcionistaController.java
@@ -81,6 +81,6 @@ Este documento centraliza los 12 requerimientos oficiales del proyecto. A difere
 
 ### 3. Mapeo de Recetas y Fármacos (Relación Muchos a Muchos)
 
-- **Frontend:** clinica/src/main/resources/templates/doctores/atencion.html (Interfaz de selección múltiple de medicamentos para la receta).
+- **Frontend:** clinica/src/main/resources/templates/doctores/consulta.html (Interfaz de selección múltiple de medicamentos para la receta).
 - **Backend (Entidades):** clinica/src/main/java/com/proyectoclinica/clinica/modules/consultas/models/Receta.java y MedicamentoPrescrito.java (Mostrar cómo se conectan usando @OneToMany y cascade = CascadeType.ALL).
 - **Backend (Controlador):** clinica/src/main/java/com/proyectoclinica/clinica/controller/MedicoController.java (Buscar @PostMapping("/atencion/finalizar") donde se guarda todo en cascada).

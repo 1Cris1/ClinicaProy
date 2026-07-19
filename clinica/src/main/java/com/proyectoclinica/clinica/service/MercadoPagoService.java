@@ -7,7 +7,6 @@ import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.resources.preference.Preference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,8 +20,7 @@ import java.util.List;
 @Slf4j
 public class MercadoPagoService {
 
-    @Value("${mercadopago.access_token}")
-    private String accessToken;
+    private final com.proyectoclinica.clinica.config.MercadoPagoProperties mercadoPagoProperties;
 
     /**
      * Crea una Preference a partir de los datos del pedido.
@@ -36,7 +34,7 @@ public class MercadoPagoService {
     public Preference crearPreference(double total, String description, String orderId, List<PreferenceItemRequest> items) {
         try {
             // Configuramos token de acceso
-            MercadoPagoConfig.setAccessToken(accessToken);
+            MercadoPagoConfig.setAccessToken(mercadoPagoProperties.getAccessToken());
 
             // Construimos las URLs de retorno
             com.mercadopago.client.preference.PreferenceBackUrlsRequest backUrls =

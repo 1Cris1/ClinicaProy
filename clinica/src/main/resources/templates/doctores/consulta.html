@@ -422,7 +422,7 @@
             }
 
             function seleccionarCIE11(cod, desc) {
-                document.getElementById('cie10-val').value = cod;
+                document.getElementById('cie10-val').value = cod + ' - ' + desc;
                 document.getElementById('diagnostico-text').textContent = 'CIE-11: ' + cod + ' - ' + desc;
                 document.getElementById('diagnostico-selected').classList.remove('d-none');
                 document.getElementById('cie11-results').classList.add('d-none');

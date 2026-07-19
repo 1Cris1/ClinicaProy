@@ -90,3 +90,130 @@
     position: absolute; bottom: -20px; left: 50%;
     transform: translateX(-50%); font-size: .6rem; color: var(--ad-muted); font-weight: 600;
 }
+
+/* =========================================
+   EXPOSICIÓN CRISTIAN (US-27) - ESTILOS INFRAESTRUCTURA Y PLANO 3D ISOMÉTRICO
+   ========================================= */
+.consultorio-card {
+    border-radius: 18px;
+    border: 1px solid #edf2f7;
+    background: white;
+    transition: all 0.2s ease;
+}
+.consultorio-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+.conflict-border {
+    border-left: 5px solid #ef4444 !important;
+    border-color: #fecaca !important;
+    background-color: #fff5f5 !important;
+}
+.normal-border {
+    border-left: 5px solid #3b82f6 !important;
+}
+.empty-border {
+    border-left: 5px solid #94a3b8 !important;
+}
+
+/* Plano Arquitectónico 3D Isométrico Lateral */
+.floor-plan-wrapper {
+    perspective: 1000px;
+    padding: 20px 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #f1f5f9;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+.floor-plan {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 8px;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #cbd5e1;
+    transform: rotateX(55deg) rotateZ(-25deg);
+    transform-style: preserve-3d;
+    box-shadow: -6px 6px 15px rgba(0, 0, 0, 0.06), 
+                -12px 12px 25px rgba(0, 0, 0, 0.04);
+    transition: all 0.5s ease;
+    width: 100%;
+    max-width: 380px;
+}
+.floor-room {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-bottom: 5px solid #cbd5e1; /* Extrusión 3D */
+    border-radius: 8px;
+    padding: 8px 2px;
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    user-select: none;
+    color: #475569;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transform: translateZ(0px);
+    transform-style: preserve-3d;
+}
+.floor-room i {
+    font-size: 1rem;
+    transition: transform 0.3s;
+}
+.floor-room:hover:not(.non-selectable) {
+    border-color: #3b82f6;
+    border-bottom: 10px solid #2563eb;
+    background: #eff6ff;
+    color: #1e3a8a;
+    transform: translateZ(10px);
+    box-shadow: -4px 4px 8px rgba(59, 130, 246, 0.2);
+}
+.floor-room.selected {
+    border-color: #2563eb !important;
+    border-bottom: 12px solid #1d4ed8 !important;
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    transform: translateZ(12px);
+    box-shadow: -6px 6px 12px rgba(37, 99, 235, 0.3);
+}
+.floor-room.non-selectable {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #cbd5e1;
+    border-bottom: 3px solid #94a3b8;
+}
+.floor-corridor {
+    grid-column: span 4;
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 4px;
+    text-align: center;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    user-select: none;
+}
+.pulse-target:not(.non-selectable) {
+    animation: mapPulse 1.5s infinite;
+    border-color: #3b82f6 !important;
+}
+@keyframes mapPulse {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+/* =========================================
+   EXPOSICIÓN CRISTIAN (US-27) - FIN ESTILOS INFRAESTRUCTURA
+   ========================================= */

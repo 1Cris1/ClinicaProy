@@ -17,11 +17,13 @@ import com.proyectoclinica.clinica.modules.recursos.models.Medico;
 import com.proyectoclinica.clinica.modules.paciente.models.Paciente;
 import com.proyectoclinica.clinica.modules.consultas.models.Receta;
 import com.proyectoclinica.clinica.modules.consultas.models.MedicamentoPrescrito;
+import com.proyectoclinica.clinica.modules.consultas.models.HistorialClinico;
 import com.proyectoclinica.clinica.modules.laboratorio.models.OrdenLaboratorio;
 import com.proyectoclinica.clinica.modules.citas.repository.CitaRepository;
 import com.proyectoclinica.clinica.modules.recursos.repository.MedicoRepository;
 import com.proyectoclinica.clinica.modules.consultas.repository.RecetaRepository;
 import com.proyectoclinica.clinica.modules.consultas.repository.MedicamentoPrescritoRepository;
+import com.proyectoclinica.clinica.modules.consultas.repository.HistorialClinicoRepository;
 import com.proyectoclinica.clinica.modules.laboratorio.repository.OrdenLaboratorioRepository;
 import com.proyectoclinica.clinica.config.PowerBiProperties;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class MedicoController {
     private final RecetaRepository recetaRepository;
     private final MedicamentoPrescritoRepository medicamentoPrescritoRepository;
     private final OrdenLaboratorioRepository ordenRepository;
+    private final HistorialClinicoRepository historialClinicoRepository;
     private final PowerBiProperties powerBiProperties;
 
     private Medico getMedicoAutenticado(Principal principal) {
@@ -126,6 +129,7 @@ public class MedicoController {
     @Transactional
     public String completarConsulta(@RequestParam Integer idCita,
                                     @RequestParam(required = false) String notasMedicas,
+                                    @RequestParam(value = "diagnostico_cie10", required = false) String diagnosticoCie10,
                                     @RequestParam(value = "med_nombre", required = false) List<String> medNombres,
                                     @RequestParam(value = "med_dosis", required = false) List<String> medDosis,
                                     @RequestParam(value = "med_frecuencia", required = false) List<String> medFrecuencias,
@@ -144,6 +148,16 @@ public class MedicoController {
                 cita.setNotasMedicas(notasMedicas);
             }
             citaRepository.save(cita);
+
+            // Crear y guardar el historial clínico asociado
+            HistorialClinico hc = historialClinicoRepository.findByCitaIdCita(idCita).orElse(new HistorialClinico());
+            hc.setPaciente(cita.getPaciente());
+            hc.setCita(cita);
+            hc.setFechaRegistro(java.time.LocalDateTime.now());
+            hc.setDiagnostico(diagnosticoCie10 != null && !diagnosticoCie10.isBlank() ? diagnosticoCie10 : "Sin diagnóstico");
+            hc.setObservaciones(notasMedicas);
+            hc.setTratamiento("Tratamiento indicado en receta.");
+            historialClinicoRepository.save(hc);
 
             if (medNombres != null && !medNombres.isEmpty()) {
                 Receta receta = Receta.builder()

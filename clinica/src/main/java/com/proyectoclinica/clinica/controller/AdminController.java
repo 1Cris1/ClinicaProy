@@ -19,6 +19,8 @@ import com.proyectoclinica.clinica.modules.recursos.repository.SedeRepository;
 import com.proyectoclinica.clinica.modules.recursos.repository.ServicioRepository;
 import com.proyectoclinica.clinica.modules.recursos.repository.PromocionRepository;
 import com.proyectoclinica.clinica.config.PowerBiProperties;
+import com.proyectoclinica.clinica.modules.seguridad.models.AuditoriaUsuario;
+import com.proyectoclinica.clinica.modules.seguridad.repository.AuditoriaUsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,6 +35,9 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Controller
@@ -54,8 +59,9 @@ public class AdminController {
     private final PromocionRepository promocionRepository;
     private final PasswordEncoder passwordEncoder;
     private final PowerBiProperties powerBiProperties;
+    private final AuditoriaUsuarioRepository auditoriaUsuarioRepository;
 
-    // EXPOSICIÓN CRISTIAN: Aquí inyectamos métricas agregadas en tiempo real utilizando Spring Data JPA (count, countByEstado) sin necesidad de SQL manual.
+    //  - INICIO CÓDIGO BACKEND DASHBOARD (Métricas en tiempo real e inyección de URL de Power BI)
     @GetMapping({"", "/", "/dashboard", "/inicio"})
     public String dashboard(Model model) {
         log.info("[Admin] Acceso al Dashboard");
@@ -78,7 +84,7 @@ public class AdminController {
         model.addAttribute("view", "admin/dashboard");
         return LAYOUT;
     }
-
+    // EXPOSICIÓN CRISTIAN (US-15)
     @GetMapping("/susalud")
     public String susalud(Model model) {
         log.info("[Admin] Acceso a validaciones SUSALUD");
@@ -449,7 +455,7 @@ public class AdminController {
     }
 
     // ========== SERVICIOS ==========
-    // EXPOSICIÓN CRISTIAN: Operación de Lectura (Read) del Tarifario Médico. Relación con la tabla Especialidades.
+    
     @GetMapping("/servicios")
     public String listarServicios(Model model) {
         log.info("[Admin] Acceso a Servicios");
@@ -461,7 +467,7 @@ public class AdminController {
         return LAYOUT;
     }
 
-    // EXPOSICIÓN CRISTIAN: Operación de Creación (Create) de Servicios. Demuestra el uso del patrón @Builder de Lombok para registrar precios.
+    //  Operación de Creación (Create) de Servicios. Demuestra el uso del patrón @Builder de Lombok para registrar precios.
     @PostMapping("/servicios/nuevo")
     public String registrarServicio(@RequestParam String nombre,
                                    @RequestParam(required = false) String descripcion,
@@ -499,8 +505,12 @@ public class AdminController {
 
     @GetMapping("/servicios/eliminar")
     public String eliminarServicio(@RequestParam Integer id) {
-        servicioRepository.deleteById(id);
-        return "redirect:/admin/servicios?eliminado";
+        try {
+            servicioRepository.deleteById(id);
+            return "redirect:/admin/servicios?eliminado";
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            return "redirect:/admin/servicios?error=en_uso";
+        }
     }
 
     // ========== SEDES ==========
@@ -610,11 +620,6 @@ public class AdminController {
         return "redirect:/admin/promociones?exito";
     }
 
-    // ========== FARMACIA ==========
-    /**
-     * HISTORIA DE USUARIO: Gestión de Catálogo de Farmacia
-     * Integrante: 4
-     */
     @GetMapping("/productos")
     public String listarProductos(Model model) {
         log.info("[Admin] Acceso a Gestión de Productos");
@@ -699,7 +704,7 @@ public class AdminController {
         return "redirect:/admin/usuarios?rolCambiado";
     }
 
-    // EXPOSICIÓN CRISTIAN: Seguridad Spring Security. Permite al administrador inhabilitar una cuenta. El UserDetailsImpl validará este campo 'estado' para permitir o denegar el login.
+    // Seguridad Spring Security. Permite al administrador inhabilitar una cuenta. El UserDetailsImpl validará este campo 'estado' para permitir o denegar el login.
     @PostMapping("/usuarios/toggle-estado")
     public String toggleEstadoUsuario(@RequestParam Integer id, @RequestParam Integer estado) {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow();
@@ -731,5 +736,87 @@ public class AdminController {
         model.addAttribute("pageTitle", "Configuración");
         model.addAttribute("view", "admin/configuracion");
         return LAYOUT;
+    }
+
+    @GetMapping("/auditoria")
+    public String verAuditoria(Model model,
+                               @RequestParam(required = false) String usuario,
+                               @RequestParam(required = false) String tipo) {
+        log.info("[Admin] Acceso a Auditoría de Seguridad");
+        List<AuditoriaUsuario> logs;
+        if (usuario != null && !usuario.isBlank() && tipo != null && !tipo.isBlank()) {
+            logs = auditoriaUsuarioRepository.findByUsernameContainingIgnoreCaseAndTipoEventoOrderByFechaEventoDesc(usuario, tipo);
+        } else if (usuario != null && !usuario.isBlank()) {
+            logs = auditoriaUsuarioRepository.findByUsernameContainingIgnoreCaseOrderByFechaEventoDesc(usuario);
+        } else if (tipo != null && !tipo.isBlank()) {
+            logs = auditoriaUsuarioRepository.findByTipoEventoOrderByFechaEventoDesc(tipo);
+        } else {
+            logs = auditoriaUsuarioRepository.findAllByOrderByFechaEventoDesc();
+        }
+
+        model.addAttribute("logs", logs);
+        model.addAttribute("usuarioFiltro", usuario);
+        model.addAttribute("tipoFiltro", tipo);
+        model.addAttribute("pageTitle", "Auditoría de Seguridad");
+        model.addAttribute("view", "admin/auditoria");
+        return LAYOUT;
+    }
+
+    @GetMapping("/consultorios")
+    public String verConsultorios(Model model, @RequestParam(required = false) Integer idSede) {
+        log.info("[Admin] Acceso a Gestión de Consultorios");
+        List<Sede> sedes = sedeRepository.findAll();
+        List<Medico> medicos = medicoRepository.findAll();
+
+        Integer sedeSeleccionadaId = idSede;
+        if (sedeSeleccionadaId == null && !sedes.isEmpty()) {
+            sedeSeleccionadaId = sedes.get(0).getId();
+        }
+
+        final Integer finalSedeId = sedeSeleccionadaId;
+        List<Medico> medicosDeSede = medicos.stream()
+                .filter(m -> m.getSede() != null && m.getSede().getId().equals(finalSedeId))
+                .collect(Collectors.toList());
+
+        Map<String, List<Medico>> consultorioMedicos = new HashMap<>();
+        for (Medico m : medicosDeSede) {
+            String cons = m.getConsultorio();
+            if (cons == null || cons.isBlank()) {
+                cons = "Sin Consultorio";
+            }
+            consultorioMedicos.computeIfAbsent(cons, k -> new ArrayList<>()).add(m);
+        }
+
+        List<String> colisiones = new ArrayList<>();
+        for (Map.Entry<String, List<Medico>> entry : consultorioMedicos.entrySet()) {
+            if (entry.getValue().size() > 1 && !entry.getKey().equals("Sin Consultorio")) {
+                colisiones.add(entry.getKey());
+            }
+        }
+
+        model.addAttribute("sedes", sedes);
+        model.addAttribute("sedeSeleccionadaId", sedeSeleccionadaId);
+        model.addAttribute("medicos", medicosDeSede);
+        model.addAttribute("consultorioMap", consultorioMedicos);
+        model.addAttribute("colisiones", colisiones);
+        model.addAttribute("pageTitle", "Gestión de Consultorios");
+        model.addAttribute("view", "admin/consultorios");
+        return LAYOUT;
+    }
+
+    @PostMapping("/consultorios/reasignar")
+    @Transactional
+    public String reasignarConsultorio(@RequestParam Integer idMedico,
+                                       @RequestParam String consultorio,
+                                       @RequestParam Integer idSede) {
+        log.info("[Admin] Reasignando médico {} al consultorio {} de la sede {}", idMedico, consultorio, idSede);
+        Medico medico = medicoRepository.findById(idMedico).orElse(null);
+        Sede sede = sedeRepository.findById(idSede).orElse(null);
+        if (medico != null && sede != null) {
+            medico.setConsultorio(consultorio);
+            medico.setSede(sede);
+            medicoRepository.save(medico);
+        }
+        return "redirect:/admin/consultorios?idSede=" + idSede;
     }
 }

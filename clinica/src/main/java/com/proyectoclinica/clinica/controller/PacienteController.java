@@ -152,11 +152,12 @@ public class PacienteController {
             LocalDate fechaParsed = LocalDate.parse(fecha);
 
             if (id_cita != null) {
-                // Validación de conflicto de horario para re-agendamiento (excluye la propia
-                // cita)
+                // VERIFICACIÓN DE CONFLICTO EN REAGENDAMIENTO (PACIENTE): Valida si el nuevo horario seleccionado choca con otra cita activa del doctor,
+                // omitiendo la propia cita en edición (id_cita) para evitar bloqueos innecesarios con sus propios datos.
                 boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNotAndIdCitaNot(
                         id_medico, fechaParsed, hora, "Cancelada", id_cita);
                 if (conflicto) {
+                    // Detiene el flujo y redirige indicando conflicto en la URL.
                     return "redirect:/paciente/agendar?id_cita=" + id_cita + "&error=horario_ocupado";
                 }
 
@@ -170,10 +171,11 @@ public class PacienteController {
                     return "redirect:/paciente/citas?reagendado=true";
                 }
             } else {
-                // Validación de conflicto de horario para cita nueva
+                // VERIFICACIÓN DE CONFLICTO CITA NUEVA (PACIENTE): Valida que no exista otra cita activa para el médico, día y hora indicados.
                 boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNot(
                         id_medico, fechaParsed, hora, "Cancelada");
                 if (conflicto) {
+                    // Detiene la creación de la cita y redirige a la vista de reserva con alerta de error.
                     return "redirect:/paciente/agendar?error=horario_ocupado";
                 }
 

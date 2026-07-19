@@ -80,6 +80,12 @@
             <a th:href="@{/admin/reportes}" th:class="${#strings.contains(view, 'reportes')} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes">
                 <i class="bi bi-graph-up-arrow"></i> Reportes
             </a>
+            <a th:href="@{/admin/auditoria}" th:class="${#strings.contains(view, 'auditoria')} ? 'app-nav-link active' : 'app-nav-link'" data-page="auditoria">
+                <i class="bi bi-shield-lock-fill"></i> Auditoría
+            </a>
+            <a th:href="@{/admin/consultorios}" th:class="${#strings.contains(view, 'consultorios')} ? 'app-nav-link active' : 'app-nav-link'" data-page="consultorios">
+                <i class="bi bi-door-open-fill"></i> Consultorios
+            </a>
             <a th:href="@{/admin/configuracion}" th:class="${#strings.contains(view, 'configuracion')} ? 'app-nav-link active' : 'app-nav-link'" data-page="configuracion">
                 <i class="bi bi-gear-fill"></i> Configuración
             </a>

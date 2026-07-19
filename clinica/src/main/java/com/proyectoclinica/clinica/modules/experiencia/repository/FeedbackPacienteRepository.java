@@ -6,5 +6,6 @@ import java.util.Optional;
 
 public interface FeedbackPacienteRepository extends JpaRepository<FeedbackPaciente, Integer> {
     Optional<FeedbackPaciente> findByCitaIdCita(Integer idCita);
+    java.util.List<FeedbackPaciente> findAllByOrderByFechaEnvioDesc();
 }
 

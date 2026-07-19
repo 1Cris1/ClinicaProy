@@ -1,8 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head><title>Servicios - ClinicX Admin</title></head>
 <body>
     <div th:fragment="cuerpo">
+        <!-- Alertas de estado -->
+        <div th:if="${param.exito != null}" class="alert alert-success py-2 small fw-bold mb-3 rounded-3 border-0 animate__animated animate__fadeInDown">
+            <i class="bi bi-check-circle-fill me-1"></i> Servicio registrado correctamente.
+        </div>
+        <div th:if="${param.editado != null}" class="alert alert-info py-2 small fw-bold mb-3 rounded-3 border-0 animate__animated animate__fadeInDown" style="color:#0369a1; background:#e0f2fe;">
+            <i class="bi bi-info-circle-fill me-1"></i> Servicio modificado correctamente.
+        </div>
+        <div th:if="${param.eliminado != null}" class="alert alert-warning py-2 small fw-bold mb-3 rounded-3 border-0 animate__animated animate__fadeInDown" style="color:#b45309; background:#fef3c7;">
+            <i class="bi bi-trash-fill me-1"></i> Servicio eliminado correctamente.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'en_uso'}" class="alert alert-danger py-2 small fw-bold mb-3 rounded-3 border-0 animate__animated animate__shakeX">
+            <i class="bi bi-exclamation-octagon-fill me-1"></i> No se puede eliminar el servicio porque ya cuenta con citas médicas programadas. Considere cambiar su estado a "Inactivo" para que no se muestre al agendar nuevas citas.
+        </div>
+
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <h4 class="fw-bold mb-0">Gestión de Servicios</h4>
             <div class="d-flex align-items-center gap-2">

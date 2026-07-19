@@ -23,7 +23,7 @@
             </div>
             <div>
                 <h6 class="mb-0 fw-bold text-danger">Error al procesar la cita</h6>
-                <p class="mb-0 small opacity-75" th:text="${param.error[0] == 'horario_ocupado' ? 'El médico ya tiene una cita agendada en la fecha y hora seleccionadas.' : (param.error[0] == 'data_not_found' ? 'Médico o paciente no disponible.' : 'Ocurrió un error en el servidor. Inténtelo de nuevo.')}"></p>
+                <p class="mb-0 small opacity-75" th:text="${param.error[0] == 'horario_ocupado' ? 'No se puede agendar porque el médico ya tiene una cita reservada con otra persona.' : (param.error[0] == 'data_not_found' ? 'Médico o paciente no disponible.' : 'Ocurrió un error en el servidor. Inténtelo de nuevo.')}"></p>
             </div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>

@@ -12,6 +12,8 @@ import com.proyectoclinica.clinica.modules.recursos.repository.MedicoRepository;
 import com.proyectoclinica.clinica.modules.recursos.repository.EspecialidadRepository;
 import com.proyectoclinica.clinica.modules.recursos.repository.SedeRepository;
 import com.proyectoclinica.clinica.modules.recursos.repository.ServicioRepository;
+import com.proyectoclinica.clinica.modules.seguridad.models.AuditoriaUsuario;
+import com.proyectoclinica.clinica.modules.seguridad.repository.AuditoriaUsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -28,6 +30,7 @@ public class DataInitializer implements CommandLineRunner {
     private final SedeRepository sedeRepository;
     private final ServicioRepository servicioRepository;
     private final CitaRepository citaRepository;
+    private final AuditoriaUsuarioRepository auditoriaUsuarioRepository;
 
     @Override
     @Transactional
@@ -37,6 +40,84 @@ public class DataInitializer implements CommandLineRunner {
         sincronizarPacienteDesdeUsuario();
         crearServiciosSiNoExisten();
         crearCitaPruebaSiNoExiste();
+        inicializarAuditoriaPrueba();
+    }
+
+    private Integer obtenerIdUsuario(String username) {
+        return usuarioRepository.findByUsername(username)
+                .map(com.proyectoclinica.clinica.modules.seguridad.models.Usuario::getId)
+                .orElse(1); // Default to 1 (admin) if not found
+    }
+
+    private void inicializarAuditoriaPrueba() {
+        if (auditoriaUsuarioRepository.count() == 0) {
+            java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+            
+            auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                    .username("76390957") // Marlon
+                    .idUsuario(obtenerIdUsuario("76390957"))
+                    .fechaEvento(ahora.minusMinutes(45))
+                    .tipoEvento("LOGIN")
+                    .direccionIp("192.168.1.42")
+                    .detalles("Inicio de sesión correcto en el portal de Recepción")
+                    .build());
+
+            auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                    .username("72423413") // Mariana
+                    .idUsuario(obtenerIdUsuario("72423413"))
+                    .fechaEvento(ahora.minusMinutes(35))
+                    .tipoEvento("ACCESO_DATOS")
+                    .direccionIp("192.168.1.105")
+                    .detalles("Consulta de historial clínico del paciente Jhoan Dangelo")
+                    .build());
+
+            auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                    .username("76906446") // Cris
+                    .idUsuario(obtenerIdUsuario("76906446"))
+                    .fechaEvento(ahora.minusMinutes(25))
+                    .tipoEvento("LOGIN")
+                    .direccionIp("192.168.1.88")
+                    .detalles("Inicio de sesión correcto en el portal de Pacientes")
+                    .build());
+
+            auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                    .username("75592700") // Jhoan
+                    .idUsuario(obtenerIdUsuario("75592700"))
+                    .fechaEvento(ahora.minusMinutes(20))
+                    .tipoEvento("ACCESO_DATOS")
+                    .direccionIp("192.168.1.12")
+                    .detalles("Visualización de recetas médicas activas")
+                    .build());
+
+            auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                    .username("76390957") // Marlon
+                    .idUsuario(obtenerIdUsuario("76390957"))
+                    .fechaEvento(ahora.minusMinutes(15))
+                    .tipoEvento("MODIFICACION")
+                    .direccionIp("192.168.1.42")
+                    .detalles("Registro de triaje para la cita de YORNING JHONATHAN")
+                    .build());
+
+            auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                    .username("admin") // Admin
+                    .idUsuario(obtenerIdUsuario("admin"))
+                    .fechaEvento(ahora.minusMinutes(5))
+                    .tipoEvento("LOGIN")
+                    .direccionIp("127.0.0.1")
+                    .detalles("Inicio de sesión correcto en el portal de Administración")
+                    .build());
+
+            auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                    .username("admin") // Admin
+                    .idUsuario(obtenerIdUsuario("admin"))
+                    .fechaEvento(ahora.minusMinutes(2))
+                    .tipoEvento("ACCESO_DATOS")
+                    .direccionIp("127.0.0.1")
+                    .detalles("Visualización del reporte Power BI y dashboard de métricas clínicas")
+                    .build());
+
+            System.out.println("✅ LOGS DE AUDITORÍA INICIALES CREADOS");
+        }
     }
 
     private void crearCitaPruebaSiNoExiste() {

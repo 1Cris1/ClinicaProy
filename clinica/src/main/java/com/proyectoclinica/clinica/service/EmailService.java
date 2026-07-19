@@ -55,4 +55,18 @@ public class EmailService {
             log.error("Error enviando correo de bienvenida a {}", to, e);
         }
     }
+
+    public void enviarCorreoGenerico(String to, String asunto, String htmlContent) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(to);
+            helper.setSubject(asunto);
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("Correo genérico enviado exitosamente a {}", to);
+        } catch (MessagingException e) {
+            log.error("Error enviando correo genérico a {}", to, e);
+        }
+    }
 }

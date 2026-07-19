@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Auditoría de Seguridad - Admin</title></head>
+<body>
+<div th:fragment="cuerpo">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Auditoría de Seguridad</h3>
+            <p class="text-muted mb-0">Monitorea en tiempo real todas las acciones críticas del sistema.</p>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="exportTableToCSV('auditoria_log.csv')">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar Logs (CSV)
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+        <div class="card-body p-3">
+            <form method="get" th:action="@{/admin/auditoria}" class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="usuario" class="form-control bg-light border-0" placeholder="Buscar por usuario..." th:value="${usuarioFiltro}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="tipo" class="form-select form-select-sm bg-light border-0">
+                        <option value="">-- Todos los Eventos --</option>
+                        <option value="LOGIN" th:selected="${tipoFiltro == 'LOGIN'}">LOGIN (Inicios de Sesión)</option>
+                        <option value="ACCESO_DATOS" th:selected="${tipoFiltro == 'ACCESO_DATOS'}">ACCESO A DATOS</option>
+                        <option value="MODIFICACION" th:selected="${tipoFiltro == 'MODIFICACION'}">MODIFICACIÓN</option>
+                        <option value="ELIMINACION" th:selected="${tipoFiltro == 'ELIMINACION'}">ELIMINACIÓN</option>
+                        <option value="SEGURIDAD" th:selected="${tipoFiltro == 'SEGURIDAD'}">CAMBIO DE ROLES / CLAVE</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100 fw-bold">Filtrar</button>
+                    <a th:href="@{/admin/auditoria}" class="btn btn-light btn-sm rounded-pill w-100 text-muted">Limpiar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Resultados -->
+    <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="auditoriaTable">
+                <thead class="table-light">
+                    <tr class="text-uppercase text-secondary font-weight-bold" style="font-size: 0.75rem;">
+                        <th class="ps-4">ID</th>
+                        <th>Usuario</th>
+                        <th>Fecha y Hora</th>
+                        <th>Tipo Evento</th>
+                        <th>IP Origen</th>
+                        <th>Detalles</th>
+                        <th class="text-end pe-4">Ver</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(logs)}">
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-shield-slash d-block fs-1 mb-2 opacity-50"></i>
+                            No se encontraron registros de auditoría que coincidan con la búsqueda.
+                        </td>
+                    </tr>
+                    <tr th:each="log : ${logs}">
+                        <td class="ps-4 font-monospace small" th:text="${log.idAuditoria}">1</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.8rem; color: #475569;" th:text="${#strings.substring(log.username != null ? log.username : 'U', 0, 1).toUpperCase()}">U</div>
+                                <span class="fw-semibold text-dark" th:text="${log.username}">usuario</span>
+                            </div>
+                        </td>
+                        <td th:text="${#temporals.format(log.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}">01/01/2026 12:00:00</td>
+                        <td>
+                            <!-- Badges Condicionales -->
+                            <span th:if="${log.tipoEvento == 'LOGIN'}" class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1">LOGIN</span>
+                            <span th:if="${log.tipoEvento == 'MODIFICACION'}" class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2.5 py-1">MODIFICACIÓN</span>
+                            <span th:if="${log.tipoEvento == 'ELIMINACION'}" class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1">ELIMINACIÓN</span>
+                            <span th:if="${log.tipoEvento == 'ACCESO_DATOS'}" class="badge bg-info-subtle text-info-emphasis rounded-pill px-2.5 py-1">ACCESO DATOS</span>
+                            <span th:if="${log.tipoEvento == 'SEGURIDAD'}" class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1">SEGURIDAD</span>
+                            <span th:if="${log.tipoEvento != 'LOGIN' and log.tipoEvento != 'MODIFICACION' and log.tipoEvento != 'ELIMINACION' and log.tipoEvento != 'ACCESO_DATOS' and log.tipoEvento != 'SEGURIDAD'}" class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1" th:text="${log.tipoEvento}">EVENTO</span>
+                        </td>
+                        <td class="font-monospace small text-muted" th:text="${log.direccionIp}">127.0.0.1</td>
+                        <td class="text-truncate" style="max-width: 250px;" th:text="${log.detalles}">Detalles de la acción...</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-light btn-sm rounded-circle" 
+                                    th:attr="data-id=${log.idAuditoria}, data-user=${log.username}, data-fecha=${#temporals.format(log.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}, data-tipo=${log.tipoEvento}, data-ip=${log.direccionIp}, data-detalles=${log.detalles}"
+                                    onclick="mostrarDetalle(this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal de Detalles -->
+    <div class="modal fade" id="detalleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-shield-shaded me-2 text-primary"></i>Detalle de Evento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <div class="mb-3">
+                        <label class="text-muted small fw-bold text-uppercase">Usuario</label>
+                        <p class="mb-0 fw-semibold text-dark" id="modal-user">-</p>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="text-muted small fw-bold text-uppercase">Fecha y Hora</label>
+                            <p class="mb-0 text-dark" id="modal-fecha">-</p>
+                        </div>
+                        <div class="col-6">
+                            <label class="text-muted small fw-bold text-uppercase">IP Origen</label>
+                            <p class="mb-0 text-dark" id="modal-ip">-</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small fw-bold text-uppercase">Tipo de Evento</label>
+                        <div><span class="badge" id="modal-tipo">-</span></div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="text-muted small fw-bold text-uppercase">Detalle Técnico / Cambios</label>
+                        <pre class="bg-light p-3 rounded-3 mt-1 font-monospace text-dark small" style="white-space: pre-wrap; word-break: break-all; max-height: 250px; overflow-y: auto;" id="modal-detalles">-</pre>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill btn-sm px-4" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="scripts">
+    <script th:src="@{/js/admin/auditoria.js}"></script>
+</div>
+</body>
+</html>

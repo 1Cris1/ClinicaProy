@@ -81,7 +81,9 @@ public class RecepcionistaController {
             .filter(p -> "Completado".equals(p.getEstado()))
             .collect(Collectors.toList());
 
-        BigDecimal totalPagosHoy = pagosHoy.stream().map(Pago::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalPagosHoy = pagosHoy.stream()
+            .map(p -> p.getMonto() != null ? p.getMonto() : BigDecimal.ZERO)
+            .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         model.addAttribute("enSalaEspera", enSalaEspera);
         model.addAttribute("citasRestantes", citasRestantes);
@@ -164,11 +166,13 @@ public class RecepcionistaController {
 
             // Valida que el paciente, medico y servicio existan en el sistema
             if (paciente != null && medico != null && servicio != null) {
-                // Validación de conflicto de horario
+                // VERIFICACIÓN DE CONFLICTO: Valida si ya existe una cita activa para el médico seleccionado en la fecha y hora indicadas.
+                // Si existe (es true), el sistema impide la reserva para evitar sobreposiciones.
                 boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNot(
                         medicoId, LocalDate.parse(fecha), hora, "Cancelada"
                 );
                 if (conflicto) {
+                    // Si hay cruce, redirige a la lista con un parámetro de error que activa una alerta en la UI.
                     return "redirect:/recepcionista/citas?fecha=" + fecha + "&error=horario_ocupado";
                 }
 
@@ -221,11 +225,13 @@ public class RecepcionistaController {
                             @RequestParam(required = false) String observaciones) {
         Cita cita = citaRepository.findById(idCita).orElse(null);
         if (cita != null) {
-            // Validación de conflicto de horario excluyendo la propia cita
+            // VERIFICACIÓN DE CONFLICTO EN REAGENDAMIENTO: Valida si el nuevo horario colisiona con otra cita activa del doctor,
+            // pero excluyendo la cita actual (idCita) para evitar falsos positivos con sus propios datos pasados.
             boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNotAndIdCitaNot(
                     cita.getMedico().getId(), LocalDate.parse(fecha), hora, "Cancelada", idCita
             );
             if (conflicto) {
+                // Si hay conflicto, cancela la actualización y devuelve un parámetro de alerta a la vista.
                 return "redirect:/recepcionista/citas?fecha=" + fecha + "&error=horario_ocupado";
             }
 
@@ -300,8 +306,8 @@ public class RecepcionistaController {
         List<Pago> pagos = pagoRepository.findAll();
         BigDecimal totalRecaudado = pagos.stream()
                 .filter(p -> "Completado".equals(p.getEstado()))
-                .map(Pago::getMonto)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(p -> p.getMonto() != null ? p.getMonto() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
         
         long totalTransacciones = pagos.size();
         long pagosPendientes = pagos.stream().filter(p -> "Pendiente".equals(p.getEstado())).count();

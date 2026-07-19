@@ -43,8 +43,8 @@ public class PacienteGlobalController {
                         .stream()
                         .filter(c -> ("Pendiente".equals(c.getEstado()) || "Confirmada".equals(c.getEstado())) 
                                 && (c.getFechaCita().isEqual(LocalDate.now()) || c.getFechaCita().isAfter(LocalDate.now())))
-                        .min(Comparator.comparing(com.proyectoclinica.clinica.modules.citas.models.Cita::getFechaCita)
-                                .thenComparing(com.proyectoclinica.clinica.modules.citas.models.Cita::getHoraCita))
+                        .min(Comparator.comparing((com.proyectoclinica.clinica.modules.citas.models.Cita c) -> c.getFechaCita())
+                                .thenComparing((com.proyectoclinica.clinica.modules.citas.models.Cita c) -> c.getHoraCita()))
                         .orElse(null);
                 
                 model.addAttribute("proximaCita", proximaCita);

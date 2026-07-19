@@ -446,13 +446,43 @@
 
     let agendarStep = 1;
     let goingBack = false;
-    const agendarData = { specialty:'', doctor:'', id_medico:'', sede:'', date:'', time:'' };
+    const agendarData = { 
+        specialty: '', 
+        doctor: '', 
+        id_medico: '', 
+        sede: '', 
+        date: '', 
+        time: '',
+        horariolv: '',
+        horariosab: '',
+        duracion: 30
+    };
 
     /* ===== Selecciones ===== */
     window.selectSpecialty = function(el) {
         document.querySelectorAll('.specialty-option').forEach(function(o) { o.classList.remove('selected'); });
         el.classList.add('selected');
         agendarData.specialty = el.dataset.specialty;
+
+        // Filtro rápido de médicos
+        var visibleCount = 0;
+        document.querySelectorAll('.doctor-item').forEach(function(item) {
+            if (item.dataset.docSpecialty === agendarData.specialty) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+            var opt = item.querySelector('.doctor-option');
+            if (opt) opt.classList.remove('selected');
+        });
+        agendarData.doctor = ''; 
+        var noDocMsg = document.getElementById('noDoctorsMsg');
+        if (noDocMsg) noDocMsg.style.display = visibleCount === 0 ? '' : 'none';
+
+        setTimeout(function() {
+            if (agendarStep === 1) agendarNextAction();
+        }, 350);
     };
 
     window.selectDoctor = function(el) {
@@ -461,13 +491,111 @@
         agendarData.doctor = el.dataset.doctor;
         agendarData.sede = el.dataset.sede;
         agendarData.id_medico = el.dataset.idMedico;
+        agendarData.horariolv = el.dataset.horariolv;
+        agendarData.horariosab = el.dataset.horariosab;
+        agendarData.duracion = parseInt(el.dataset.duracion) || 30;
+
+        document.getElementById('citaSede').value = agendarData.sede;
+        document.getElementById('hidden_id_medico').value = agendarData.id_medico;
+
+        // Si ya hay fecha, generar horarios
+        var dateVal = document.getElementById('citaFecha')?.value;
+        if (dateVal) {
+            generateTimeSlots(dateVal);
+        }
+
+        setTimeout(function() {
+            if (agendarStep === 2) agendarNextAction();
+        }, 350);
     };
 
     window.selectTime = function(el) {
         document.querySelectorAll('.time-slot').forEach(function(b) { b.classList.remove('selected'); });
         el.classList.add('selected');
         agendarData.time = el.textContent.trim();
+        document.getElementById('hidden_hora').value = agendarData.time;
     };
+
+    function generateTimeSlots(dateString) {
+        const grid = document.getElementById('horariosGrid');
+        if (!grid) return;
+        
+        grid.innerHTML = '';
+        
+        if (!dateString || !agendarData.id_medico) {
+            grid.innerHTML = '<p class="text-muted small">Selecciona un médico y una fecha para ver los horarios disponibles.</p>';
+            return;
+        }
+        
+        const parts = dateString.split('-');
+        if (parts.length !== 3) return;
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        const day = d.getDay(); 
+        
+        if (day === 0) {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-calendar-x"></i> No hay atención los domingos.</p>';
+            return;
+        }
+        
+        let scheduleStr = (day === 6) ? agendarData.horariosab : agendarData.horariolv;
+        
+        if (!scheduleStr || scheduleStr === 'No disponible' || scheduleStr === 'null') {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-calendar-x"></i> Doctor no disponible en este día.</p>';
+            return;
+        }
+        
+        const times = scheduleStr.split('-');
+        if (times.length !== 2) {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-exclamation-triangle"></i> Horario mal configurado.</p>';
+            return;
+        }
+        
+        const startStr = times[0].trim();
+        const endStr = times[1].trim();
+        
+        const startParts = startStr.split(':');
+        const endParts = endStr.split(':');
+        
+        if (startParts.length < 2 || endParts.length < 2) return;
+        
+        let startMins = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+        let endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+        let dur = agendarData.duracion > 0 ? agendarData.duracion : 30;
+        
+        let currentMins = startMins;
+        let html = '';
+        
+        while (currentMins + dur <= endMins) {
+            let h = Math.floor(currentMins / 60);
+            let m = currentMins % 60;
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            let h12 = h % 12;
+            if (h12 === 0) h12 = 12;
+            let timeFmt = (h12 < 10 ? '0' : '') + h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+            
+            html += '<button class="app-btn py-2 px-3 bg-white text-dark border shadow-sm-hover time-slot" style="font-size:.85rem;" onclick="selectTime(this)">' + timeFmt + '</button>';
+            
+            currentMins += dur;
+        }
+        
+        if (html === '') {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-calendar-x"></i> No hay horarios disponibles en este rango.</p>';
+        } else {
+            grid.innerHTML = html;
+        }
+        
+        agendarData.time = '';
+    }
+
+    // Escucha de cambios de fecha
+    document.addEventListener('DOMContentLoaded', function() {
+        var citaFechaInput = document.getElementById('citaFecha');
+        if (citaFechaInput) {
+            citaFechaInput.addEventListener('change', function() {
+                generateTimeSlots(this.value);
+            });
+        }
+    });
 
     /* ===== HU04: Slide Animation entre pasos ===== */
     function slideToStep(fromStep, toStep, backwards) {
@@ -527,6 +655,7 @@
             var today = new Date().toISOString().split('T')[0];
             document.getElementById('citaFecha').min  = today;
             document.getElementById('citaFecha').value = today;
+            generateTimeSlots(today);
         }
     }
 
@@ -849,64 +978,6 @@ window.selectServiceTab = function(btn, category) {
             });
         };
 
-/* =========================================
-   FUNCIONES POWER BI - Dashboard
-   ========================================= */
-
-/**
- * Oculta el indicador de carga y muestra el iframe
- * @param {HTMLIFrameElement} iframe - El iframe que se está cargando
- * @param {string} loadingId - ID del elemento de carga
- */
-function hideLoading(iframe, loadingId) {
-    if (loadingId) {
-        const loadingEl = document.getElementById(loadingId);
-        if (loadingEl) {
-            loadingEl.style.display = 'none';
-        }
-    }
-    if (iframe) {
-        iframe.style.display = 'block';
-    }
-}
-
-/**
- * Recarga el iframe de Power BI
- * @param {HTMLElement} btn - Botón que llamó la función
- */
-function reloadIframe(btn) {
-    const card = btn.closest('.ad-card, .doc-card, .cx-card, .rc-card');
-    if (card) {
-        const iframe = card.querySelector('iframe');
-        if (iframe) {
-            const loadingId = iframe.getAttribute('onload').replace('hideLoading(this, ', '').replace(')', '').replace(/'/g, '');
-            const loadingEl = document.getElementById(loadingId);
-            if (loadingEl) loadingEl.style.display = '';
-            iframe.style.display = 'none';
-            iframe.src = iframe.src;
-        }
-    }
-}
-
-/**
- * Activa modo pantalla completa para el iframe
- * @param {HTMLElement} btn - Botón que llamó la función
- */
-function toggleFullscreen(btn) {
-    const card = btn.closest('.ad-card, .doc-card, .cx-card, .rc-card');
-    if (card) {
-        const iframe = card.querySelector('iframe');
-        if (iframe) {
-            if (iframe.requestFullscreen) {
-                iframe.requestFullscreen();
-            } else if (iframe.webkitRequestFullscreen) {
-                iframe.webkitRequestFullscreen();
-            } else if (iframe.msRequestFullscreen) {
-                iframe.msRequestFullscreen();
-            }
-        }
-    }
-}
 
 /* =========================================
    FILE: layout-recepcionista.html
@@ -984,4 +1055,6 @@ function toggleFullscreen(btn) {
     });
 
 })();
+
+
 

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><title>Gestión de Consultorios - Admin</title></head>
+<body>
+<div th:fragment="cuerpo">
+
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Distribución de Consultorios</h3>
+            <p class="text-muted mb-0">Administra los espacios físicos de la clínica y previene colisiones horarias en tiempo real.</p>
+        </div>
+    </div>
+
+    <!-- Filtro de Sede -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+        <div class="card-body p-3">
+            <form method="get" th:action="@{/admin/consultorios}" id="filterForm" class="row align-items-center">
+                <div class="col-md-6">
+                    <label class="small text-muted fw-bold text-uppercase d-block mb-1">Seleccionar Sede</label>
+                    <select name="idSede" class="form-select form-select-sm bg-light border-0" onchange="document.getElementById('filterForm').submit()">
+                        <option th:each="s : ${sedes}" th:value="${s.id}" th:text="${s.nombre}" th:selected="${s.id == sedeSeleccionadaId}">Sede Central</option>
+                    </select>
+                </div>
+                <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                    <div class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2" th:if="${not #lists.isEmpty(colisiones)}">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> <span th:text="${#lists.size(colisiones)}">0</span> Conflictos Activos
+                    </div>
+                    <div class="badge bg-success-subtle text-success rounded-pill px-3 py-2" th:if="${#lists.isEmpty(colisiones)}">
+                        <i class="bi bi-check-circle-fill me-1"></i> Espacios en Orden
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Banner de Alerta Global si hay colisiones -->
+    <div th:if="${not #lists.isEmpty(colisiones)}" class="alert alert-danger d-flex align-items-start gap-3 border-0 shadow-sm p-3 mb-4 animate__animated animate__shakeX" style="border-radius: 16px;">
+        <i class="bi bi-exclamation-octagon-fill fs-3 text-danger"></i>
+        <div>
+            <h6 class="fw-bold mb-1">¡Alerta de Colisión Detectada!</h6>
+            <p class="mb-0 small text-danger-emphasis">
+                Se ha asignado el mismo consultorio a más de un médico simultáneamente en los siguientes ambientes:
+                <strong><span th:text="${#strings.listJoin(colisiones, ', ')}">101</span></strong>.
+                Por favor, reasigna a los doctores correspondientes para evitar problemas en la atención presencial.
+            </p>
+        </div>
+    </div>
+
+    <!-- CUERPO PRINCIPAL A DOS COLUMNAS -->
+    <div class="row g-4">
+        <!-- Columna Izquierda: Tarjetas de consultorios (col-lg-7) -->
+        <div class="col-lg-7">
+            <div class="row g-3">
+                <div class="col-md-6 col-sm-6" th:each="entry : ${consultorioMap}">
+                    <div class="card consultorio-card shadow-sm p-3 h-100 d-flex flex-column justify-content-between"
+                         th:classappend="${#lists.contains(colisiones, entry.key)} ? 'conflict-border' : (entry.key == 'Sin Consultorio' ? 'empty-border' : 'normal-border')">
+                        
+                        <div>
+                            <!-- Encabezado Tarjeta -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold text-dark mb-0">
+                                    <i class="bi bi-door-open me-1 text-secondary"></i> 
+                                    <span th:text="${entry.key}">Consultorio 101</span>
+                                </h5>
+                                
+                                <span th:if="${#lists.contains(colisiones, entry.key)}" class="badge bg-danger rounded-pill py-1 px-2.5 small animate__animated animate__pulse animate__infinite">
+                                    <i class="bi bi-exclamation-triangle"></i> COLISIÓN
+                                </span>
+                                <span th:if="${not #lists.contains(colisiones, entry.key) and entry.key != 'Sin Consultorio'}" class="badge bg-blue-subtle text-primary rounded-pill py-1 px-2.5 small">
+                                    Asignado
+                                </span>
+                                <span th:if="${entry.key == 'Sin Consultorio'}" class="badge bg-secondary-subtle text-secondary rounded-pill py-1 px-2.5 small">
+                                    Pendiente
+                                </span>
+                            </div>
+
+                            <!-- Médicos asignados -->
+                            <div class="d-flex flex-column gap-3">
+                                <div th:each="med : ${entry.value}" class="p-2.5 bg-white border border-light rounded-3 shadow-2xs">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center fw-bold text-primary" style="width: 32px; height: 32px; font-size: 0.75rem;" th:text="${#strings.substring(med.nombres, 0, 1) + #strings.substring(med.apellidos, 0, 1)}">DR</div>
+                                        <div>
+                                            <p class="mb-0 fw-bold text-dark small" th:text="'Dr. ' + ${med.nombres} + ' ' + ${med.apellidos}">Dr. Nombre</p>
+                                            <span class="badge bg-light text-muted fw-normal" style="font-size: 0.65rem;" th:text="${med.especialidad.nombre}">Especialidad</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Horarios -->
+                                    <div class="x-small text-muted mb-2" style="font-size: 0.75rem;">
+                                        <div><i class="bi bi-clock me-1"></i> <strong>Lunes a Viernes:</strong> <span th:text="${med.horarioLv != null ? med.horarioLv : 'No asignado'}">-</span></div>
+                                        <div class="mt-0.5"><i class="bi bi-calendar3 me-1"></i> <strong>Sábado:</strong> <span th:text="${med.horarioSabado != null ? med.horarioSabado : 'No asignado'}">-</span></div>
+                                    </div>
+
+                                    <!-- Botón reasignar por médico -->
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-outline-primary btn-xs rounded-pill px-3 py-1 btn-reasignar"
+                                                th:id="'btn-med-' + ${med.id}"
+                                                th:attr="data-medico-id=${med.id}, data-medico-nombre=${med.nombres + ' ' + med.apellidos}, data-consultorio=${entry.key == 'Sin Consultorio' ? '' : entry.key}"
+                                                onclick="iniciarReasignacion(this)">
+                                            <i class="bi bi-arrow-left-right me-1"></i> Reasignar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Plano 3D Fijo e Interactivo (col-lg-5) -->
+        <div class="col-lg-5">
+            <!-- Banner Informativo del Modo Reasignación -->
+            <div id="reasignar-banner" class="card border-primary shadow-sm mb-3 d-none animate__animated animate__fadeIn" style="border-radius: 16px;">
+                <div class="card-body bg-primary-subtle p-3 text-center">
+                    <h6 class="fw-bold text-primary mb-1"><i class="bi bi-arrow-left-right me-1"></i> Modo Reasignación Activo</h6>
+                    <p class="text-primary-emphasis small mb-2">Asignando espacio a: <strong id="reasignar-doctor-nombre">-</strong></p>
+                    <p class="x-small text-muted mb-2">Haz clic directamente sobre una habitación en el plano 3D de abajo para reubicarlo.</p>
+                    <button type="button" class="btn btn-xs btn-outline-danger rounded-pill px-3 py-0.5" onclick="cancelarReasignacion()" style="font-size: 0.7rem;">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Card del Plano 3D -->
+            <div class="card border-0 shadow-sm" style="border-radius: 18px;">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-map-fill me-1 text-primary"></i> Plano de Planta 3D</h6>
+                    
+                    <div class="floor-plan-wrapper">
+                        <div class="floor-plan">
+                            <!-- Fila 1: Habitaciones Superiores -->
+                            <div class="floor-room" data-room="Consultorio 101" onclick="clickRoom3D(this)">
+                                <i class="bi bi-door-closed-fill"></i><span>101</span>
+                            </div>
+                            <div class="floor-room" data-room="Consultorio 102" onclick="clickRoom3D(this)">
+                                <i class="bi bi-door-closed-fill"></i><span>102</span>
+                            </div>
+                            <div class="floor-room" data-room="Consultorio 103" onclick="clickRoom3D(this)">
+                                <i class="bi bi-door-closed-fill"></i><span>103</span>
+                            </div>
+                            <div class="floor-room" data-room="Consultorio 104" onclick="clickRoom3D(this)">
+                                <i class="bi bi-door-closed-fill"></i><span>104</span>
+                            </div>
+
+                            <!-- Pasillo de Distribución -->
+                            <div class="floor-corridor">Pasillo Central</div>
+
+                            <!-- Fila 3: Habitaciones Inferiores -->
+                            <div class="floor-room" data-room="Consultorio 105" onclick="clickRoom3D(this)">
+                                <i class="bi bi-door-closed-fill"></i><span>105</span>
+                            </div>
+                            <div class="floor-room" data-room="Consultorio 106" onclick="clickRoom3D(this)">
+                                <i class="bi bi-door-closed-fill"></i><span>106</span>
+                            </div>
+                            <div class="floor-room text-danger" data-room="Tópico A" onclick="clickRoom3D(this)">
+                                <i class="bi bi-heart-pulse-fill"></i><span>Tópico A</span>
+                            </div>
+                            <div class="floor-room text-danger" data-room="Tópico B" onclick="clickRoom3D(this)">
+                                <i class="bi bi-heart-pulse-fill"></i><span>Tópico B</span>
+                            </div>
+
+                            <!-- Fila 4: Recepción y Espera (No seleccionables) -->
+                            <div class="floor-room non-selectable" style="grid-column: span 2;">
+                                <i class="bi bi-person-workspace text-secondary"></i><span>Recepción</span>
+                            </div>
+                            <div class="floor-room non-selectable" style="grid-column: span 2;">
+                                <i class="bi bi-chair-fill text-secondary"></i><span>Sala Espera</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leyenda de colores -->
+                    <div class="d-flex justify-content-center gap-3 mt-3 text-muted" style="font-size: 0.68rem; font-weight: 600;">
+                        <div><span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background: #2563eb; margin-right: 4px;"></span>Seleccionado</div>
+                        <div><span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background: #fff; border: 2px solid #e2e8f0; margin-right: 4px;"></span>Disponible</div>
+                        <div><span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background: #e2e8f0; margin-right: 4px;"></span>Área Pública</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO OCULTO PARA ENVÍO DE REASIGNACIÓN -->
+    <form id="hiddenReassignForm" th:action="@{/admin/consultorios/reasignar}" method="post" style="display:none;">
+        <input type="hidden" name="idMedico" id="form-medico-id">
+        <input type="hidden" name="consultorio" id="form-consultorio">
+        <input type="hidden" name="idSede" th:value="${sedeSeleccionadaId}">
+    </form>
+</div>
+
+<div th:fragment="scripts">
+    <script th:src="@{/js/admin/consultorios.js}"></script>
+</div>
+</body>
+</html>
