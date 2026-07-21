@@ -3,61 +3,28 @@
 <head><title>Reportes - ClinicX Admin</title></head>
 <body>
     <div th:fragment="cuerpo">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <h4 class="fw-bold mb-0">Reportes y Estadísticas</h4>
-            <button class="btn rounded-pill px-4 fw-bold shadow-sm btn-sm" style="background:var(--ad-primary);color:#fff;" onclick="alert('ðŸ“Š Exportando reporte en PDF...')">
-                <i class="bi bi-download me-1"></i> Exportar Reporte
-            </button>
-        </div>
 
-        <!-- KPIs -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3"><div class="ad-stat text-center"><p class="mb-1" style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--ad-muted);">Citas este mes</p><h3 class="fw-bold mb-0" style="color:var(--ad-primary);">194</h3><p class="text-muted small mb-0"><i class="bi bi-arrow-up text-success"></i> +12% vs mes anterior</p></div></div>
-            <div class="col-md-3"><div class="ad-stat text-center"><p class="mb-1" style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--ad-muted);">Pacientes nuevos</p><h3 class="fw-bold mb-0" style="color:#059669;">48</h3><p class="text-muted small mb-0"><i class="bi bi-arrow-up text-success"></i> +8% vs mes anterior</p></div></div>
-            <div class="col-md-3"><div class="ad-stat text-center"><p class="mb-1" style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--ad-muted);">Tasa de cancelación</p><h3 class="fw-bold mb-0" style="color:#DC2626;">4.1%</h3><p class="text-muted small mb-0"><i class="bi bi-arrow-down text-success"></i> -2% vs mes anterior</p></div></div>
-            <div class="col-md-3"><div class="ad-stat text-center"><p class="mb-1" style="font-size:.65rem;font-weight:700;text-transform:uppercase;color:var(--ad-muted);">Ingresos</p><h3 class="fw-bold mb-0" style="color:var(--ad-primary);">S/ 85,400</h3><p class="text-muted small mb-0"><i class="bi bi-arrow-up text-success"></i> +15% vs mes anterior</p></div></div>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Dashboard de Gestión de Servicios Médicos</h4>
+    </div>
 
-        <div class="row g-4">
-            <!-- Gráfico Citas por Especialidad -->
-            <div class="col-lg-6">
-                <div class="ad-card h-100">
-                    <div class="ad-card-header"><h6 class="fw-bold mb-0" style="font-size:.85rem;">Citas por Especialidad (Abril)</h6></div>
-                    <div class="ad-card-body">
-                        <div class="bar-chart" style="padding-bottom:28px;height:160px;">
-                            <div class="bar" style="height:100%;"><span>Card.</span></div>
-                            <div class="bar" style="height:70%;"><span>Med.G</span></div>
-                            <div class="bar" style="height:55%;"><span>Ped.</span></div>
-                            <div class="bar" style="height:45%;"><span>Derm.</span></div>
-                            <div class="bar" style="height:35%;"><span>Oft.</span></div>
-                            <div class="bar" style="height:30%;"><span>Gin.</span></div>
-                            <div class="bar" style="height:20%;"><span>Trau.</span></div>
-                            <div class="bar" style="height:15%;"><span>Neum.</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-2">
 
-            <!-- Top Médicos -->
-            <div class="col-lg-6">
-                <div class="ad-card h-100">
-                    <div class="ad-card-header"><h6 class="fw-bold mb-0" style="font-size:.85rem;">Top 5 Médicos por Atenciones</h6></div>
-                    <div class="ad-card-body p-0">
-                        <table class="ad-table">
-                            <thead><tr><th>#</th><th>Médico</th><th>Especialidad</th><th>Atenciones</th><th>Satisfacción</th></tr></thead>
-                            <tbody>
-                                <tr><td class="fw-bold">1</td><td>Dr. Alberto Ramos</td><td>Cardiología</td><td class="fw-bold">42</td><td><span class="ad-badge-status" style="background:#D1FAE5;color:#059669;">â­ 4.9</span></td></tr>
-                                <tr><td class="fw-bold">2</td><td>Dr. Luis Vargas</td><td>Med. General</td><td class="fw-bold">38</td><td><span class="ad-badge-status" style="background:#D1FAE5;color:#059669;">â­ 4.8</span></td></tr>
-                                <tr><td class="fw-bold">3</td><td>Dra. Ana López</td><td>Pediatría</td><td class="fw-bold">31</td><td><span class="ad-badge-status" style="background:#D1FAE5;color:#059669;">â­ 4.9</span></td></tr>
-                                <tr><td class="fw-bold">4</td><td>Dr. Jorge Castillo</td><td>Dermatología</td><td class="fw-bold">27</td><td><span class="ad-badge-status" style="background:#DBEAFE;color:#2563EB;">â­ 4.7</span></td></tr>
-                                <tr><td class="fw-bold">5</td><td>Dra. Carmen Ríos</td><td>Oftalmología</td><td class="fw-bold">22</td><td><span class="ad-badge-status" style="background:#DBEAFE;color:#2563EB;">â­ 4.6</span></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <iframe
+                title="Dashboard clínico"
+                src="https://app.powerbi.com/view?r=eyJrIjoiNDNhNzM4NjMtOGE0NC00ZWVhLTg0MGQtYjk5OTZlMDcwYWU5IiwidCI6ImM0YTY2YzM0LTJiYjctNDUxZi04YmUxLWIyYzI2YTQzMDE1OCIsImMiOjR9"
+                width="100%"
+                height="900"
+                frameborder="0"
+                style="border:0;"
+                allowfullscreen>
+            </iframe>
+
         </div>
     </div>
+
+</div>
 </body>
 </html>
 

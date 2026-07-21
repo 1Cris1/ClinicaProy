@@ -45,6 +45,9 @@
             <a th:href="@{/paciente/agendar}" th:class="${#strings.contains(view, 'agendar')} ? 'app-nav-link active' : 'app-nav-link'" data-page="agendar">
                 <i class="bi bi-calendar-plus-fill"></i> Agendar Cita
             </a>
+            <a th:href="@{/paciente/doctores}" th:class="${#strings.contains(view, 'doctores')} ? 'app-nav-link active' : 'app-nav-link'" data-page="doctores">
+                <i class="bi bi-person-badge-fill"></i> Doctores
+            </a>
 
             <div class="app-sidebar-label mt-3">Salud</div>
             <a th:href="@{/paciente/farmacia}" th:class="${#strings.contains(view, 'farmacia')} ? 'app-nav-link active' : 'app-nav-link'" data-page="farmacia">
@@ -60,6 +63,9 @@
             </a>
             <a th:href="@{/paciente/historial}" th:class="${#strings.contains(view, 'historial')} ? 'app-nav-link active' : 'app-nav-link'" data-page="historial">
                 <i class="bi bi-clock-history"></i> Historial Clínico
+            </a>
+            <a th:href="@{/paciente/calificaciones}" th:class="${#strings.contains(view, 'calificaciones')} ? 'app-nav-link active' : 'app-nav-link'" data-page="calificaciones">
+                <i class="bi bi-star-fill"></i> Calificar Atención
             </a>
 
             <div class="app-sidebar-label mt-3">Cuenta</div>

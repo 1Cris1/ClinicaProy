@@ -5,11 +5,54 @@
 <div th:fragment="cuerpo">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-bold mb-1">Laboratorio Clínico: Visor Médico</h4>
-            <p class="text-muted small mb-0">Seguimiento avanzado y comparativa histórica de resultados.</p>
-        </div>
+    <div>
+        <h4 class="fw-bold mb-1">
+            Gestión de Laboratorio Clínico</h4>
+        <p class="text-muted small mb-0">
+            Solicita, consulta y realiza seguimiento a las órdenes de laboratorio de tus pacientes.
+        </p>
     </div>
+
+    <button type="button"
+            class="btn btn-primary rounded-pill px-4"
+            data-bs-toggle="modal"
+            data-bs-target="#modalSolicitarExamen">
+        <i class="bi bi-plus-circle me-1"></i>
+        Solicitar examen
+    </button>
+</div>
+<div th:if="${param.solicitud != null}"
+     class="alert alert-success alert-dismissible fade show border-0 shadow-sm"
+     role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    La solicitud de laboratorio fue registrada correctamente.
+
+    <button type="button"
+            class="btn-close"
+            data-bs-dismiss="alert">
+    </button>
+</div>
+
+<div th:if="${param.error != null}"
+     class="alert alert-danger alert-dismissible fade show border-0 shadow-sm"
+     role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+    <span th:if="${param.error[0] == 'datos'}">
+        No se pudo registrar la solicitud porque el paciente o el examen no existe.
+    </span>
+
+    <span th:if="${param.error[0] == 'acceso'}">
+        No tienes autorización para solicitar exámenes para este paciente.
+    </span>
+
+    <button type="button"
+            class="btn-close"
+            data-bs-dismiss="alert">
+    </button>
+</div>
+
+
 
     <div class="row g-4">
         <!-- Listado de Órdenes Recientes -->
@@ -22,16 +65,83 @@
                     <div class="list-group list-group-flush">
                         <div th:each="o : ${ordenes}" class="list-group-item list-group-item-action border-0 p-3 mb-1 rounded-3">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-primary" th:text="${'#' + o.id}">#1</span>
-                                <span class="badge rounded-pill" 
-                                      th:text="${o.estado}"
-                                      th:classappend="${o.estado == 'Validado' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'}">Estado</span>
-                            </div>
-                            <p class="mb-1 fw-bold small mt-2" th:text="${o.paciente.nombres + ' ' + o.paciente.apellidos}">Paciente</p>
-                            <div class="d-flex justify-content-between text-muted small">
-                                <span th:text="${#temporals.format(o.fechaSolicitud, 'dd/MM/yyyy')}">12/04/2026</span>
-                                <span th:if="${o.prioridad == 'STAT'}" class="text-danger fw-bold">STAT</span>
-                            </div>
+    <span class="fw-bold text-primary"
+          th:text="${'ORD-' + o.id}"
+        ORD-1
+    </span>
+
+    <span class="badge rounded-pill"
+      th:text="${o.estado}"
+      th:classappend="
+        ${o.estado == 'Validado'}
+            ? 'bg-success-subtle text-success'
+            : (${o.estado == 'En proceso'}
+                ? 'bg-info-subtle text-info'
+                : 'bg-warning-subtle text-warning')">
+            </span>
+</div>
+
+<p class="mb-1 fw-bold small mt-2"
+   th:text="${o.paciente.nombres + ' ' + o.paciente.apellidos}">
+    Paciente
+</p>
+
+<p class="mb-0 small">
+    <i class="bi bi-clipboard2-pulse me-1 text-primary"></i>
+
+    <span th:text="${o.examen != null
+        ? o.examen.nombre
+        : 'Examen no especificado'}">
+        Examen
+    </span>
+</p>
+
+<p class="mb-2 text-muted"
+   style="font-size:.75rem;"
+   th:if="${o.examen != null and o.examen.categoria != null}">
+    <i class="bi bi-tag me-1"></i>
+
+    <span th:text="${o.examen.categoria}">
+        Categoría
+    </span>
+</p>
+
+<div class="d-flex justify-content-between align-items-center text-muted small">
+
+    <span th:text="${#temporals.format(
+        o.fechaSolicitud,
+        'dd/MM/yyyy HH:mm'
+    )}">
+        15/07/2026
+    </span>
+
+    <span class="badge rounded-pill"
+      th:text="${o.prioridad}"
+      th:classappend="
+      ${o.prioridad == 'STAT'}
+        ? 'bg-danger text-white'
+        : 'bg-success-subtle text-success'">
+          th:classappend="${o.prioridad == 'STAT'
+              ? 'bg-danger-subtle text-danger'
+              : 'bg-success-subtle text-success'}">
+        Normal
+    </span>
+</div>
+
+<div class="mt-3 pt-2 border-top"
+     th:if="${o.observacionesTecnicas != null
+             and !#strings.isEmpty(o.observacionesTecnicas)}">
+
+    <small class="text-muted d-block mb-1">
+        <i class="bi bi-chat-left-text me-1"></i>
+        Observaciones
+    </small>
+
+    <p class="small mb-0"
+       th:text="${o.observacionesTecnicas}">
+        Observaciones médicas
+    </p>
+</div>
                         </div>
                         <div th:if="${#lists.isEmpty(ordenes)}" class="text-center py-5">
                             <p class="text-muted small">No hay órdenes registradas.</p>
@@ -42,14 +152,124 @@
         </div>
 
         <!-- DiacnosticAnaliticIA - Comparativa Histórica -->
+        <!-- Columna derecha -->
         <div class="col-lg-8">
+
+            <!-- Detalle de la orden más reciente -->
+            <div class="doc-card shadow-sm border-0 mb-4"
+                 th:if="${!#lists.isEmpty(ordenes)}">
+
+    <div class="doc-card-header bg-white border-bottom py-3">
+        <h6 class="fw-bold mb-0">
+            <i class="bi bi-file-earmark-medical me-2 text-primary"></i>
+            Última solicitud registrada
+        </h6>
+    </div>
+
+    <div class="doc-card-body">
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <small class="text-muted d-block">Paciente</small>
+
+                <span class="fw-bold"
+                      th:text="${ordenes[0].paciente.nombres
+                          + ' '
+                          + ordenes[0].paciente.apellidos}">
+                    Paciente
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <small class="text-muted d-block">Examen solicitado</small>
+
+                <span class="fw-bold"
+                      th:text="${ordenes[0].examen != null
+                          ? ordenes[0].examen.nombre
+                          : 'Examen no especificado'}">
+                    Examen
+                </span>
+            </div>
+
+            <div class="col-md-4">
+                <small class="text-muted d-block">Categoría</small>
+
+                <span th:text="${ordenes[0].examen != null
+                    and ordenes[0].examen.categoria != null
+                    ? ordenes[0].examen.categoria
+                    : 'No registrada'}">
+                    Categoría
+                </span>
+            </div>
+
+            <div class="col-md-4">
+                <small class="text-muted d-block">Prioridad</small>
+
+                <span class="badge rounded-pill"
+                th:text="${ordenes[0].prioridad}"
+                th:classappend="
+                ${ordenes[0].prioridad == 'STAT'}? 'bg-danger text-white'
+                : 'bg-success-subtle text-success'">
+                      th:classappend="${ordenes[0].prioridad == 'STAT'
+                          ? 'bg-danger-subtle text-danger'
+                          : 'bg-success-subtle text-success'}">
+                    Normal
+                </span>
+            </div>
+
+            <div class="col-md-4">
+                <small class="text-muted d-block">Estado</small>
+
+                <span class="badge rounded-pill"
+                th:text="${ordenes[0].estado}"
+                th:classappend="${ordenes[0].estado == 'Validado'}? 'bg-success-subtle text-success': (${ordenes[0].estado == 'En proceso'}
+                ? 'bg-info-subtle text-info': 'bg-warning-subtle text-warning')">
+                    Pendiente de toma
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <small class="text-muted d-block">Fecha de solicitud</small>
+
+                <span>
+                    <i class="bi bi-calendar-event me-1 text-primary"></i>
+                    Fecha
+                </span>
+            </div>
+
+            <div class="col-md-12">
+                <small class="text-muted d-block mb-1">
+                    Indicaciones para el laboratorio
+                </small>
+
+                <div class="p-3 rounded"
+                     style="background:#F8FAFC;">
+
+                    <span th:text="${ordenes[0].observacionesTecnicas != null
+                        and !#strings.isEmpty(ordenes[0].observacionesTecnicas)
+                        ? ordenes[0].observacionesTecnicas
+                        : 'Sin observaciones registradas'}">
+                        Observaciones
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- DiacnosticAnaliticIA - Comparativa Histórica -->
             <div class="doc-card shadow-sm border-0 mb-4">
                 <div class="doc-card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-graph-up me-2 text-primary"></i>DiacnosticAnaliticIA: Comparativa Histórica</h6>
-                    <a th:if="${pacienteSeleccionado != null and !ordenes.isEmpty()}" 
-                       th:href="@{'/laboratorio/orden/' + ${ordenes[0].id} + '/pdf'}" 
-                       class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank">
-                        <i class="bi bi-file-earmark-pdf me-1"></i>Descargar Informe Completo
+                    <h6 class="fw-bold mb-0"><i class="bi bi-graph-up me-2 text-primary"></i>Comparativa Histórica de Resultados</h6>
+                    <a th:if="${!#lists.isEmpty(ordenes)}"
+                    th:href="@{/medico/laboratorio/orden/{idOrden}/pdf(
+                        idOrden=${ordenes[0].id}
+                        )}"
+                        class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                        Descargar solicitud PDF
                     </a>
                 </div>
                 <div class="doc-card-body">
@@ -126,6 +346,184 @@
             </div>
         </div>
     </div>
+<!-- Modal para solicitar examen -->
+<div class="modal fade"
+     id="modalSolicitarExamen"
+     tabindex="-1"
+     aria-labelledby="modalSolicitarExamenLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
+            <form th:action="@{/medico/laboratorio/solicitar}"
+                  method="post">
+
+                <div class="modal-header border-bottom">
+                    <div>
+                        <h5 class="modal-title fw-bold"
+                            id="modalSolicitarExamenLabel">
+                            <i class="bi bi-clipboard2-plus me-2 text-primary"></i>
+                            Solicitar examen de laboratorio
+                        </h5>
+
+                        <p class="text-muted small mb-0 mt-1">
+                            Selecciona el paciente, el examen y la prioridad de la solicitud.
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Cerrar">
+                    </button>
+                </div>
+
+                <div class="modal-body p-4">
+
+                    <div class="row g-4">
+
+                        <!-- Paciente -->
+                        <div class="col-md-6">
+                            <label for="idPaciente"
+                                   class="form-label fw-semibold">
+                                Paciente
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <select id="idPaciente"
+                                    name="idPaciente"
+                                    class="form-select"
+                                    required>
+
+                                <option value="">
+                                    Selecciona un paciente
+                                </option>
+
+                                <option th:each="paciente : ${pacientes}"
+                                        th:value="${paciente.id}"
+                                        th:text="${paciente.nombres
+                                            + ' '
+                                            + paciente.apellidos
+                                            + ' - DNI: '
+                                            + paciente.dni}">
+                                    Paciente
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Examen -->
+                        <div class="col-md-6">
+                            <label for="idExamen"
+                                   class="form-label fw-semibold">
+                                Examen de laboratorio
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <select id="idExamen"
+                                    name="idExamen"
+                                    class="form-select"
+                                    required>
+
+                                <option value="">
+                                    Selecciona un examen
+                                </option>
+
+                                <option th:each="examen : ${examenes}"
+                                        th:value="${examen.id}"
+                                        th:text="${examen.nombre
+                                            + (examen.categoria != null
+                                                ? ' - ' + examen.categoria
+                                                : '')}">
+                                    Examen
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Prioridad -->
+                        <div class="col-md-6">
+                            <label for="prioridad"
+                                   class="form-label fw-semibold">
+                                Prioridad
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <select id="prioridad"
+                                    name="prioridad"
+                                    class="form-select"
+                                    required>
+
+                                <option value="Normal" selected>
+                                    Normal
+                                </option>
+
+                                <option value="STAT">
+                                    Urgente — STAT
+                                </option>
+                            </select>
+
+                            <small class="text-muted">
+                                STAT se utiliza cuando el examen requiere atención inmediata.
+                            </small>
+                        </div>
+
+                        <!-- Estado inicial -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Estado inicial
+                            </label>
+
+                            <input type="text"
+                                   class="form-control"
+                                   value="Pendiente de toma"
+                                   disabled>
+
+                            <small class="text-muted">
+                                El estado se asigna automáticamente al registrar la orden.
+                            </small>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="col-12">
+                            <label for="observaciones"
+                                   class="form-label fw-semibold">
+                                Indicaciones u observaciones clínicas
+                            </label>
+
+                            <textarea id="observaciones"
+                                      name="observaciones"
+                                      class="form-control"
+                                      rows="4"
+                                      maxlength="1000"
+                                      placeholder="Ejemplo: paciente en ayunas, controlar glucosa y descartar alteraciones metabólicas..."></textarea>
+
+                            <small class="text-muted">
+                                Registra información relevante para el personal de laboratorio.
+                            </small>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer border-top">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                            class="btn btn-primary px-4">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Registrar solicitud
+                    </button>
+                </div>
+
+                        </form>
+        </div>
+    </div>
+</div>
+
 </div>
 </body>
 </html>

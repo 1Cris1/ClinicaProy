@@ -61,7 +61,7 @@
             <td>
                 <div class="position-relative">
                     <input type="text" name="med_nombre" class="form-control med-input bg-light" 
-                           placeholder="Buscar medicamento..." required onkeyup="buscarProducto(this)">
+                           placeholder="Buscar medicamento..." onkeyup="buscarProducto(this)">
                     <div class="product-results list-group d-none" style="position: absolute; z-index: 1000; width: 100%;"></div>
                 </div>
                 <input type="text" name="med_instrucciones" class="form-control form-control-sm border-0 bg-transparent mt-1 text-muted" 
@@ -89,10 +89,27 @@
     </div>
 
     <!-- HCE Single Screen Layout -->
-    <div th:if="${cita != null}" class="hce-container animate__animated animate__fadeIn">
-        <div class="row g-0 h-100">
+    <div th:if="${cita != null}"
+    class="hce-container animate__animated animate__fadeIn"
+    style="width:100%; display:block;">
+        <div style="
+        display:flex !important;
+        flex-direction:row !important;
+        flex-wrap:nowrap !important;
+        align-items:stretch !important;
+        width:100% !important;
+        min-height:calc(100vh - 100px);
+        ">
             <!-- Sidebar Izquierda: Antecedentes (Siempre Visible) -->
-            <div class="col-lg-3 hce-sidebar border-end bg-white">
+            <div class="hce-sidebar border-end bg-white"
+            style="
+            display:block !important;
+            flex:0 0 350px !important;
+            width:350px !important;
+            min-width:350px !important;
+            max-width:350px !important;
+            overflow-y:auto;
+            ">
                 <div class="p-4">
                     <div class="text-center mb-4">
                         <div class="mx-auto mb-3 hce-avatar shadow-sm">
@@ -125,7 +142,8 @@
                         </div>
                         <div class="d-flex justify-content-between py-2 border-bottom border-light x-small">
                             <span class="text-muted">Edad</span>
-                            <span class="fw-bold" th:text="${cita.paciente.fechaNacimiento != null ? #temporals.between(cita.paciente.fechaNacimiento, T(java.time.LocalDate).now(), T(java.time.temporal.ChronoUnit).YEARS) + ' años' : '-'}">-</span>
+                            <span class="fw-bold"
+                            th:text="${edadPaciente != null ? edadPaciente + ' años' : '-'}">-</span>
                         </div>
                     </div>
 
@@ -140,9 +158,38 @@
             </div>
 
             <!-- Panel Central: Consulta Activa -->
-            <div class="col-lg-9 hce-main bg-light">
-                <div class="p-4">
-                    <form th:action="@{/medico/consulta/completar}" method="post" id="formConsulta">
+            <div class="consulta-formulario bg-light"
+            style="
+            display:block !important;
+            position:static !important;
+            flex:1 1 0 !important;
+            width:auto !important;
+            min-width:0 !important;
+            height:auto !important;
+            min-height:calc(100vh - 100px);
+            overflow:visible !important;
+            visibility:visible !important;
+            opacity:1 !important;
+            transform:none !important;
+            ">
+                <div class="p-4"
+                style="
+                display:block !important;
+                position:static !important;
+                width:100% !important;
+                visibility:visible !important;
+                opacity:1 !important;
+                ">
+                    <form th:action="@{/medico/consulta/completar}"
+                    method="post"
+                    id="formConsulta"
+                    style="
+                    display:block !important;
+                    position:static !important;
+                    width:100% !important;
+                    visibility:visible !important;
+                    opacity:1 !important;
+                    ">
                         <input type="hidden" name="idCita" th:value="${cita.idCita}">
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -157,38 +204,24 @@
                             <!-- Columna 1: Registro y Diagnóstico -->
                             <div class="col-md-7">
                                 <!-- Triaje Rápido -->
-                                <div class="hce-form-card mb-4 shadow-sm" style="background: #f8fafc; border-left: 4px solid #8b5cf6;">
-                                    <h6 class="fw-bold mb-3" style="font-size: 0.8rem; color: #475569;">
-                                        <i class="bi bi-heart-pulse-fill text-danger me-1"></i> Signos Vitales (Triaje Inicial)
-                                    </h6>
+                                <div class="hce-form-card mb-4 shadow-sm">
                                     <div class="row g-3">
                                         <div class="col-md-3">
                                             <label class="x-small fw-bold text-muted text-uppercase">Peso (kg)</label>
-                                            <input type="number" step="0.1" name="peso" class="form-control hce-input" placeholder="0.0" 
-                                                   th:value="${cita.triaje != null ? cita.triaje.peso : ''}" 
-                                                   th:readonly="${cita.triaje != null}">
+                                            <input type="number" step="0.1" name="peso" class="form-control hce-input" placeholder="0.0">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="x-small fw-bold text-muted text-uppercase">Talla (m)</label>
-                                            <input type="number" step="0.01" name="talla" class="form-control hce-input" placeholder="0.00" 
-                                                   th:value="${cita.triaje != null ? cita.triaje.talla : ''}" 
-                                                   th:readonly="${cita.triaje != null}">
+                                            <label class="x-small fw-bold text-muted text-uppercase">Talla (cm)</label>
+                                            <input type="number" name="talla" class="form-control hce-input" placeholder="0">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="x-small fw-bold text-muted text-uppercase">Temp (°C)</label>
-                                            <input type="number" step="0.1" name="temperatura" class="form-control hce-input" placeholder="36.5" 
-                                                   th:value="${cita.triaje != null ? cita.triaje.temperatura : ''}" 
-                                                   th:readonly="${cita.triaje != null}">
+                                            <input type="number" step="0.1" name="temperatura" class="form-control hce-input" placeholder="36.5">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="x-small fw-bold text-muted text-uppercase">P. Art.</label>
-                                            <input type="text" name="presion" class="form-control hce-input" placeholder="120/80" 
-                                                   th:value="${cita.triaje != null ? cita.triaje.presionArterial : ''}" 
-                                                   th:readonly="${cita.triaje != null}">
+                                            <input type="text" name="presion" class="form-control hce-input" placeholder="120/80">
                                         </div>
-                                    </div>
-                                    <div th:if="${cita.triaje != null}" class="mt-2 text-muted" style="font-size: 0.7rem;">
-                                        <i class="bi bi-info-circle-fill text-success"></i> Registrado por recepción el <span th:text="${#temporals.format(cita.triaje.fechaRegistro, 'dd/MM/yyyy HH:mm')}"></span>.
                                     </div>
                                 </div>
 
@@ -265,9 +298,32 @@
 
     <!-- Estilos Premium para HCE Single Screen -->
     <style>
-        .hce-container { height: calc(100vh - 100px); background: #f8fafc; }
-        .hce-sidebar { height: 100%; overflow-y: auto; }
-        .hce-main { height: 100%; overflow-y: auto; }
+
+    .hce-container {
+        width: 100% !important;
+        min-height: calc(100vh - 100px);
+        background: #f8fafc;
+        display: block !important;
+        overflow-x: auto;
+    }
+    
+
+    .hce-sidebar {
+        width: 350px !important;
+        min-width: 350px !important;
+        min-height: calc(100vh - 100px);
+        overflow-y: auto;
+        display: block !important;
+    }
+    .consulta-formulario {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+        min-height: calc(100vh - 100px);
+        background: #f8fafc;
+    }
+
+
         .hce-avatar { width: 80px; height: 80px; border-radius: 24px; background: linear-gradient(135deg, #3B82F6, #60A5FA); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 800; }
         .hce-section-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #64748B; margin-bottom: 1rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
         .hce-card { border-radius: 14px; border: 1px solid rgba(0,0,0,0.05); transition: all 0.2s; }
@@ -299,7 +355,7 @@
             </button>
             <div class="position-relative mb-2">
                 <input type="text" name="med_nombre" class="form-control form-control-sm border-0 bg-white shadow-sm" 
-                       placeholder="Nombre del medicamento..." required onkeyup="buscarProducto(this)">
+                       placeholder="Nombre del medicamento..." onkeyup="buscarProducto(this)">
                 <div class="product-results list-group d-none shadow" style="position: absolute; z-index: 1000; width: 100%;"></div>
                 <div class="stock-status"></div>
             </div>
@@ -399,16 +455,13 @@
                 }
 
                 try {
-                    const res = await fetch('/data/cie10.json');
-                    const allData = await res.json();
+                    const res = await fetch('/api/v1/external/cie11/search?q=' + encodeURIComponent(val));
+                    const data = await res.json();
                     
-                    const valLower = val.toLowerCase();
-                    const filteredData = allData.filter(x => x.descripcion.toLowerCase().includes(valLower)).slice(0, 5);
-                    
-                    if (filteredData.length > 0) {
-                        results.innerHTML = filteredData.map(x => `
-                            <button type="button" class="list-group-item list-group-item-action py-2 small" onclick="seleccionarCIE11('${x.codigo || ''}', '${x.descripcion.replace(/'/g, "\\'")}')">
-                                <span class="fw-bold text-info">${x.codigo || 'N/A'}</span> - ${x.descripcion}
+                    if (data.destinationEntities && data.destinationEntities.length > 0) {
+                        results.innerHTML = data.destinationEntities.map(x => `
+                            <button type="button" class="list-group-item list-group-item-action py-2 small" onclick="seleccionarCIE11('${x.theCode || ''}', '${x.title.replace(/<[^>]*>?/gm, '')}')">
+                                <span class="fw-bold text-info">${x.theCode || 'N/A'}</span> - ${x.title}
                             </button>
                         `).join('');
                         results.classList.remove('d-none');
@@ -422,7 +475,7 @@
             }
 
             function seleccionarCIE11(cod, desc) {
-                document.getElementById('cie10-val').value = cod + ' - ' + desc;
+                document.getElementById('cie10-val').value = cod;
                 document.getElementById('diagnostico-text').textContent = 'CIE-11: ' + cod + ' - ' + desc;
                 document.getElementById('diagnostico-selected').classList.remove('d-none');
                 document.getElementById('cie11-results').classList.add('d-none');
@@ -510,6 +563,5 @@
             }
         </script>
     </th:block>
-</div>
 </body>
 </html>

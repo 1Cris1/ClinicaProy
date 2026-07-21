@@ -65,6 +65,9 @@ public class Medico {
 
     private String estado;
 
+    @Column(length = 1)
+    private String sexo;
+    
     @Column(name = "foto_url")
     private String fotoUrl;
 }

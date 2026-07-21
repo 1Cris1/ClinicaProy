@@ -12,7 +12,7 @@
             <div class="app-card-body d-flex justify-content-between align-items-center flex-wrap gap-4 py-5 px-4 position-relative" style="z-index: 2;">
                 <div>
                     <span class="app-badge bg-white bg-opacity-25 text-white border-0 mb-3" style="backdrop-filter: blur(4px);">CENTRO MEDICO DIGITAL</span>
-                    <h1 class="fw-bold mb-2 text-white" style="font-size:2.2rem; letter-spacing: -0.5px;" th:text="${'¡Bienvenido, ' + (pacienteGlobal != null ? pacienteGlobal.nombres : 'Paciente') + '!'}">Bienvenido, Paciente!</h1>
+                    <h1 class="fw-bold mb-2 text-white" style="font-size:2.2rem; letter-spacing: -0.5px;" th:text="${'¡Bienvenido, ' + (pacienteGlobal != null ? pacienteGlobal.nombres : 'Paciente') + '!'}">¡Bienvenido, Paciente!</h1>
                     <p class="text-white opacity-75 mb-0 d-flex align-items-center gap-2">
                         <i class="bi bi-calendar3-event fs-5"></i> 
                         <span id="currentDateDisplay">Cargando fecha...</span>
@@ -44,7 +44,7 @@
                                     <span class="badge rounded-pill px-3 py-2" 
                                           th:classappend="${pacienteGlobal != null and pacienteGlobal.estadoSeguro == 'ACTIVO' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}"
                                           th:text="${pacienteGlobal != null and pacienteGlobal.estadoSeguro != null ? 'SEGURO ' + pacienteGlobal.estadoSeguro : 'SIN SEGURO'}">ACTIVO</span>
-                                    <span class="text-muted small fw-medium"><i class="bi bi-info-circle me-1"></i> <span th:text="${'Plan: ' + (pacienteGlobal != null and pacienteGlobal.tipoPlan != null ? pacienteGlobal.tipoPlan : 'AtenciÃ³n Particular')}">Plan</span></span>
+                                    <span class="text-muted small fw-medium"><i class="bi bi-info-circle me-1"></i> <span th:text="${'Plan: ' + (pacienteGlobal != null and pacienteGlobal.tipoPlan != null ? pacienteGlobal.tipoPlan : 'Atención Particular')}">Plan</span></span>
                                 </div>
                             </div>
                         </div>
@@ -68,7 +68,7 @@
                         <div class="rounded-pill bg-primary-subtle d-flex align-items-center justify-content-center" style="width:48px;height:48px; color:#8B5CF6; background: #E0F2FE;">
                             <i class="bi bi-calendar2-check-fill fs-4"></i>
                         </div>
-                        <span class="small text-muted fw-bold">PROXIMO</span>
+                        <span class="small text-muted fw-bold">PRÓXIMO</span>
                     </div>
                     <p class="text-muted small fw-bold text-uppercase letter-spacing-1 mb-1">Citas Pendientes</p>
                     <h2 class="fw-bold mb-0 text-dark" th:text="${citasPendientesCount != null ? citasPendientesCount : '0'}">0</h2>
@@ -94,7 +94,7 @@
                         </div>
                         <span class="small text-warning fw-bold">ACTIVO</span>
                     </div>
-                    <p class="text-muted small fw-bold text-uppercase letter-spacing-1 mb-1">Recetas Medicas</p>
+                    <p class="text-muted small fw-bold text-uppercase letter-spacing-1 mb-1">Recetas Médicas</p>
                     <h2 class="fw-bold mb-0 text-dark" th:text="${recetasActivas != null ? recetasActivas : '0'}">0</h2>
                 </div>
             </div>
@@ -148,7 +148,7 @@
                                 </div>
                                 <div>
                                     <p class="small text-muted mb-0">Atendido por</p>
-                                    <p class="fw-bold mb-0" th:text="${'Dr/a. ' + proximaCita.medico.apellidos}">MÃ©dico</p>
+                                    <p class="fw-bold mb-0" th:text="${'Dr/a. ' + proximaCita.medico.apellidos}">Médico</p>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-3">
@@ -157,7 +157,7 @@
                                 </div>
                                 <div>
                                     <p class="small text-muted mb-0">Sede</p>
-                                    <p class="fw-bold mb-0 text-truncate" th:text="${proximaCita.medico.sede.nombre}">UbicaciÃ³n</p>
+                                    <p class="fw-bold mb-0 text-truncate" th:text="${proximaCita.medico.sede.nombre}">Ubicación</p>
                                 </div>
                             </div>
                         </div>
@@ -172,7 +172,7 @@
             <div class="col-lg-8">
                 <div class="app-card h-100 border-0 shadow-sm bg-white">
                     <div class="app-card-header bg-white border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-droplet-half text-danger me-2 fs-5"></i>Examenes Recientes</h6>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-droplet-half text-danger me-2 fs-5"></i>Exámenes Recientes</h6>
                         <a th:href="@{/paciente/resultados}" class="text-primary text-decoration-none small fw-bold border-bottom border-primary border-2 pb-1">Ver Historial</a>
                     </div>
                     <div class="app-card-body p-4">
@@ -210,14 +210,14 @@
                                             <span th:if="${res.estado != 'Disponible'}" class="app-badge" style="background:#FEF3C7; color:#B45309;">Procesando</span>
                                         </td>
                                         <td class="text-end">
-                                            <button th:if="${res.estado == 'Disponible'}" class="app-btn py-1 px-3 bg-light border text-primary" style="font-size: .75rem;" onclick="alert('ðŸ“„ Preparando descarga...')">
+                                            <button th:if="${res.estado == 'Disponible'}" class="app-btn py-1 px-3 bg-light border text-primary" style="font-size: .75rem;" onclick="alert('📄 Preparando descarga...')">
                                                 <i class="bi bi-download"></i> PDF
                                             </button>
                                         </td>
                                     </tr>
                                     <tr th:if="${ultimosResultados == null or #lists.isEmpty(ultimosResultados)}">
                                         <td colspan="4" class="text-center text-muted py-5 opacity-50">
-                                            <i class="bi bi-info-circle d-block fs-3 mb-2"></i> No se registran exÃ¡menes en los Ãºltimos 30 dÃ­as.
+                                            <i class="bi bi-info-circle d-block fs-3 mb-2"></i> No se registran exámenes en los últimos 30 días.
                                         </td>
                                     </tr>
                                 </tbody>
@@ -231,7 +231,7 @@
         <!-- Quick Access Shortcuts -->
         <div class="mt-5 mb-4">
             <h6 class="fw-bold text-muted text-uppercase letter-spacing-1 d-flex align-items-center gap-2" style="font-size:.75rem;">
-                <i class="bi bi-grid-fill"></i> Accesos RÃ¡pidos ClinicX
+                <i class="bi bi-grid-fill"></i> Accesos Rápidos ClinicX
             </h6>
         </div>
         <div class="row g-4 mb-5">
@@ -276,6 +276,17 @@
                 </a>
             </div>
             <div class="col-6 col-md-4 col-lg-2">
+    <a th:href="@{/paciente/calificaciones}" class="text-decoration-none shortcut-item">
+        <div class="app-card text-center py-4 border-0 shadow-sm-hover bg-white rounded-4 transition-all">
+            <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:54px; height:54px; background:#FEF3C7; color:#D97706;">
+                <i class="bi bi-star-fill fs-3"></i>
+            </div>
+            <p class="fw-bold small mb-0 text-dark">Calificar Atención</p>
+        </div>
+    </a>
+</div>
+            <div class="col-6 col-md-4 col-lg-2">
                 <a th:href="@{/paciente/perfil}" class="text-decoration-none shortcut-item">
                     <div class="app-card text-center py-4 border-0 shadow-sm-hover bg-white rounded-4 transition-all">
                         <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width:54px; height:54px; background:#FEF2F2; color:#DC2626;">
@@ -297,47 +308,6 @@
             </div>
         </div>
 
-        <!-- Power BI Reporte Paciente -->
-        <div class="mt-5 mb-4">
-            <h6 class="fw-bold text-muted text-uppercase letter-spacing-1 d-flex align-items-center gap-2" style="font-size:.75rem;">
-                <i class="bi bi-bar-chart-fill"></i> Mi Resumen de Salud (Power BI)
-            </h6>
-        </div>
-        <div class="app-card border-0 shadow-sm rounded-4 overflow-hidden mb-5 cx-card">
-            <div class="app-card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div>
-                    <h5 class="fw-bold mb-1 text-dark" th:text="${powerBiPageName}">Mi Panel de Salud</h5>
-                    <p class="text-muted small mb-0">Visualizacion de datos e indicadores personales</p>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-light btn-sm rounded-pill px-3 fw-bold" onclick="reloadIframe(this)" title="Recargar">
-                        <i class="bi bi-arrow-clockwise me-1"></i> Recargar
-                    </button>
-                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" onclick="toggleFullscreen(this)" title="Pantalla Completa">
-                        <i class="bi bi-arrows-fullscreen me-1"></i> Pantalla Completa
-                    </button>
-                </div>
-            </div>
-            <div class="app-card-body p-0" style="position:relative; min-height: 400px;">
-                <!-- Indicador de carga -->
-                <div class="text-center py-5" id="powerbi-loading-paciente" style="background:#f8f9fa; position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-                    <p class="mt-3 text-muted fw-bold">Cargando tu panel personalizado...</p>
-                </div>
-                <!-- iframe -->
-                <iframe 
-                    th:src="${powerBiUrl}"
-                    title="Panel Paciente - ClinicX"
-                    width="100%" 
-                    height="800"
-                    allowFullScreen
-                    frameborder="0"
-                    style="border:none; display:none;"
-                    onload="hideLoading(this, 'powerbi-loading-paciente')">
-                </iframe>
-            </div>
-        </div>
     </div>
 </body>
 </html>
-

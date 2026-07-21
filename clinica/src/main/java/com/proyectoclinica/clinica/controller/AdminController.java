@@ -730,6 +730,15 @@ public class AdminController {
         return LAYOUT;
     }
 
+    // ========== DASHBOARD POWER BI - DESEMPEÑO CLÍNICO ==========
+    @GetMapping("/reportes/desempeno-clinico")
+    public String reporteDesempenoClinico(Model model) {
+        log.info("[Admin] Acceso al Dashboard de Gestión de Atención y Desempeño Clínico");
+        model.addAttribute("pageTitle", "Gestión de Atención y Desempeño Clínico");
+        model.addAttribute("view", "admin/reportes-desempeno");
+        return LAYOUT;
+    }
+
     @GetMapping("/configuracion")
     public String configuracion(Model model) {
         log.info("[Admin] Acceso a Configuración");

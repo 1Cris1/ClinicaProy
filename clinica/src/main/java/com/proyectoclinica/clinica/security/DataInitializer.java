@@ -45,7 +45,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private Integer obtenerIdUsuario(String username) {
         return usuarioRepository.findByUsername(username)
-                .map(com.proyectoclinica.clinica.modules.seguridad.models.Usuario::getId)
+                .map(u -> u.getId())
                 .orElse(1); // Default to 1 (admin) if not found
     }
 

@@ -34,6 +34,8 @@ import com.proyectoclinica.clinica.modules.recursos.models.Servicio;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.resources.preference.Preference;
 
+import com.proyectoclinica.clinica.modules.experiencia.service.FeedbackPacienteService;
+
 /**
  * Controlador del portal del paciente.
  */
@@ -55,6 +57,7 @@ public class PacienteController {
     private final com.proyectoclinica.clinica.modules.laboratorio.repository.ResultadoLaboratorioRepository resultadoLaboratorioRepository;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
+    private final FeedbackPacienteService feedbackPacienteService;
     private static final String LAYOUT = "layout-paciente";
 
     @Value("${powerbi.base.url:}")
@@ -454,5 +457,58 @@ public class PacienteController {
                 "message", "Pedido finalizado, recoger en físico y cancelar en la clínica",
                 "pedidoId", pedido.getId()
         ));
+    }
+
+    @GetMapping("/calificaciones")
+    public String calificaciones(Model model, Principal principal) {
+        Paciente paciente = getPacienteAutenticado(principal);
+        if (paciente == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("pacienteGlobal", paciente);
+        model.addAttribute("citas", citaRepository.findByPacienteIdAndEstadoOrderByFechaCitaDesc(
+                paciente.getId(),
+                "Completada"
+        ));
+        model.addAttribute("pageTitle", "Calificar Atención");
+        model.addAttribute("view", "paciente/calificaciones");
+        return LAYOUT;
+    }
+
+    @PostMapping("/calificaciones")
+    public String guardarCalificacion(
+            @RequestParam Integer idCita,
+            @RequestParam Integer puntuacion,
+            @RequestParam(required = false) String comentario,
+            Principal principal) {
+        Paciente paciente = getPacienteAutenticado(principal);
+        if (paciente == null) {
+            return "redirect:/login";
+        }
+        try {
+            feedbackPacienteService.guardarCalificacion(
+                    idCita,
+                    puntuacion,
+                    comentario,
+                    paciente
+            );
+            return "redirect:/paciente/calificaciones?success";
+        } catch (RuntimeException ex) {
+            return "redirect:/paciente/calificaciones?error";
+        }
+    }
+
+    @GetMapping("/doctores")
+    public String doctores(Model model, Principal principal) {
+        Paciente paciente = getPacienteAutenticado(principal);
+        if (paciente == null) {
+            return "redirect:/login";
+        }
+        model.addAttribute("pacienteGlobal", paciente);
+        model.addAttribute("medicos", medicoRepository.findAll());
+        model.addAttribute("especialidades", especialidadRepository.findAll());
+        model.addAttribute("pageTitle", "Nuestros Especialistas");
+        model.addAttribute("view", "paciente/doctores");
+        return LAYOUT;
     }
 }

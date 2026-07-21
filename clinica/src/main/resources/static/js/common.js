@@ -295,6 +295,9 @@ let currentStep = 1;
                 el.classList.add('active');
                 
                 selectedDoctorId = el.getAttribute('data-id-medico');
+                console.log(el);
+                console.log(el.outerHTML);
+                console.log("ID=", el.getAttribute("data-id-medico"));
                 selectedDoctorName = el.getAttribute('data-doctor');
                 selectedSede = el.getAttribute('data-sede') || "Sede Principal";
                 selectedDoctorHorarioLv = el.getAttribute('data-horariolv');
@@ -306,6 +309,9 @@ let currentStep = 1;
                 
                 // Regenerate time slots if date is already picked
                 let dateVal = document.getElementById('citaFecha')?.value;
+                console.log("Doctor ID:", selectedDoctorId);
+                console.log("Horario LV:", selectedDoctorHorarioLv);
+                console.log("Fecha:", document.getElementById("citaFecha").value);
                 if(dateVal) {
                     generateTimeSlots(dateVal);
                 }
@@ -323,6 +329,9 @@ let currentStep = 1;
             }
 
             function generateTimeSlots(dateString) {
+                console.log("Entró a generateTimeSlots");
+                console.log("selectedDoctorId =", selectedDoctorId);
+                console.log("dateString =", dateString);
                 const grid = document.getElementById('horariosGrid');
                 if(!grid) return;
                 
@@ -446,10 +455,6 @@ let currentStep = 1;
                     const btn = document.getElementById('agendarNext');
                     btn.disabled = true;
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Procesando...';
-                    
-                    const selectedPayChoice = document.querySelector('input[name="metodoPagoChoice"]:checked').value;
-                    document.getElementById('hidden_metodoPago').value = selectedPayChoice;
-                    
                     document.getElementById('realAgendarForm').submit();
                     return;
                 }

@@ -77,8 +77,11 @@
             </a>
 
             <div class="app-sidebar-label mt-2">Sistema</div>
-            <a th:href="@{/admin/reportes}" th:class="${#strings.contains(view, 'reportes')} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes">
-                <i class="bi bi-graph-up-arrow"></i> Reportes
+            <a th:href="@{/admin/reportes}" th:class="${view == 'admin/reportes'} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes">
+                <i class="bi bi-graph-up-arrow"></i> Reportes Servicios
+            </a>
+            <a th:href="@{/admin/reportes/desempeno-clinico}" th:class="${view == 'admin/reportes-desempeno'} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes-desempeno">
+                <i class="bi bi-bar-chart-line-fill"></i> Desempeño Clínico
             </a>
             <a th:href="@{/admin/auditoria}" th:class="${#strings.contains(view, 'auditoria')} ? 'app-nav-link active' : 'app-nav-link'" data-page="auditoria">
                 <i class="bi bi-shield-lock-fill"></i> Auditoría

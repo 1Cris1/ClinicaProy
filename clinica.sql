@@ -1,6 +1,6 @@
 -- DROP SCHEMA dbo;
 
-CREATE SCHEMA dbo;
+-- CREATE SCHEMA dbo;
 -- bd_clinica.dbo.catalogo_examenes definition
 
 -- Drop table

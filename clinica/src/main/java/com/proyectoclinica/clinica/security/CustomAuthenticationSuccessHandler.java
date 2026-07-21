@@ -2,12 +2,12 @@ package com.proyectoclinica.clinica.security;
 
 import java.io.IOException;
 import com.proyectoclinica.clinica.modules.seguridad.models.AuditoriaUsuario;
+import com.proyectoclinica.clinica.modules.seguridad.models.Usuario;
 import com.proyectoclinica.clinica.modules.seguridad.repository.AuditoriaUsuarioRepository;
-import com.proyectoclinica.clinica.modules.seguridad.repository.UsuarioRepository;
+import com.proyectoclinica.clinica.service.TwoFactorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import jakarta.servlet.ServletException;
@@ -20,13 +20,43 @@ import lombok.RequiredArgsConstructor;
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private static final Logger log = LoggerFactory.getLogger(CustomAuthenticationSuccessHandler.class);
     private final AuditoriaUsuarioRepository auditoriaUsuarioRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final TwoFactorService twoFactorService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        String username = authentication.getName();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Usuario usuario = userDetails.getUsuario();
+        String username = usuario.getUsername();
         log.info("Authentication success for user={}", username);
+
+        // Si el usuario es ADMINISTRADOR o MEDICO, omitir 2FA y redirigir directamente
+        if (usuario.getRol() == com.proyectoclinica.clinica.modules.seguridad.models.Rol.ROLE_ADMIN ||
+            usuario.getRol() == com.proyectoclinica.clinica.modules.seguridad.models.Rol.ROLE_MEDICO) {
+            try {
+                String ipAddress = request.getRemoteAddr();
+                if ("0:0:0:0:0:0:0:1".equals(ipAddress)) {
+                    ipAddress = "127.0.0.1";
+                }
+                auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
+                        .username(username)
+                        .idUsuario(usuario.getId())
+                        .fechaEvento(java.time.LocalDateTime.now())
+                        .tipoEvento("LOGIN")
+                        .direccionIp(ipAddress)
+                        .detalles("Inicio de sesión correcto en el sistema (" + usuario.getRol().name() + " sin 2FA)")
+                        .build());
+                log.info("Audit log saved for login of user {} bypassing 2FA", username);
+            } catch (Exception e) {
+                log.error("Failed to save audit log for login of user {}", username, e);
+            }
+            if (usuario.getRol() == com.proyectoclinica.clinica.modules.seguridad.models.Rol.ROLE_ADMIN) {
+                response.sendRedirect("/admin");
+            } else {
+                response.sendRedirect("/medico");
+            }
+            return;
+        }
         
         // Guardar registro de auditoría del inicio de sesión
         try {
@@ -34,38 +64,32 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             if ("0:0:0:0:0:0:0:1".equals(ipAddress)) {
                 ipAddress = "127.0.0.1";
             }
-            Integer userId = usuarioRepository.findByUsername(username)
-                    .map(com.proyectoclinica.clinica.modules.seguridad.models.Usuario::getId)
-                    .orElse(1); // fallback to 1
-
             auditoriaUsuarioRepository.save(AuditoriaUsuario.builder()
                     .username(username)
-                    .idUsuario(userId)
+                    .idUsuario(usuario.getId())
                     .fechaEvento(java.time.LocalDateTime.now())
                     .tipoEvento("LOGIN")
                     .direccionIp(ipAddress)
-                    .detalles("Inicio de sesión correcto en el sistema")
+                    .detalles("Inicio de sesión correcto en el sistema (Pendiente de 2FA)")
                     .build());
             log.info("Audit log saved for login of user {}", username);
         } catch (Exception e) {
             log.error("Failed to save audit log for login of user {}", username, e);
         }
 
-        String redirectUrl = "/";
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            log.debug("Granted authority for {}: {}", username, authority.getAuthority());
-            if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                redirectUrl = "/admin/inicio";
-                break;
-            } else if (authority.getAuthority().equals("ROLE_MEDICO")) {
-                redirectUrl = "/medico/inicio";
-            } else if (authority.getAuthority().equals("ROLE_PACIENTE")) {
-                redirectUrl = "/paciente/inicio";
-            } else if (authority.getAuthority().equals("ROLE_RECEPCIONISTA")) {
-                redirectUrl = "/recepcionista/inicio";
-            }
+        // Generar y enviar código 2FA
+        try {
+            twoFactorService.generarYEnviarCodigo(usuario);
+            log.info("2FA code generated and sent to {}", usuario.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to generate/send 2FA code for user {}", username, e);
         }
-        log.info("Redirecting user {} to {}", username, redirectUrl);
-        response.sendRedirect(redirectUrl);
+
+        // Guardar datos en sesión para la pantalla de verificación
+        request.getSession().setAttribute("usuario2FA", usuario);
+        request.getSession().setAttribute("otpVerificado", false);
+
+        // Redirigir a la pantalla de verificación de código 2FA
+        response.sendRedirect("/verificar-codigo");
     }
 }

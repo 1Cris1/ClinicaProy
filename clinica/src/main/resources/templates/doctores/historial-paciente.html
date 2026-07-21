@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Historial Clínico - Médico</title>
+</head>
+<body>
+
+<div th:fragment="cuerpo">
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h5 class="fw-bold mb-1">Historial Clínico del Paciente</h5>
+            <p class="text-muted small mb-0">
+                Consulta de diagnósticos, tratamientos y observaciones anteriores.
+            </p>
+        </div>
+
+        <a th:href="@{/medico/pacientes}"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>
+            Volver a Mis Pacientes
+        </a>
+    </div>
+
+    <!-- Datos del paciente -->
+    <div class="doc-card mb-4">
+        <div class="doc-card-body">
+            <div class="row align-items-center">
+
+                <div class="col-md-2 text-center mb-3 mb-md-0">
+                    <div style="
+                        width:80px;
+                        height:80px;
+                        margin:auto;
+                        background:linear-gradient(135deg,#0D9488,#2DD4BF);
+                        border-radius:18px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                    ">
+                        <span style="font-size:1.5rem;font-weight:700;color:#fff;"
+                              th:text="${#strings.substring(paciente.nombres,0,1)
+                              + #strings.substring(paciente.apellidos,0,1)}">
+                            PP
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-10">
+                    <h4 class="fw-bold mb-3"
+                        th:text="${paciente.nombres + ' ' + paciente.apellidos}">
+                        Nombre del paciente
+                    </h4>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">DNI</small>
+                            <span class="fw-semibold"
+                                  th:text="${paciente.dni}">
+                                -
+                            </span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Teléfono</small>
+                            <span class="fw-semibold"
+                                  th:text="${paciente.telefono != null ? paciente.telefono : '-'}">
+                                -
+                            </span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Correo</small>
+                            <span class="fw-semibold"
+                                  th:text="${paciente.email != null ? paciente.email : '-'}">
+                                -
+                            </span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Tipo de sangre</small>
+                            <span class="fw-semibold"
+                                  th:text="${paciente.tipoSangre != null ? paciente.tipoSangre : 'No registrado'}">
+                                No registrado
+                            </span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Alergias</small>
+                            <span class="fw-semibold"
+                                  th:text="${paciente.alergias != null ? paciente.alergias : 'No registradas'}">
+                                No registradas
+                            </span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Estado</small>
+                            <span class="doc-badge-status"
+                                  th:text="${paciente.estado != null ? paciente.estado : 'Activo'}"
+                                  style="background:#D1FAE5;color:#059669;">
+                                Activo
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="doc-card mb-4">
+        <div class="doc-card-body">
+            <div class="d-flex align-items-center gap-3">
+
+                <div style="
+                    width:46px;
+                    height:46px;
+                    border-radius:12px;
+                    background:#DBEAFE;
+                    color:#2563EB;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:1.25rem;
+                ">
+                    <i class="bi bi-file-medical"></i>
+                </div>
+
+                <div>
+                    <small class="text-muted">Atenciones registradas</small>
+                    <h4 class="fw-bold mb-0"
+                        th:text="${totalHistoriales}">
+                        0
+                    </h4>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Buscador del historial -->
+<div class="doc-card mb-4"
+     th:if="${!historiales.isEmpty()}">
+
+    <div class="doc-card-body">
+        <label for="buscarHistorial"
+               class="form-label fw-semibold">
+            Buscar dentro del historial
+        </label>
+
+        <div class="input-group">
+            <span class="input-group-text bg-white">
+                <i class="bi bi-search"></i>
+            </span>
+
+            <input type="text"
+                   id="buscarHistorial"
+                   class="form-control"
+                   placeholder="Buscar diagnóstico, tratamiento u observación...">
+        </div>
+
+        <small class="text-muted">
+            La búsqueda se realiza sobre las atenciones mostradas.
+        </small>
+    </div>
+</div>
+
+   
+    <!-- Con historial -->
+<div th:if="${!historiales.isEmpty()}"
+     class="historial-timeline"
+     id="contenedorHistorial">
+
+    <div class="historial-item"
+         th:each="historial : ${historiales}">
+
+        <!-- Punto de la línea de tiempo -->
+        <div class="historial-punto">
+            <i class="bi bi-clipboard2-pulse"></i>
+        </div>
+
+        <!-- Tarjeta de atención -->
+        <div class="doc-card mb-4 historial-registro">
+
+            <div class="doc-card-body">
+
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+
+                    <div>
+                        <h6 class="fw-bold mb-1">
+                            Atención médica
+                        </h6>
+
+                        <div class="text-muted small">
+                            <i class="bi bi-calendar3 me-1"></i>
+
+                            <span th:text="${#temporals.format(
+                                historial.fechaRegistro,
+                                'dd/MM/yyyy'
+                            )}">
+                                18/05/2026
+                            </span>
+
+                            <span class="mx-1">—</span>
+
+                            <i class="bi bi-clock me-1"></i>
+
+                            <span th:text="${#temporals.format(
+                                historial.fechaRegistro,
+                                'HH:mm'
+                            )}">
+                                15:30
+                            </span>
+                        </div>
+                    </div>
+
+                    <span class="badge rounded-pill"
+                          style="background:#DBEAFE;color:#2563EB;"
+                          th:text="${'Historia N.° ' + historial.idHistorial}">
+                        Historia N.° 1
+                    </span>
+
+                </div>
+
+                <!-- Diagnóstico destacado -->
+                <div class="p-3 rounded mb-3"
+                     style="background:#EFF6FF;border-left:4px solid #2563EB;">
+
+                    <small class="text-muted d-block mb-1">
+                        Diagnóstico
+                    </small>
+
+                    <h6 class="fw-bold mb-0 diagnostico-texto"
+                        th:text="${historial.diagnostico != null
+                            ? historial.diagnostico
+                            : 'Sin diagnóstico registrado'}">
+                        Diagnóstico
+                    </h6>
+                </div>
+
+                <div class="row g-3">
+
+                    <!-- Tratamiento -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded h-100"
+                             style="background:#F8FAFC;">
+
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-capsule text-success"></i>
+
+                                <small class="fw-semibold">
+                                    Tratamiento indicado
+                                </small>
+                            </div>
+
+                            <p class="mb-0 tratamiento-texto"
+                               th:text="${historial.tratamiento != null
+                                    ? historial.tratamiento
+                                    : 'Sin tratamiento registrado'}">
+                                Tratamiento
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded h-100"
+                             style="background:#F8FAFC;">
+
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-chat-left-text text-warning"></i>
+
+                                <small class="fw-semibold">
+                                    Observaciones médicas
+                                </small>
+                            </div>
+
+                            <p class="mb-0 observacion-texto"
+                               th:text="${historial.observaciones != null
+                                    ? historial.observaciones
+                                    : 'Sin observaciones registradas'}">
+                                Observaciones
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Mensaje cuando el filtro no encuentra coincidencias -->
+<div id="sinCoincidencias"
+     class="doc-card text-center py-5 d-none">
+
+    <i class="bi bi-search text-muted"
+       style="font-size:2.5rem;"></i>
+
+    <h6 class="fw-bold mt-3">
+        No se encontraron coincidencias
+    </h6>
+
+    <p class="text-muted mb-0">
+        Prueba utilizando otro diagnóstico, tratamiento u observación.
+    </p>
+</div>
+
+
+
+        <!-- Sin historial -->
+    <div th:if="${historiales.isEmpty()}"
+         class="doc-card text-center py-5">
+
+        <i class="bi bi-file-earmark-medical text-muted"
+           style="font-size:2.8rem;"></i>
+
+        <h6 class="fw-bold mt-3">
+            Sin historial clínico
+        </h6>
+
+        <p class="text-muted mb-0">
+            Este paciente todavía no tiene atenciones médicas registradas.
+        </p>
+    </div>
+
+    <!-- ESTILOS DENTRO DEL FRAGMENTO -->
+    <style>
+        .historial-timeline {
+            position: relative;
+            padding-left: 48px;
+        }
+
+        .historial-timeline::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            bottom: 20px;
+            left: 18px;
+            width: 3px;
+            background: #DBEAFE;
+            border-radius: 10px;
+        }
+
+        .historial-item {
+            position: relative;
+        }
+
+        .historial-punto {
+            position: absolute;
+            left: -48px;
+            top: 18px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #2563EB;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 6px #EFF6FF;
+            z-index: 2;
+        }
+
+        .historial-registro {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .historial-registro:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+        }
+
+        @media (max-width: 768px) {
+            .historial-timeline {
+                padding-left: 0;
+            }
+
+            .historial-timeline::before,
+            .historial-punto {
+                display: none;
+            }
+        }
+    </style>
+
+    <!-- JAVASCRIPT DENTRO DEL FRAGMENTO -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const buscador = document.getElementById("buscarHistorial");
+            const registros = document.querySelectorAll(".historial-item");
+            const sinCoincidencias =
+                document.getElementById("sinCoincidencias");
+
+            if (!buscador) {
+                return;
+            }
+
+            buscador.addEventListener("input", function () {
+                const textoBuscado = buscador.value
+                    .toLowerCase()
+                    .trim();
+
+                let visibles = 0;
+
+                registros.forEach(function (registro) {
+                    const contenido = registro.textContent
+                        .toLowerCase();
+
+                    const coincide =
+                        contenido.includes(textoBuscado);
+
+                    registro.style.display =
+                        coincide ? "" : "none";
+
+                    if (coincide) {
+                        visibles++;
+                    }
+                });
+
+                if (visibles === 0) {
+                    sinCoincidencias.classList.remove("d-none");
+                } else {
+                    sinCoincidencias.classList.add("d-none");
+                }
+            });
+        });
+    </script>
+
+</div>
+</body>
+</html>

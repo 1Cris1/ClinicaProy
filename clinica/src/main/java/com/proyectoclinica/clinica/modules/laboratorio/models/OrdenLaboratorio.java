@@ -25,6 +25,13 @@ public class OrdenLaboratorio {
     @ManyToOne
     @JoinColumn(name = "id_medico", nullable = false)
     private Medico medico;
+
+    
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_examen")
+    private ExamenCatalogo examen;
+
+
     @Column(name = "fecha_solicitud")
     @Builder.Default
     private LocalDateTime fechaSolicitud = LocalDateTime.now();
