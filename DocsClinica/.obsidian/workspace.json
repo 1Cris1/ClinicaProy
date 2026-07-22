@@ -67,13 +67,18 @@
             "id": "6a8a7591b846a297",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vista gráfica"
+              "type": "markdown",
+              "state": {
+                "file": "Requerimientos_Finales_Cristian_AVF.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Requerimientos_Finales_Cristian_AVF"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -233,14 +238,14 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "743eda1b72a1deaf",
+  "active": "d7890b963fe6b781",
   "lastOpenFiles": [
     "Requerimientos_Finales_Cristian_AVF.md",
-    "Requerimientos_Finales_Tablas.md",
-    "Explicacion de codigo backend y frontend dashboard.md",
     "Decisiones segun las especialidades.md",
-    "Explicacion de KPIs para exposicion final PowerBI.md",
     "Rutas de archivos.md",
+    "Requerimientos_Finales_Tablas.md",
+    "Explicacion de KPIs para exposicion final PowerBI.md",
+    "Explicacion de codigo backend y frontend dashboard.md",
     "Sin título.canvas",
     "GUION_EXPOSICION_CRIS.md",
     "2026-07-14.md",

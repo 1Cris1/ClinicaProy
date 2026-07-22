@@ -27,14 +27,20 @@
             dashboard: 'Dashboard', usuarios: 'Centro de Control', pacientes: 'Pacientes', medicos: 'Médicos',
             recepcionistas: 'Recepcionistas', citas: 'Citas', especialidades: 'Especialidades',
             servicios: 'Servicios', productos: 'Farmacia', susalud: 'Catálogo SUSALUD', sedes: 'Sedes',
-            promociones: 'Promociones', reportes: 'Reportes', configuracion: 'Configuración'
+            promociones: 'Promociones', reportes: 'Reportes', 'reportes-desempeno': 'Desempeño Clínico',
+            auditoria: 'Auditoría', configuracion: 'Configuración'
         };
         var isRoot = (path === '/admin' || path === '/admin/');
-        var activePage = isRoot
-            ? 'dashboard'
-            : (Object.keys(titles).find(function(p) {
-                return p !== 'dashboard' && path.includes('/admin/' + p);
-              }) || 'dashboard');
+        var activePage = 'dashboard';
+        if (!isRoot) {
+            if (path.includes('/admin/reportes/desempeno-clinico')) {
+                activePage = 'reportes-desempeno';
+            } else {
+                activePage = Object.keys(titles).find(function(p) {
+                    return p !== 'dashboard' && path.includes('/admin/' + p);
+                }) || 'dashboard';
+            }
+        }
 
         var titleEl = document.getElementById('pageTitle');
         if (titleEl) titleEl.textContent = titles[activePage] || 'Dashboard';
