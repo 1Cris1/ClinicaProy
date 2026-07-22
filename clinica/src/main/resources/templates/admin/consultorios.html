@@ -19,7 +19,10 @@
                 <div class="col-md-6">
                     <label class="small text-muted fw-bold text-uppercase d-block mb-1">Seleccionar Sede</label>
                     <select name="idSede" class="form-select form-select-sm bg-light border-0" onchange="document.getElementById('filterForm').submit()">
-                        <option th:each="s : ${sedes}" th:value="${s.id}" th:text="${s.nombre}" th:selected="${s.id == sedeSeleccionadaId}">Sede Central</option>
+                        <option th:each="s : ${sedes}" 
+                                th:value="${s.id}" 
+                                th:text="${sedeConflictosCount.get(s.id) != null and sedeConflictosCount.get(s.id) > 0} ? ${s.nombre + ' (' + sedeConflictosCount.get(s.id) + ' conflicto/s)'} : ${s.nombre + ' (Espacios en Orden)'}" 
+                                th:selected="${s.id == sedeSeleccionadaId}">Sede Central</option>
                     </select>
                 </div>
                 <div class="col-md-6 text-md-end mt-2 mt-md-0">

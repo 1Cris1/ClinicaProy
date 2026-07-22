@@ -28,7 +28,7 @@
             recepcionistas: 'Recepcionistas', citas: 'Citas', especialidades: 'Especialidades',
             servicios: 'Servicios', productos: 'Farmacia', susalud: 'Catálogo SUSALUD', sedes: 'Sedes',
             promociones: 'Promociones', reportes: 'Reportes', 'reportes-desempeno': 'Desempeño Clínico',
-            auditoria: 'Auditoría', configuracion: 'Configuración'
+            auditoria: 'Auditoría', consultorios: 'Consultorios', configuracion: 'Configuración'
         };
         var isRoot = (path === '/admin' || path === '/admin/');
         var activePage = 'dashboard';

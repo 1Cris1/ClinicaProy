@@ -825,14 +825,47 @@ public class AdminController {
         }
 
         List<String> colisiones = new ArrayList<>();
-        for (Map.Entry<String, List<Medico>> entry : consultorioMedicos.entrySet()) {
-            if (entry.getValue().size() > 1 && !entry.getKey().equals("Sin Consultorio")) {
-                colisiones.add(entry.getKey());
+        Map<String, List<String>> roomGroup = new HashMap<>();
+        for (String cons : consultorioMedicos.keySet()) {
+            if (!cons.equals("Sin Consultorio")) {
+                String roomNum = cons.replaceAll("[^0-9]", "");
+                if (roomNum.isEmpty()) roomNum = cons;
+                roomGroup.computeIfAbsent(roomNum, k -> new ArrayList<>()).add(cons);
             }
+        }
+        for (Map.Entry<String, List<String>> entry : roomGroup.entrySet()) {
+            if (entry.getValue().size() > 1) {
+                colisiones.addAll(entry.getValue());
+            } else {
+                String originalName = entry.getValue().get(0);
+                if (consultorioMedicos.get(originalName).size() > 1) {
+                    colisiones.add(originalName);
+                }
+            }
+        }
+
+        // Calcular conflictos para todas las sedes
+        Map<Integer, Long> sedeConflictosCount = new HashMap<>();
+        for (Sede s : sedes) {
+            List<Medico> medicosDeEstaSede = medicos.stream()
+                    .filter(m -> m.getSede() != null && m.getSede().getId().equals(s.getId()))
+                    .collect(Collectors.toList());
+            Map<String, List<Medico>> tempMap = new HashMap<>();
+            for (Medico m : medicosDeEstaSede) {
+                String cons = m.getConsultorio();
+                if (cons != null && !cons.isBlank() && !cons.equalsIgnoreCase("Sin Consultorio")) {
+                    String roomNum = cons.replaceAll("[^0-9]", "");
+                    if (roomNum.isEmpty()) roomNum = cons;
+                    tempMap.computeIfAbsent(roomNum, k -> new ArrayList<>()).add(m);
+                }
+            }
+            long conflictos = tempMap.values().stream().filter(list -> list.size() > 1).count();
+            sedeConflictosCount.put(s.getId(), conflictos);
         }
 
         model.addAttribute("sedes", sedes);
         model.addAttribute("sedeSeleccionadaId", sedeSeleccionadaId);
+        model.addAttribute("sedeConflictosCount", sedeConflictosCount);
         model.addAttribute("medicos", medicosDeSede);
         model.addAttribute("consultorioMap", consultorioMedicos);
         model.addAttribute("colisiones", colisiones);
