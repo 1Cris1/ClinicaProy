@@ -76,7 +76,7 @@ public class AdminController {
         model.addAttribute("citasHoy", citasHoy);
         model.addAttribute("citasPendientes", citasPendientes);
 
-        // EXPOSICIÓN CRISTIAN: Inyección de URL para reportes desde application.properties (Power BI)
+        //Inyección de URL para reportes desde application.properties (Power BI)
         String powerBiUrl = powerBiProperties.getBase().getUrl() + "&pageName=" + powerBiProperties.getPage().getAdmin();
         model.addAttribute("powerBiUrl", powerBiUrl);
         model.addAttribute("powerBiPageName", "Dashboard Administrador");

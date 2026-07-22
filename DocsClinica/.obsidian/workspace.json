@@ -64,21 +64,31 @@
             }
           },
           {
-            "id": "6a8a7591b846a297",
+            "id": "16cf6110b47749bd",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Requerimientos_Finales_Cristian_AVF.md",
+                "file": "15_Explicacion_Codigo_Auditoria_Consultorios_Cristian.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Requerimientos_Finales_Cristian_AVF"
+              "title": "15_Explicacion_Codigo_Auditoria_Consultorios_Cristian"
+            }
+          },
+          {
+            "id": "035cdd065dbd035e",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "Nueva pestaña"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 4
       }
     ],
     "direction": "vertical"
@@ -238,11 +248,13 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "d7890b963fe6b781",
+  "active": "16cf6110b47749bd",
   "lastOpenFiles": [
-    "Requerimientos_Finales_Cristian_AVF.md",
     "Decisiones segun las especialidades.md",
+    "15_Explicacion_Codigo_Auditoria_Consultorios_Cristian.md",
+    "Sin título 2.canvas",
     "Rutas de archivos.md",
+    "Requerimientos_Finales_Cristian_AVF.md",
     "Requerimientos_Finales_Tablas.md",
     "Explicacion de KPIs para exposicion final PowerBI.md",
     "Explicacion de codigo backend y frontend dashboard.md",
@@ -275,8 +287,6 @@
     "08_Resumen_Cambios_Jhoan.md",
     "07_Resumen_Cambios_Miguel.md",
     "05_Plan_Implementacion_Cristian.md",
-    "01_Propuesta_Segunda_Exposicion.md",
-    "04_Resumen_Cambios_Rhomel.md",
     "Sin título 1.base"
   ]
 }

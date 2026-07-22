@@ -8,9 +8,6 @@
             <h3 class="fw-bold text-dark mb-1">Auditoría de Seguridad</h3>
             <p class="text-muted mb-0">Monitorea en tiempo real todas las acciones críticas del sistema.</p>
         </div>
-        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="exportTableToCSV('auditoria_log.csv')">
-            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar Logs (CSV)
-        </button>
     </div>
 
     <!-- Filtros -->
@@ -51,7 +48,6 @@
                         <th>Usuario</th>
                         <th>Fecha y Hora</th>
                         <th>Tipo Evento</th>
-                        <th>IP Origen</th>
                         <th>Detalles</th>
                         <th class="text-end pe-4">Ver</th>
                     </tr>
@@ -84,11 +80,10 @@
                             <span th:if="${log.tipoEvento == 'SEGURIDAD'}" class="badge bg-primary-subtle text-primary rounded-pill px-2.5 py-1">SEGURIDAD</span>
                             <span th:if="${log.tipoEvento != 'LOGIN' and log.tipoEvento != 'MODIFICACION' and log.tipoEvento != 'ELIMINACION' and log.tipoEvento != 'ACCESO_DATOS' and log.tipoEvento != 'SEGURIDAD'}" class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1" th:text="${log.tipoEvento}">EVENTO</span>
                         </td>
-                        <td class="font-monospace small text-muted" th:text="${log.direccionIp != null ? (log.direccionIp.contains('.') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf('.')) + '.***' : (log.direccionIp.contains(':') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf(':')) + ':***' : '***')) : 'N/A'}">127.0.0.1</td>
                         <td class="text-truncate" style="max-width: 250px;" th:text="${log.detalles}">Detalles de la acción...</td>
                         <td class="text-end pe-4">
                             <button class="btn btn-light btn-sm rounded-circle" 
-                                    th:attr="data-id=${log.idAuditoria}, data-user=${log.nombreCompleto != null ? log.nombreCompleto + ' (' + log.username + ')' : log.username}, data-fecha=${#temporals.format(log.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}, data-tipo=${log.tipoEvento}, data-ip=${log.direccionIp != null ? (log.direccionIp.contains('.') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf('.')) + '.***' : (log.direccionIp.contains(':') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf(':')) + ':***' : '***')) : 'N/A'}, data-detalles=${log.detalles}"
+                                    th:attr="data-id=${log.idAuditoria}, data-user=${log.nombreCompleto != null ? log.nombreCompleto + ' (' + log.username + ')' : log.username}, data-fecha=${#temporals.format(log.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}, data-tipo=${log.tipoEvento}, data-detalles=${log.detalles}"
                                     onclick="mostrarDetalle(this)">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -113,13 +108,9 @@
                         <p class="mb-0 fw-semibold text-dark" id="modal-user">-</p>
                     </div>
                     <div class="row mb-3">
-                        <div class="col-6">
+                        <div class="col-12">
                             <label class="text-muted small fw-bold text-uppercase">Fecha y Hora</label>
                             <p class="mb-0 text-dark" id="modal-fecha">-</p>
-                        </div>
-                        <div class="col-6">
-                            <label class="text-muted small fw-bold text-uppercase">IP Origen</label>
-                            <p class="mb-0 text-dark" id="modal-ip">-</p>
                         </div>
                     </div>
                     <div class="mb-3">
