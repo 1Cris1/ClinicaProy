@@ -763,6 +763,34 @@ public class AdminController {
             logs = auditoriaUsuarioRepository.findAllByOrderByFechaEventoDesc();
         }
 
+        for (AuditoriaUsuario logItem : logs) {
+            if (logItem.getUsername() != null) {
+                if ("admin".equalsIgnoreCase(logItem.getUsername())) {
+                    logItem.setNombreCompleto("Administrador");
+                } else {
+                    java.util.Optional<Usuario> optUser = usuarioRepository.findByUsername(logItem.getUsername());
+                    if (optUser.isPresent()) {
+                        Usuario u = optUser.get();
+                        if (u.getRol() == Rol.ROLE_PACIENTE && u.getPaciente() != null) {
+                            logItem.setNombreCompleto(u.getPaciente().getNombres() + " " + u.getPaciente().getApellidos());
+                        } else if (u.getRol() == Rol.ROLE_MEDICO && u.getMedico() != null) {
+                            logItem.setNombreCompleto("Dr. " + u.getMedico().getNombres() + " " + u.getMedico().getApellidos());
+                        } else if (u.getRol() == Rol.ROLE_ADMIN && u.getAdministrador() != null) {
+                            logItem.setNombreCompleto(u.getAdministrador().getNombres() + " " + u.getAdministrador().getApellidos());
+                        } else if (u.getRol() == Rol.ROLE_RECEPCIONISTA) {
+                            logItem.setNombreCompleto("Recepcionista");
+                        } else {
+                            logItem.setNombreCompleto(u.getUsername());
+                        }
+                    } else {
+                        logItem.setNombreCompleto(logItem.getUsername());
+                    }
+                }
+            } else {
+                logItem.setNombreCompleto("N/A");
+            }
+        }
+
         model.addAttribute("logs", logs);
         model.addAttribute("usuarioFiltro", usuario);
         model.addAttribute("tipoFiltro", tipo);

@@ -67,8 +67,11 @@
                         <td class="ps-4 font-monospace small" th:text="${log.idAuditoria}">1</td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.8rem; color: #475569;" th:text="${#strings.substring(log.username != null ? log.username : 'U', 0, 1).toUpperCase()}">U</div>
-                                <span class="fw-semibold text-dark" th:text="${log.username}">usuario</span>
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-weight: bold; font-size: 0.8rem; color: #475569;" th:text="${#strings.substring(log.nombreCompleto != null ? log.nombreCompleto : (log.username != null ? log.username : 'U'), 0, 1).toUpperCase()}">U</div>
+                                <div>
+                                    <span class="fw-semibold text-dark d-block" th:text="${log.nombreCompleto != null ? log.nombreCompleto : log.username}">Nombre</span>
+                                    <span class="text-muted small" style="font-size: 0.75rem;" th:if="${log.nombreCompleto != null and !log.nombreCompleto.equals(log.username)}" th:text="${log.username}">Usuario / DNI</span>
+                                </div>
                             </div>
                         </td>
                         <td th:text="${#temporals.format(log.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}">01/01/2026 12:00:00</td>
@@ -85,7 +88,7 @@
                         <td class="text-truncate" style="max-width: 250px;" th:text="${log.detalles}">Detalles de la acción...</td>
                         <td class="text-end pe-4">
                             <button class="btn btn-light btn-sm rounded-circle" 
-                                    th:attr="data-id=${log.idAuditoria}, data-user=${log.username}, data-fecha=${#temporals.format(log.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}, data-tipo=${log.tipoEvento}, data-ip=${log.direccionIp != null ? (log.direccionIp.contains('.') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf('.')) + '.***' : (log.direccionIp.contains(':') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf(':')) + ':***' : '***')) : 'N/A'}, data-detalles=${log.detalles}"
+                                    th:attr="data-id=${log.idAuditoria}, data-user=${log.nombreCompleto != null ? log.nombreCompleto + ' (' + log.username + ')' : log.username}, data-fecha=${#temporals.format(log.fechaEvento, 'dd/MM/yyyy HH:mm:ss')}, data-tipo=${log.tipoEvento}, data-ip=${log.direccionIp != null ? (log.direccionIp.contains('.') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf('.')) + '.***' : (log.direccionIp.contains(':') ? log.direccionIp.substring(0, log.direccionIp.lastIndexOf(':')) + ':***' : '***')) : 'N/A'}, data-detalles=${log.detalles}"
                                     onclick="mostrarDetalle(this)">
                                 <i class="bi bi-eye"></i>
                             </button>

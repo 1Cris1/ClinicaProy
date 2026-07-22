@@ -39,4 +39,7 @@ public class AuditoriaUsuario {
 
     @Column(name = "detalles", columnDefinition = "TEXT")
     private String detalles;
+
+    @Transient
+    private String nombreCompleto;
 }
