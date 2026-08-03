@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad - ClinicX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        .policy-card {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            background: #ffffff;
+        }
+        .header-gradient {
+            background: linear-gradient(135deg, #2563EB, #06D6A0);
+            color: white;
+            border-radius: 24px 24px 0 0;
+            padding: 3rem 2rem;
+        }
+        .section-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background-color: #eff6ff;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <!-- Botón Regresar -->
+                <div class="mb-4">
+                    <a th:href="@{/login}" class="btn btn-light rounded-pill px-4 fw-bold text-secondary shadow-sm">
+                        <i class="bi bi-arrow-left me-2"></i> Regresar al Login
+                    </a>
+                </div>
+
+                <div class="card policy-card overflow-hidden">
+                    <!-- Header -->
+                    <div class="header-gradient text-center">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                            <span style="width:38px;height:38px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;">C</span>
+                            <span style="font-weight:800;font-size:1.35rem;color:#fff;">ClinicX</span>
+                        </div>
+                        <h1 class="fw-bold mb-2">Política de Privacidad y Tratamiento de Datos Personales</h1>
+                        <p class="mb-0 opacity-90">Cumplimiento estricto de la Ley N° 29733 (Ley de Protección de Datos Personales - Perú)</p>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="card-body p-4 p-md-5">
+                        <div class="mb-4 text-muted small text-end">
+                            <strong>Última actualización:</strong> 2 de Agosto de 2026
+                        </div>
+
+                        <p class="lead text-secondary mb-5">
+                            En ClinicX nos comprometemos a proteger la privacidad y seguridad de la información médica y personal de nuestros pacientes. Esta política explica de forma clara cómo recopilamos, procesamos, almacenamos y protegemos sus datos bajo la normativa legal vigente de la República del Perú.
+                        </p>
+
+                        <!-- Section 1 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-envelope-open-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">1. Datos Personales que Recopilamos</h5>
+                                <p class="text-muted">
+                                    Para brindarle una atención médica de calidad, en nuestro formulario de registro solicitamos los siguientes datos personales: Nombres completos, apellidos, número de Documento Nacional de Identidad (DNI), correo electrónico, contraseña de acceso encriptada, número telefónico y fecha de nacimiento.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Section 2 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-file-earmark-medical-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">2. Finalidad del Tratamiento de Datos</h5>
+                                <p class="text-muted">
+                                    Sus datos personales y médicos serán utilizados exclusivamente para los siguientes fines legítimos:
+                                </p>
+                                <ul class="text-muted">
+                                    <li>Gestión de citas médicas y control de turnos en las sedes físicas.</li>
+                                    <li>Mantenimiento de su Historial Clínico Electrónico (HCE) seguro.</li>
+                                    <li>Envío de notificaciones importantes sobre sus citas y recetas médicas.</li>
+                                    <li>Verificación oficial de identidad en la base de datos de SUSALUD.</li>
+                                    <li>Atención de consultas, reclamos y sugerencias de servicio.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Section 3 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-shield-fill-check"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">3. Medidas de Seguridad y Cifrado</h5>
+                                <p class="text-muted">
+                                    Contamos con estrictas medidas de seguridad técnicas e institucionales para salvaguardar sus datos. Las contraseñas de las cuentas son cifradas utilizando el algoritmo de hash unidireccional seguro **BCrypt**, lo que impide que cualquier tercero o personal administrativo pueda visualizarlas en texto claro. Asimismo, las comunicaciones se realizan bajo protocolos seguros (HTTPS).
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Section 4 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">4. Transferencia de Datos a Terceros</h5>
+                                <p class="text-muted">
+                                    ClinicX no vende, comercializa ni transfiere sus datos personales a terceras empresas con fines comerciales. Los datos únicamente podrán ser compartidos con entidades oficiales del sector salud (como el Ministerio de Salud - MINSA, SUSALUD o INDECOPI) ante requerimientos legales estrictamente fundados.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Section 5 -->
+                        <div class="d-flex gap-3 mb-5">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-key-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">5. Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición)</h5>
+                                <p class="text-muted">
+                                    Usted, como titular de los datos personales, puede ejercer en cualquier momento sus derechos de Acceso, Rectificación, Cancelación y Oposición (Derechos ARCO) enviando una solicitud formal a nuestro correo electrónico institucional de soporte **soporte@clinicx.com.pe** o de forma presencial en cualquiera de nuestras sedes clínicas físicas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="text-center pt-4 border-top">
+                            <p class="small text-muted mb-0">ClinicX S.A.C. - Todos los derechos reservados &copy; 2026</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

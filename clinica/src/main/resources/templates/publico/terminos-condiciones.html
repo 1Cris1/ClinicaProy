@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y Condiciones - ClinicX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        .policy-card {
+            border-radius: 24px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            background: #ffffff;
+        }
+        .header-gradient {
+            background: linear-gradient(135deg, #2563EB, #3B82F6);
+            color: white;
+            border-radius: 24px 24px 0 0;
+            padding: 3rem 2rem;
+        }
+        .section-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background-color: #f0fdf4;
+            color: #16a34a;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <!-- Botón Regresar -->
+                <div class="mb-4">
+                    <a th:href="@{/login}" class="btn btn-light rounded-pill px-4 fw-bold text-secondary shadow-sm">
+                        <i class="bi bi-arrow-left me-2"></i> Regresar al Login
+                    </a>
+                </div>
+
+                <div class="card policy-card overflow-hidden">
+                    <!-- Header -->
+                    <div class="header-gradient text-center">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                            <span style="width:38px;height:38px;background:rgba(255,255,255,.2);backdrop-filter:blur(8px);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;">C</span>
+                            <span style="font-weight:800;font-size:1.35rem;color:#fff;">ClinicX</span>
+                        </div>
+                        <h1 class="fw-bold mb-2">Términos y Condiciones de Uso</h1>
+                        <p class="mb-0 opacity-90">Normativa reguladora de la prestación de servicios médicos digitales e integrales</p>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="card-body p-4 p-md-5">
+                        <div class="mb-4 text-muted small text-end">
+                            <strong>Última actualización:</strong> 2 de Agosto de 2026
+                        </div>
+
+                        <p class="lead text-secondary mb-5">
+                            Los siguientes términos y condiciones regulan el acceso y uso de los servicios médicos provistos por ClinicX a través de su plataforma web y sedes físicas. Al registrarse y agendar consultas, usted acepta plenamente este reglamento de servicio.
+                        </p>
+
+                        <!-- Section 1 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-person-fill-check"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">1. Condiciones de Registro y Cuenta</h5>
+                                <p class="text-muted">
+                                    Para registrarse como paciente en ClinicX, es obligatorio ingresar un Documento Nacional de Identidad (DNI) oficial peruano y datos verídicos. Está terminantemente prohibido suplantar identidades. Cada paciente es responsable exclusivo de resguardar la confidencialidad de sus credenciales de acceso.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Section 2 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-calendar-event-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">2. Reservas de Citas y Cancelaciones</h5>
+                                <p class="text-muted">
+                                    Las citas se programan a través de la plataforma y están sujetas a la disponibilidad del staff médico y las especialidades. El paciente tiene la posibilidad de reprogramar o cancelar su cita con un mínimo de **12 horas de anticipación** sin penalidad, a través de su panel de control privado.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Section 3 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-credit-card-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">3. Políticas de Devolución y Reembolso</h5>
+                                <p class="text-muted">
+                                    En cumplimiento con la normativa de protección al consumidor (INDECOPI):
+                                </p>
+                                <ul class="text-muted">
+                                    <li>Si la clínica se ve obligada a reprogramar o cancelar una cita debido a emergencias médicas o fuerza mayor del doctor, el paciente tendrá derecho al reembolso inmediato del 100% de la consulta o a su reprogramación prioritaria.</li>
+                                    <li>En caso de inasistencia voluntaria por parte del paciente (No-Show) sin aviso previo de 12 horas, no se efectuará reembolso del pago inicial.</li>
+                                    <li>Para medicamentos o productos de farmacia adquiridos en línea, no se admiten devoluciones una vez que los productos hayan salido de nuestras sedes físicas, por razones de bioseguridad y cadena de frío médica, salvo defectos de fabricación o caducidad demostrada en el punto de entrega.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Section 4 -->
+                        <div class="d-flex gap-3 mb-4">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-shield-lock-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">4. Confidencialidad de la Ficha Médica</h5>
+                                <p class="text-muted">
+                                    El expediente e Historial Clínico de cada paciente es confidencial y solo accesible por los médicos asignados para el tratamiento clínico. El almacenamiento y manejo de las HCE cumplen rigurosamente con los estándares y normativas vigentes del Ministerio de Salud (MINSA).
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Section 5 -->
+                        <div class="d-flex gap-3 mb-5">
+                            <div class="section-icon flex-shrink-0">
+                                <i class="bi bi-file-earmark-ruled-fill"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-2">5. Jurisdicción y Modificaciones</h5>
+                                <p class="text-muted">
+                                    ClinicX se reserva el derecho de actualizar o modificar estos términos cuando sea necesario para reflejar cambios legales o de operación clínica. Las controversias derivadas del uso de los servicios se resolverán bajo las leyes aplicables de la República del Perú y competencia de los fueros judiciales de Lima Metropolitana.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="text-center pt-4 border-top">
+                            <p class="small text-muted mb-0">ClinicX S.A.C. - Todos los derechos reservados &copy; 2026</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

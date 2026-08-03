@@ -27,7 +27,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // EXPOSICIÓN RHOMEL: Aquí definimos qué rutas son públicas (permitAll) como el login o registro, y cuáles requieren autenticación obligatoria y un ROL específico.
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/images/**").permitAll()
-                .requestMatchers("/", "/inicio", "/especialidades", "/medicos", "/servicios", "/promociones", "/sedes", "/blog", "/contacto", "/login", "/registro", "/api/test/users", "/api/password/**", "/api/identidad/**", "/api/colegiatura/**", "/pago/**", "/error").permitAll()
+                .requestMatchers("/", "/inicio", "/especialidades", "/medicos", "/servicios", "/promociones", "/sedes", "/blog", "/contacto", "/login", "/registro", "/politica-privacidad", "/terminos-condiciones", "/api/test/users", "/api/password/**", "/api/identidad/**", "/api/colegiatura/**", "/pago/**", "/error").permitAll()
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/medico/**").hasAuthority("ROLE_MEDICO")
                 .requestMatchers("/paciente/recetas/descargar/**").hasAnyAuthority("ROLE_PACIENTE", "ROLE_MEDICO")

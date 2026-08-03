@@ -113,6 +113,16 @@ public class PublicoController {
         return "publico/registro";
     }
 
+    @GetMapping("/politica-privacidad")
+    public String politicaPrivacidad() {
+        return "publico/politica-privacidad";
+    }
+
+    @GetMapping("/terminos-condiciones")
+    public String terminosCondiciones() {
+        return "publico/terminos-condiciones";
+    }
+
     @GetMapping("/agendar-cita")
     public String agendarCitaBridge() {
         return "redirect:/login";
