@@ -21,12 +21,13 @@
             <div class="ad-card-body p-0">
                 <table class="ad-table" th:if="${usuarios != null and !usuarios.isEmpty()}">
                     <thead>
-                        <tr><th>Usuario (DNI)</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                        <tr><th>Usuario (DNI)</th><th>Nombre Completo</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody>
                         <tr th:each="u : ${usuarios}">
                             <!-- ID rem -->
                             <td th:text="${u.username}">Username</td>
+                            <td class="fw-semibold text-dark" th:text="${u.paciente != null ? (u.paciente.nombres + ' ' + u.paciente.apellidos) : 'Sin Datos'}">Nombre Completo</td>
                             <td class="text-muted" th:text="${u.email != null ? u.email : '-'}">-</td>
                             <td>
                                 <span class="ad-badge-status" th:text="${u.rol}" style="background:#DBEAFE;color:#2563EB;">ROLE</span>
