@@ -678,8 +678,20 @@ public class AdminController {
 
     @GetMapping("/productos/eliminar")
     public String eliminarProducto(@RequestParam Integer id) {
-        productoRepository.deleteById(id);
-        return "redirect:/admin/productos?eliminado";
+        try {
+            productoRepository.deleteById(id);
+            return "redirect:/admin/productos?eliminado";
+        } catch (Exception e) {
+            log.warn("[Admin] No se puede eliminar el producto {} debido a historial de pedidos. Aplicando desactivación lógica.", id);
+            Producto p = productoRepository.findById(id).orElse(null);
+            if (p != null) {
+                p.setEstado("Inactivo");
+                p.setStock(0);
+                productoRepository.save(p);
+                return "redirect:/admin/productos?descontinuado";
+            }
+            return "redirect:/admin/productos?error";
+        }
     }
 
     // ========== USUARIOS ==========
