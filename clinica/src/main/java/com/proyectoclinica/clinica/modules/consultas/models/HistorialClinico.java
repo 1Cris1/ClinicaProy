@@ -39,6 +39,15 @@ public class HistorialClinico {
     private String diagnostico;
     private String tratamiento;
     private String observaciones;
+    
+    @Column(columnDefinition = "TEXT")
+    private String alergias;
+    
+    @Column(name = "antecedentes_personales", columnDefinition = "TEXT")
+    private String antecedentesPersonales;
+    
+    @Column(name = "antecedentes_familiares", columnDefinition = "TEXT")
+    private String antecedentesFamiliares;
 
     @Column(name = "peso")
     private Double peso;

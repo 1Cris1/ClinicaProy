@@ -5,11 +5,28 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.proyectoclinica.clinica.modules.facturacion.repository.PagoRepository;
+import com.proyectoclinica.clinica.modules.facturacion.models.Pago;
+import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class PagoService {
+    private final PagoRepository pagoRepository;
+    
     private final AtomicInteger contadorBoletas = new AtomicInteger(0);
     private final AtomicInteger contadorFacturas = new AtomicInteger(0);
     private final AtomicInteger contadorTickets = new AtomicInteger(0);
+    
+    public List<Pago> listarTodos() {
+        return pagoRepository.findAll();
+    }
+    
+    public Pago guardar(Pago pago) {
+        return pagoRepository.save(pago);
+    }
 
     // EXPOSICIÓN JHOAN: Destacar el uso de AtomicInteger para que, si dos recepcionistas cobran a la vez, no se duplique el número de comprobante (concurrencia segura).
     public String generarNumeroComprobante(String tipoComprobante) {

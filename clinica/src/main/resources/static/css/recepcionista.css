@@ -27,7 +27,7 @@
     width: var(--rc-sidebar-w); height: 100vh;
     background: var(--rc-gradient); color: var(--rc-text);
     display: flex; flex-direction: column; overflow-y: auto;
-    z-index: 1040; transition: transform var(--rc-transition);
+    z-index: 1040;
     box-shadow: 4px 0 24px rgba(0,0,0,.3);
 }
 

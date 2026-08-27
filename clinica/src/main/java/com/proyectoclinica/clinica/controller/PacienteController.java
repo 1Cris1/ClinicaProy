@@ -3,28 +3,28 @@ package com.proyectoclinica.clinica.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.*;
-import java.security.Principal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.stream.Collectors;
-import java.math.BigDecimal;
+import java.security.Principal;
+import java.util.Map;
+import java.util.List;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.proyectoclinica.clinica.modules.seguridad.repository.UsuarioRepository;
 import com.proyectoclinica.clinica.modules.seguridad.models.Usuario;
+import java.util.ArrayList;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.proyectoclinica.clinica.modules.consultas.service.RecetaService;
-import com.proyectoclinica.clinica.modules.recursos.repository.EspecialidadRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.MedicoRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.SedeRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.ServicioRepository;
-import com.proyectoclinica.clinica.modules.citas.repository.CitaRepository;
-import com.proyectoclinica.clinica.modules.paciente.repository.PacienteRepository;
-import com.proyectoclinica.clinica.modules.farmacia.repository.*;
+import com.proyectoclinica.clinica.modules.citas.service.CitasService;
+import com.proyectoclinica.clinica.modules.paciente.service.PacienteService;
+import com.proyectoclinica.clinica.modules.recursos.service.CatalogoService;
+import com.proyectoclinica.clinica.modules.recursos.service.MedicoService;
+import com.proyectoclinica.clinica.modules.farmacia.service.PedidoService;
+import com.proyectoclinica.clinica.modules.farmacia.service.ProductoService;
+import com.proyectoclinica.clinica.modules.laboratorio.service.LaboratorioService;
 import com.proyectoclinica.clinica.modules.farmacia.models.*;
 import com.proyectoclinica.clinica.dto.PedidoRequest;
 import com.proyectoclinica.clinica.modules.citas.models.Cita;
@@ -44,17 +44,14 @@ import com.proyectoclinica.clinica.modules.experiencia.service.FeedbackPacienteS
 @RequiredArgsConstructor
 @Slf4j
 public class PacienteController {
-    private final EspecialidadRepository especialidadRepository;
-    private final MedicoRepository medicoRepository;
-    private final SedeRepository sedeRepository;
-    private final CitaRepository citaRepository;
-    private final PacienteRepository pacienteRepository;
-    private final ServicioRepository servicioRepository;
-    private final ProductoRepository productoRepository;
-    private final PedidoRepository pedidoRepository;
-    private final DetallePedidoRepository detallePedidoRepository;
+    private final CatalogoService catalogoService;
+    private final MedicoService medicoService;
+    private final CitasService citasService;
+    private final PacienteService pacienteService;
+    private final ProductoService productoService;
+    private final PedidoService pedidoService;
     private final RecetaService recetaService;
-    private final com.proyectoclinica.clinica.modules.laboratorio.repository.ResultadoLaboratorioRepository resultadoLaboratorioRepository;
+    private final LaboratorioService laboratorioService;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
     private final FeedbackPacienteService feedbackPacienteService;
@@ -70,7 +67,7 @@ public class PacienteController {
     private Paciente getPacienteAutenticado(Principal principal) {
         if (principal == null)
             return null;
-        return pacienteRepository.findByUsuarioUsername(principal.getName()).orElse(null);
+        return pacienteService.obtenerPorUsername(principal.getName()).orElse(null);
     }
 
     @GetMapping({ "", "/" })
@@ -83,9 +80,9 @@ public class PacienteController {
         Paciente paciente = getPacienteAutenticado(principal);
         if (paciente != null) {
             model.addAttribute("pacienteGlobal", paciente);
-            model.addAttribute("proximaCita", citaRepository.findProximaCita(paciente.getId()));
-            model.addAttribute("citasPendientesCount", citaRepository.countCitasPendientes(paciente.getId()));
-            model.addAttribute("consultasAnioActual", citaRepository.countConsultasAnioActual(paciente.getId()));
+            model.addAttribute("proximaCita", citasService.obtenerProximaCita(paciente.getId()));
+            model.addAttribute("citasPendientesCount", citasService.contarCitasPendientes(paciente.getId()));
+            model.addAttribute("consultasAnioActual", citasService.contarConsultasAnioActual(paciente.getId()));
 
             String powerBiUrl = powerBiBaseUrl
                     + "&pageName=" + powerBiPagePaciente
@@ -95,9 +92,9 @@ public class PacienteController {
             model.addAttribute("powerBiPageName", "Dashboard Paciente");
             model.addAttribute("recetasActivas", recetaService.obtenerRecetasActivas(paciente.getId()).size());
             model.addAttribute("resultadosListosCount",
-                    resultadoLaboratorioRepository.countByPacienteIdAndEstado(paciente.getId(), "Disponible"));
+                    laboratorioService.contarResultadosListos(paciente.getId()));
             model.addAttribute("ultimosResultados",
-                    resultadoLaboratorioRepository.findByPacienteIdOrderByFechaExamenDesc(paciente.getId()).stream()
+                    laboratorioService.listarResultadosPorPaciente(paciente.getId()).stream()
                             .limit(3).collect(Collectors.toList()));
         }
         model.addAttribute("pageTitle", "Mi Panel");
@@ -111,7 +108,7 @@ public class PacienteController {
         if (paciente == null)
             return "redirect:/login";
 
-        List<Cita> citas = citaRepository.findByPacienteIdOrderByFechaCitaDesc(paciente.getId());
+        List<Cita> citas = citasService.listarCitasPorPaciente(paciente.getId());
         model.addAttribute("pacienteGlobal", paciente);
         model.addAttribute("citas", citas);
         model.addAttribute("pageTitle", "Mis Citas");
@@ -126,16 +123,18 @@ public class PacienteController {
             return "redirect:/login";
 
         if (id_cita != null) {
-            Cita citaExistente = citaRepository.findById(id_cita).orElse(null);
+            Cita citaExistente = citasService.obtenerPorId(id_cita)
+                    .filter(c -> c.getPaciente().getId().equals(paciente.getId()))
+                    .orElse(null);
             model.addAttribute("citaReagendar", citaExistente);
             model.addAttribute("pageTitle", "Re-agendar Cita");
         } else {
             model.addAttribute("pageTitle", "Agendar Cita");
         }
         model.addAttribute("pacienteGlobal", paciente);
-        model.addAttribute("especialidades", especialidadRepository.findAll());
-        model.addAttribute("medicos", medicoRepository.findAll());
-        model.addAttribute("sedes", sedeRepository.findAll());
+        model.addAttribute("especialidades", catalogoService.listarEspecialidades());
+        model.addAttribute("medicos", medicoService.listarMedicos());
+        model.addAttribute("sedes", catalogoService.listarSedes());
         model.addAttribute("view", "paciente/agendar");
         return LAYOUT;
     }
@@ -148,51 +147,29 @@ public class PacienteController {
             @RequestParam(defaultValue = "clinica") String metodoPago,
             Principal principal) {
         Paciente paciente = getPacienteAutenticado(principal);
-        Medico medico = medicoRepository.findById(id_medico).orElse(null);
-        Servicio servicioDefault = servicioRepository.findById(1).orElse(null);
+        Medico medico = medicoService.obtenerMedicoPorId(id_medico);
+        Servicio servicioDefault = catalogoService.obtenerServicioPorId(1);
 
         if (paciente != null && medico != null) {
             LocalDate fechaParsed = LocalDate.parse(fecha);
 
             if (id_cita != null) {
-                // VERIFICACIÓN DE CONFLICTO EN REAGENDAMIENTO (PACIENTE): Valida si el nuevo horario seleccionado choca con otra cita activa del doctor,
-                // omitiendo la propia cita en edición (id_cita) para evitar bloqueos innecesarios con sus propios datos.
-                boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNotAndIdCitaNot(
-                        id_medico, fechaParsed, hora, "Cancelada", id_cita);
-                if (conflicto) {
-                    // Detiene el flujo y redirige indicando conflicto en la URL.
+                try {
+                    citasService.reagendarCitaPaciente(id_cita, paciente.getId(), medico, fechaParsed, hora);
+                    return "redirect:/paciente/citas?reagendado=true";
+                } catch (SecurityException e) {
+                    return "redirect:/paciente/citas?error=true";
+                } catch (IllegalStateException e) {
                     return "redirect:/paciente/agendar?id_cita=" + id_cita + "&error=horario_ocupado";
                 }
-
-                Cita cita = citaRepository.findById(id_cita).orElse(null);
-                if (cita != null && cita.getPaciente().getId().equals(paciente.getId())) {
-                    cita.setMedico(medico);
-                    cita.setFechaCita(fechaParsed);
-                    cita.setHoraCita(hora);
-                    cita.setEstado("Pendiente");
-                    citaRepository.save(cita);
-                    return "redirect:/paciente/citas?reagendado=true";
-                }
             } else {
-                // VERIFICACIÓN DE CONFLICTO CITA NUEVA (PACIENTE): Valida que no exista otra cita activa para el médico, día y hora indicados.
-                boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNot(
-                        id_medico, fechaParsed, hora, "Cancelada");
-                if (conflicto) {
-                    // Detiene la creación de la cita y redirige a la vista de reserva con alerta de error.
-                    return "redirect:/paciente/agendar?error=horario_ocupado";
+                Servicio servicio = catalogoService.obtenerServicioPorId(medico.getEspecialidad().getId());
+                if (servicio == null) {
+                    servicio = servicioDefault;
                 }
 
-                Servicio servicio = servicioRepository.findById(medico.getEspecialidad().getId()).orElse(servicioDefault);
-
-                Cita nuevaCita = Cita.builder()
-                        .paciente(paciente)
-                        .medico(medico)
-                        .servicio(servicio)
-                        .fechaCita(fechaParsed)
-                        .horaCita(hora)
-                        .estado("Pendiente")
-                        .build();
-                Cita savedCita = citaRepository.save(nuevaCita);
+                try {
+                    Cita savedCita = citasService.agendarCita(paciente, medico, servicio, fechaParsed, hora, null);
 
                 if ("online".equals(metodoPago)) {
                     try {
@@ -228,6 +205,10 @@ public class PacienteController {
                     }
                 }
 
+                } catch (IllegalStateException e) {
+                    return "redirect:/paciente/agendar?error=horario_ocupado";
+                }
+
                 return "redirect:/paciente/citas?agendado=true";
             }
         }
@@ -237,10 +218,9 @@ public class PacienteController {
     @PostMapping("/citas/cancelar")
     public String cancelarCita(@RequestParam Integer id_cita, Principal principal) {
         Paciente paciente = getPacienteAutenticado(principal);
-        Cita cita = citaRepository.findById(id_cita).orElse(null);
+        Cita cita = citasService.obtenerPorId(id_cita).orElse(null);
         if (cita != null && paciente != null && cita.getPaciente().getId().equals(paciente.getId())) {
-            cita.setEstado("Cancelada");
-            citaRepository.save(cita);
+            citasService.actualizarEstado(id_cita, "Cancelada");
             return "redirect:/paciente/citas?cancelado=true";
         }
         return "redirect:/paciente/citas?error=true";
@@ -260,7 +240,7 @@ public class PacienteController {
 
         model.addAttribute("pacienteGlobal", paciente);
         model.addAttribute("resultados",
-                resultadoLaboratorioRepository.findByPacienteIdOrderByFechaExamenDesc(paciente.getId()));
+                laboratorioService.listarResultadosPorPaciente(paciente.getId()));
         model.addAttribute("pageTitle", "Mis Resultados");
         model.addAttribute("view", "paciente/resultados");
         return LAYOUT;
@@ -290,7 +270,7 @@ public class PacienteController {
 
         model.addAttribute("pacienteGlobal", paciente);
         model.addAttribute("atenciones",
-                citaRepository.findByPacienteIdAndEstadoOrderByFechaCitaDesc(paciente.getId(), "Completada"));
+                citasService.listarCitasCompletadasPorPaciente(paciente.getId()));
         model.addAttribute("pageTitle", "Mi Historial");
         model.addAttribute("view", "paciente/historial");
         return LAYOUT;
@@ -320,7 +300,7 @@ public class PacienteController {
         if (paciente != null) {
             paciente.setTelefono(telefono);
             paciente.setEmail(email);
-            pacienteRepository.save(paciente);
+            pacienteService.guardarPaciente(paciente);
         }
         return "redirect:/paciente/perfil?actualizado=true";
     }
@@ -382,8 +362,8 @@ public class PacienteController {
         }
 
         model.addAttribute("pacienteGlobal", paciente);
-        model.addAttribute("productos", productoRepository.findByEstado("Activo"));
-        model.addAttribute("misPedidos", pedidoRepository.findByPacienteIdOrderByFechaPedidoDesc(paciente.getId()));
+        model.addAttribute("productos", productoService.listarActivos());
+        model.addAttribute("misPedidos", pedidoService.listarPedidosPorPaciente(paciente.getId()));
         model.addAttribute("sugerenciaReceta", sugerencia);
         model.addAttribute("pageTitle", "Farmacia y Ofertas");
         model.addAttribute("view", "paciente/farmacia");
@@ -403,60 +383,33 @@ public class PacienteController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "El carrito está vacío"));
         }
 
-        Pedido pedido = Pedido.builder()
-                .paciente(paciente)
-                .fechaPedido(LocalDateTime.now())
-                .estado("Pendiente")
-                .notas(pedidoReq.getNotas())
-                .total(BigDecimal.ZERO)
-                .build();
-
-        pedido = pedidoRepository.save(pedido);
-        BigDecimal total = BigDecimal.ZERO;
         List<PreferenceItemRequest> mpItems = new ArrayList<>();
+        Pedido pedido = pedidoService.crearPedido(paciente, pedidoReq, mpItems);
 
-        for (PedidoRequest.ItemPedido item : pedidoReq.getItems()) {
-            Producto producto = productoRepository.findById(item.getIdProducto()).orElse(null);
-            if (producto != null) {
-                BigDecimal precioFinal = producto.getPrecioDescuento() != null ? producto.getPrecioDescuento()
-                        : producto.getPrecio();
-                
-                // Si la presentación elegida es "Unidad" (Blíster), el precio es la décima parte de la caja
-                if ("Unidad".equalsIgnoreCase(item.getPresentacion())) {
-                    precioFinal = precioFinal.divide(new BigDecimal(10), 2, java.math.RoundingMode.HALF_UP);
-                }
+        try {
+            com.mercadopago.client.preference.PreferenceBackUrlsRequest backUrls =
+                    com.mercadopago.client.preference.PreferenceBackUrlsRequest.builder()
+                            .success("http://localhost:8080/pago/farmacia/success")
+                            .failure("http://localhost:8080/pago/farmacia/failure")
+                            .pending("http://localhost:8080/pago/farmacia/pending")
+                            .build();
 
-                BigDecimal subtotal = precioFinal.multiply(new BigDecimal(item.getCantidad()));
-                total = total.add(subtotal);
+            com.mercadopago.client.preference.PreferenceRequest request =
+                    com.mercadopago.client.preference.PreferenceRequest.builder()
+                            .items(mpItems)
+                            .externalReference(pedido.getId().toString())
+                            .backUrls(backUrls)
+                            .statementDescriptor("ClinicX Farmacia")
+                            .build();
 
-                DetallePedido detalle = DetallePedido.builder()
-                        .pedido(pedido)
-                        .producto(producto)
-                        .cantidad(item.getCantidad())
-                        .precioUnitario(precioFinal)
-                        .subtotal(subtotal)
-                        .build();
-                detallePedidoRepository.save(detalle);
+            com.mercadopago.client.preference.PreferenceClient client = new com.mercadopago.client.preference.PreferenceClient();
+            Preference preference = client.create(request);
 
-                // Add to Mercado Pago items list
-                PreferenceItemRequest mpItem = PreferenceItemRequest.builder()
-                        .id(producto.getId().toString())
-                        .title(producto.getNombre() + ( "Unidad".equalsIgnoreCase(item.getPresentacion()) ? " (Unidad)" : " (Caja)" ))
-                        .quantity(item.getCantidad())
-                        .unitPrice(precioFinal)
-                        .currencyId("PEN")
-                        .build();
-                mpItems.add(mpItem);
-            }
+            return ResponseEntity.ok(Map.of("success", true, "init_point", preference.getInitPoint()));
+        } catch (Exception e) {
+            log.error("Error al crear preferencia MP para farmacia", e);
+            return ResponseEntity.status(500).body(Map.of("success", false, "message", "Error procesando el pago."));
         }
-        pedido.setTotal(total);
-        pedidoRepository.save(pedido);
-
-        return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Pedido finalizado, recoger en físico y cancelar en la clínica",
-                "pedidoId", pedido.getId()
-        ));
     }
 
     @GetMapping("/calificaciones")
@@ -466,10 +419,7 @@ public class PacienteController {
             return "redirect:/login";
         }
         model.addAttribute("pacienteGlobal", paciente);
-        model.addAttribute("citas", citaRepository.findByPacienteIdAndEstadoOrderByFechaCitaDesc(
-                paciente.getId(),
-                "Completada"
-        ));
+        model.addAttribute("citas", citasService.listarCitasCompletadasPorPaciente(paciente.getId()));
         model.addAttribute("pageTitle", "Calificar Atención");
         model.addAttribute("view", "paciente/calificaciones");
         return LAYOUT;
@@ -505,8 +455,8 @@ public class PacienteController {
             return "redirect:/login";
         }
         model.addAttribute("pacienteGlobal", paciente);
-        model.addAttribute("medicos", medicoRepository.findAll());
-        model.addAttribute("especialidades", especialidadRepository.findAll());
+        model.addAttribute("medicos", medicoService.listarMedicos());
+        model.addAttribute("especialidades", medicoService.listarEspecialidades());
         model.addAttribute("pageTitle", "Nuestros Especialistas");
         model.addAttribute("view", "paciente/doctores");
         return LAYOUT;

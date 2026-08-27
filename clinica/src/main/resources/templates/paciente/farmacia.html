@@ -518,6 +518,10 @@
                         guardarCarrito();
                         actualizarBadge();
                         bootstrap.Modal.getInstance(document.getElementById('carritoModal')).hide();
+                        if (data.init_point) {
+                            window.location.href = data.init_point;
+                            return;
+                        }
                         Swal.fire({
                             icon: 'success',
                             title: '¡Pedido Generado!',

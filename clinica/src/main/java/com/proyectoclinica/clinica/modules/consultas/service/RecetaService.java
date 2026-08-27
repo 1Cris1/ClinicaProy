@@ -22,16 +22,34 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import com.proyectoclinica.clinica.modules.consultas.repository.MedicamentoPrescritoRepository;
 
 @Service
 @RequiredArgsConstructor
 public class RecetaService {
 
     private final RecetaRepository recetaRepository;
+    private final MedicamentoPrescritoRepository medicamentoPrescritoRepository;
+
+    @Transactional
+    public Receta guardar(Receta receta) {
+        return recetaRepository.save(receta);
+    }
+
+    @Transactional
+    public MedicamentoPrescrito guardarMedicamento(MedicamentoPrescrito med) {
+        return medicamentoPrescritoRepository.save(med);
+    }
 
     public List<Receta> obtenerRecetasPorPaciente(Integer idPaciente) {
         return recetaRepository
                 .findByPacienteIdOrderByFechaEmisionDesc(idPaciente);
+    }
+
+    public List<Receta> obtenerRecetasPorMedico(Integer idMedico) {
+        return recetaRepository
+                .findByMedicoIdOrderByFechaEmisionDesc(idMedico);
     }
 
     public List<Receta> obtenerRecetasActivas(Integer idPaciente) {

@@ -19,19 +19,18 @@ import com.proyectoclinica.clinica.modules.paciente.models.Paciente;
 import com.proyectoclinica.clinica.modules.consultas.models.Receta;
 import com.proyectoclinica.clinica.modules.consultas.models.MedicamentoPrescrito;
 import com.proyectoclinica.clinica.modules.laboratorio.models.OrdenLaboratorio;
-import com.proyectoclinica.clinica.modules.citas.repository.CitaRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.MedicoRepository;
-import com.proyectoclinica.clinica.modules.consultas.repository.RecetaRepository;
-import com.proyectoclinica.clinica.modules.consultas.repository.MedicamentoPrescritoRepository;
-import com.proyectoclinica.clinica.modules.laboratorio.repository.OrdenLaboratorioRepository;
+import com.proyectoclinica.clinica.modules.citas.service.CitasService;
+import com.proyectoclinica.clinica.modules.recursos.service.MedicoService;
+import com.proyectoclinica.clinica.modules.paciente.service.PacienteService;
+import com.proyectoclinica.clinica.modules.consultas.service.RecetaService;
+import com.proyectoclinica.clinica.modules.consultas.service.HistorialClinicoService;
+import com.proyectoclinica.clinica.modules.laboratorio.service.LaboratorioService;
 import com.proyectoclinica.clinica.config.PowerBiProperties;
 import lombok.RequiredArgsConstructor;
 
 import com.proyectoclinica.clinica.modules.laboratorio.models.ExamenCatalogo;
-import com.proyectoclinica.clinica.modules.laboratorio.repository.ExamenCatalogoRepository;
+
 import com.proyectoclinica.clinica.modules.consultas.models.HistorialClinico;
-import com.proyectoclinica.clinica.modules.consultas.repository.HistorialClinicoRepository;
-import com.proyectoclinica.clinica.modules.paciente.repository.PacienteRepository;
 import com.proyectoclinica.clinica.modules.laboratorio.service.OrdenLaboratorioPdfService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -48,22 +47,20 @@ public class MedicoController {
     private static final Logger log = LoggerFactory.getLogger(MedicoController.class);
     private static final String LAYOUT = "layout-medico";
 
-    private final MedicoRepository medicoRepository;
-    private final CitaRepository citaRepository;
-    private final RecetaRepository recetaRepository;
-    private final MedicamentoPrescritoRepository medicamentoPrescritoRepository;
-    private final OrdenLaboratorioRepository ordenRepository;
-    private final HistorialClinicoRepository historialClinicoRepository;
-    private final PacienteRepository pacienteRepository;
-    private final ExamenCatalogoRepository examenCatalogoRepository;
+    private final MedicoService medicoService;
+    private final CitasService citasService;
+    private final RecetaService recetaService;
+    private final LaboratorioService laboratorioService;
+    private final HistorialClinicoService historialClinicoService;
+    private final PacienteService pacienteService;
     private final OrdenLaboratorioPdfService ordenLaboratorioPdfService;
     private final PowerBiProperties powerBiProperties;
 
     private Medico getMedicoAutenticado(Principal principal) {
         if (principal == null) return null;
         String identifier = principal.getName();
-        return medicoRepository.findByUsuarioUsername(identifier)
-                .or(() -> medicoRepository.findByDni(identifier))
+        return medicoService.obtenerPorUsername(identifier)
+                .or(() -> medicoService.obtenerPorDni(identifier))
                 .orElse(null);
     }
 
@@ -79,14 +76,13 @@ public class MedicoController {
         if (medico == null) return "redirect:/login";
 
         LocalDate hoy = LocalDate.now();
-        // EXPOSICIÓN JHOAN: Aquí usamos Spring Data JPA para filtrar automáticamente las citas de la BD que pertenezcan solo a este Médico y sean del día de hoy.
-        List<Cita> citasHoy = citaRepository.findByMedicoIdAndFechaCitaOrderByHoraCitaAsc(medico.getId(), hoy);
-        Cita siguienteCita = citaRepository.findSiguienteCitaMedico(medico.getId());
+        List<Cita> citasHoy = citasService.listarCitasPorMedicoYFecha(medico.getId(), hoy);
+        Cita siguienteCita = citasService.obtenerSiguienteCitaMedico(medico.getId());
 
-        long atendidosHoy = citaRepository.countByMedicoIdAndEstadoAndFechaCita(medico.getId(), "Completada", hoy);
-        long consultasMes = citaRepository.countConsultasMesActual(medico.getId());
-        long notasMes     = citaRepository.countNotasMesActual(medico.getId());
-        long totalPacientes = citaRepository.countPacientesDistintosByMedico(medico.getId());
+        long atendidosHoy = citasService.contarAtendidosMedicoPorFecha(medico.getId(), hoy);
+        long consultasMes = citasService.contarConsultasMesActualMedico(medico.getId());
+        long notasMes     = citasService.contarNotasMesActualMedico(medico.getId());
+        long totalPacientes = citasService.contarPacientesDistintosMedico(medico.getId());
 
         model.addAttribute("medico", medico);
         model.addAttribute("citasHoy", citasHoy);
@@ -122,7 +118,7 @@ public String agenda(Model model, Principal principal) {
     LocalDate hoy = LocalDate.now();
 
     List<Cita> citasSemana =
-            citaRepository.findByMedicoIdAndFechaCitaOrderByHoraCitaAsc(
+            citasService.listarCitasPorMedicoYFecha(
                     medico.getId(),
                     hoy
             );
@@ -204,12 +200,12 @@ public String consulta(
     Cita cita;
 
     if (idCita != null) {
-        cita = citaRepository.findById(idCita)
+        cita = citasService.obtenerPorId(idCita)
                 .filter(c -> c.getMedico() != null
                         && c.getMedico().getId().equals(medico.getId()))
                 .orElse(null);
     } else {
-        cita = citaRepository.findSiguienteCitaMedico(medico.getId());
+        cita = citasService.obtenerSiguienteCitaMedico(medico.getId());
     }
 
     Integer edadPaciente = null;
@@ -252,7 +248,7 @@ public String consulta(
         return "redirect:/login";
     }
 
-    Cita cita = citaRepository.findById(idCita).orElse(null);
+    Cita cita = citasService.obtenerPorId(idCita).orElse(null);
 
     if (cita == null
             || cita.getMedico() == null
@@ -267,10 +263,10 @@ public String consulta(
         cita.setNotasMedicas(notasMedicas);
     }
 
-    citaRepository.save(cita);
+    citasService.guardar(cita);
 
-    HistorialClinico historial = historialClinicoRepository
-            .findByCitaIdCita(idCita)
+    HistorialClinico historial = historialClinicoService
+            .obtenerPorCita(idCita)
             .orElse(null);
 
     if (historial == null) {
@@ -289,7 +285,7 @@ public String consulta(
     historial.setCodigoDiagnostico(diagnostico_cie10);
     historial.setTratamiento("Tratamiento registrado durante la consulta");
 
-    historialClinicoRepository.save(historial);
+    historialClinicoService.guardar(historial);
 
     if (medNombres != null && !medNombres.isEmpty()) {
 
@@ -301,7 +297,7 @@ public String consulta(
                 .estado("Activa")
                 .build();
 
-        receta = recetaRepository.save(receta);
+        receta = recetaService.guardar(receta);
 
         for (int i = 0; i < medNombres.size(); i++) {
 
@@ -335,7 +331,7 @@ public String consulta(
                                 )
                                 .build();
 
-                medicamentoPrescritoRepository.save(medicamento);
+                recetaService.guardarMedicamento(medicamento);
             }
         }
     }
@@ -355,7 +351,7 @@ public String consulta(
         Medico medico = getMedicoAutenticado(principal);
         if (medico == null) return "redirect:/login";
 
-        List<Paciente> misPacientes = citaRepository.findPacientesByMedico(medico.getId());
+        List<Paciente> misPacientes = citasService.listarPacientesDeMedico(medico.getId());
         model.addAttribute("medico", medico);
         model.addAttribute("pacientes", misPacientes);
         model.addAttribute("totalPacientes", misPacientes.size());
@@ -383,15 +379,14 @@ Muestra la nueva pantalla. */
         return "redirect:/login";
     }
 
-    Paciente paciente = pacienteRepository.findById(idPaciente)
-            .orElse(null);
+    Paciente paciente = pacienteService.obtenerPacientePorId(idPaciente);
 
     if (paciente == null) {
         return "redirect:/medico/pacientes?error=paciente";
     }
 
     List<Paciente> pacientesDelMedico =
-            citaRepository.findPacientesByMedico(medico.getId());
+            citasService.listarPacientesDeMedico(medico.getId());
 
     boolean perteneceAlMedico = pacientesDelMedico.stream()
             .anyMatch(p -> p.getId().equals(idPaciente));
@@ -401,8 +396,7 @@ Muestra la nueva pantalla. */
     }
 
     List<HistorialClinico> historiales =
-            historialClinicoRepository
-                    .findByPacienteIdOrderByFechaRegistroDesc(idPaciente);
+            historialClinicoService.listarPorPaciente(idPaciente);
 
     model.addAttribute("medico", medico);
     model.addAttribute("paciente", paciente);
@@ -427,15 +421,13 @@ Muestra la nueva pantalla. */
         }
 
     List<OrdenLaboratorio> ordenes =
-            ordenRepository.findByMedicoIdOrderByFechaSolicitudDesc(
-                    medico.getId()
-            );
+            laboratorioService.listarOrdenesPorMedico(medico.getId());
 
     List<ExamenCatalogo> examenes =
-            examenCatalogoRepository.findAll();
+            laboratorioService.listarExamenesCatalogo();
 
     List<Paciente> pacientes =
-            citaRepository.findPacientesByMedico(medico.getId());
+            citasService.listarPacientesDeMedico(medico.getId());
 
     if (!ordenes.isEmpty()) {
         Paciente pacienteSeleccionado =
@@ -472,18 +464,16 @@ public String solicitarExamen(
         return "redirect:/login";
     }
 
-    Paciente paciente = pacienteRepository.findById(idPaciente)
-            .orElse(null);
+    Paciente paciente = pacienteService.obtenerPacientePorId(idPaciente);
 
-    ExamenCatalogo examen = examenCatalogoRepository.findById(idExamen)
-            .orElse(null);
+    ExamenCatalogo examen = laboratorioService.obtenerExamenPorId(idExamen);
 
     if (paciente == null || examen == null) {
         return "redirect:/medico/laboratorio?error=datos";
     }
 
     boolean perteneceAlMedico =
-            citaRepository.findPacientesByMedico(medico.getId())
+            citasService.listarPacientesDeMedico(medico.getId())
                     .stream()
                     .anyMatch(p -> p.getId().equals(idPaciente));
 
@@ -500,7 +490,7 @@ public String solicitarExamen(
             .observacionesTecnicas(observaciones)
             .build();
 
-    ordenRepository.save(orden);
+    laboratorioService.guardarOrden(orden);
 
     return "redirect:/medico/laboratorio?solicitud=ok";
 }
@@ -518,8 +508,7 @@ public ResponseEntity<byte[]> descargarOrdenLaboratorioPdf(
         return ResponseEntity.status(401).build();
     }
 
-    OrdenLaboratorio orden = ordenRepository.findById(idOrden)
-            .orElse(null);
+    OrdenLaboratorio orden = laboratorioService.obtenerOrdenPorId(idOrden);
 
     if (orden == null) {
         return ResponseEntity.notFound().build();
@@ -554,7 +543,7 @@ public ResponseEntity<byte[]> descargarOrdenLaboratorioPdf(
         Medico medico = getMedicoAutenticado(principal);
         if (medico == null) return "redirect:/login";
 
-        List<Receta> historialRecetas = recetaRepository.findByMedicoIdOrderByFechaEmisionDesc(medico.getId());
+        List<Receta> historialRecetas = recetaService.obtenerRecetasPorMedico(medico.getId());
         model.addAttribute("medico", medico);
         model.addAttribute("historialRecetas", historialRecetas);
         model.addAttribute("pageTitle", "Historial de Recetas");
@@ -613,7 +602,7 @@ public String actualizarHorario(@RequestParam(required = false) String horarioLv
         medico.setDuracionCita(duracionCita);
     }
 
-    medicoRepository.save(medico);
+    medicoService.guardar(medico);
 
     return "redirect:/medico/perfil?success=true";
 }
@@ -633,7 +622,7 @@ public String actualizarHorario(@RequestParam(required = false) String horarioLv
     @GetMapping("/api/paciente/historial")
     @ResponseBody
     public ResponseEntity<List<Map<String, Object>>> getPacienteHistorial(@RequestParam Integer idPaciente) {
-        List<Cita> historial = citaRepository.findByPacienteIdOrderByFechaCitaDesc(idPaciente);
+        List<Cita> historial = citasService.listarCitasPorPaciente(idPaciente);
         return ResponseEntity.ok(historial.stream()
             .filter(c -> "Completada".equals(c.getEstado()))
             .map(c -> {

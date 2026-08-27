@@ -8,24 +8,22 @@ import org.springframework.http.ResponseEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.proyectoclinica.clinica.modules.citas.repository.CitaRepository;
-import com.proyectoclinica.clinica.modules.paciente.repository.PacienteRepository;
+import com.proyectoclinica.clinica.modules.citas.service.CitasService;
+import com.proyectoclinica.clinica.modules.paciente.service.PacienteService;
 import com.proyectoclinica.clinica.modules.citas.models.Cita;
 import com.proyectoclinica.clinica.modules.facturacion.models.Pago;
-import com.proyectoclinica.clinica.modules.facturacion.repository.PagoRepository;
 import com.proyectoclinica.clinica.modules.facturacion.service.PagoService;
 import com.proyectoclinica.clinica.modules.paciente.models.Paciente;
 import com.proyectoclinica.clinica.modules.recursos.models.Medico;
 import com.proyectoclinica.clinica.modules.recursos.models.Servicio;
-import com.proyectoclinica.clinica.modules.recursos.repository.MedicoRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.ServicioRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.SedeRepository;
+import com.proyectoclinica.clinica.modules.recursos.service.MedicoService;
+import com.proyectoclinica.clinica.modules.recursos.service.CatalogoService;
 import com.proyectoclinica.clinica.modules.integraciones.service.GoogleCalendarService;
-import com.proyectoclinica.clinica.modules.farmacia.repository.PedidoRepository;
+import com.proyectoclinica.clinica.modules.farmacia.service.PedidoService;
 import com.proyectoclinica.clinica.modules.farmacia.models.Pedido;
 
-import com.proyectoclinica.clinica.modules.triaje.models.Triaje;
-import com.proyectoclinica.clinica.modules.triaje.repository.TriajeRepository;
+
+import com.proyectoclinica.clinica.modules.triaje.service.TriajeService;
 
 import java.security.Principal;
 import java.math.BigDecimal;
@@ -40,16 +38,14 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 @Slf4j
 public class RecepcionistaController {
-    private final CitaRepository citaRepository;
-    private final PacienteRepository pacienteRepository;
-    private final MedicoRepository medicoRepository;
-    private final ServicioRepository servicioRepository;
-    private final PagoRepository pagoRepository;
+    private final CitasService citasService;
+    private final PacienteService pacienteService;
+    private final MedicoService medicoService;
+    private final CatalogoService catalogoService;
     private final PagoService pagoService;
     private final GoogleCalendarService googleCalendarService;
-    private final SedeRepository sedeRepository;
-    private final PedidoRepository pedidoRepository;
-    private final TriajeRepository triajeRepository;
+    private final PedidoService pedidoService;
+    private final TriajeService triajeService;
 
     private static final String LAYOUT = "layout-recepcionista";
 
@@ -69,14 +65,14 @@ public class RecepcionistaController {
         model.addAttribute("view", "recepcionista/dashboard");
         
         LocalDate hoy = LocalDate.now();
-        List<Cita> citasDeHoy = citaRepository.findByFechaCitaOrderByHoraCitaAsc(hoy);
+        List<Cita> citasDeHoy = citasService.listarCitasPorFecha(hoy);
         model.addAttribute("citasHoy", citasDeHoy);
 
         long enSalaEspera = citasDeHoy.stream().filter(c -> "Confirmada".equals(c.getEstado())).count();
         long citasRestantes = citasDeHoy.stream().filter(c -> "Pendiente".equals(c.getEstado())).count();
-        long cancelaciones = citaRepository.countByEstadoAndFechaCita("Cancelada", hoy);
+        long cancelaciones = citasService.contarCancelacionesHoy();
 
-        List<Pago> pagosHoy = pagoRepository.findAll().stream()
+        List<Pago> pagosHoy = pagoService.listarTodos().stream()
             .filter(p -> p.getFechaPago() != null && p.getFechaPago().toLocalDate().equals(hoy))
             .filter(p -> "Completado".equals(p.getEstado()))
             .collect(Collectors.toList());
@@ -92,7 +88,7 @@ public class RecepcionistaController {
         model.addAttribute("citasPendientes", enSalaEspera + citasRestantes);
 
         String powerBiUrl = powerBiBaseUrl + "&pageName=" + powerBiPageRecepcion;
-        model.addAttribute("medicos", medicoRepository.findAll());
+        model.addAttribute("medicos", medicoService.listarMedicos());
         model.addAttribute("powerBiUrl", powerBiUrl);
         model.addAttribute("powerBiPageName", "Dashboard Recepcion");
         return LAYOUT;
@@ -107,15 +103,7 @@ public class RecepcionistaController {
     public String checkIn(
             // Captura el ID de la cita enviado desde el HTML
             @RequestParam Integer idCita) {
-        // Busca la cita en la base de datos por su ID
-        Cita cita = citaRepository.findById(idCita).orElse(null);
-        // Valida que la cita exista y este en estado Pendiente
-        if (cita != null && "Pendiente".equals(cita.getEstado())) {
-            // Cambia el estado de la cita a Confirmada
-            cita.setEstado("Confirmada");
-            // EXPOSICIÓN MIGUEL: Aquí explicamos que usamos JPA. Como la cita ya tiene ID, Spring Boot ejecuta un UPDATE automático para cambiar el estado en lugar de insertar una nueva cita.
-            citaRepository.save(cita);
-        }
+        citasService.checkIn(idCita);
         // Redirige al panel de inicio de la recepcionista
         return "redirect:/recepcionista/inicio";
     }
@@ -123,13 +111,13 @@ public class RecepcionistaController {
     @GetMapping("/citas")
     public String listarCitas(@RequestParam(required = false) String fecha, Model model) {
         LocalDate fechaSeleccionada = (fecha != null && !fecha.isBlank()) ? LocalDate.parse(fecha) : LocalDate.now();
-        List<Cita> citas = citaRepository.findByFechaCitaOrderByHoraCitaAsc(fechaSeleccionada);
+        List<Cita> citas = citasService.listarCitasPorFecha(fechaSeleccionada);
         
         model.addAttribute("citas", citas);
         model.addAttribute("fechaSeleccionada", fechaSeleccionada.toString());
-        model.addAttribute("pacientes", pacienteRepository.findAll());
-        model.addAttribute("medicos", medicoRepository.findAll());
-        model.addAttribute("servicios", servicioRepository.findAll());
+        model.addAttribute("pacientes", pacienteService.listarTodosLosPacientes());
+        model.addAttribute("medicos", medicoService.listarMedicos());
+        model.addAttribute("servicios", catalogoService.listarServicios());
         model.addAttribute("pageTitle", "Gestión de Citas");
         model.addAttribute("view", "recepcionista/citas");
         return LAYOUT;
@@ -142,111 +130,66 @@ public class RecepcionistaController {
     // Escucha peticiones POST en /recepcionista/citas/nuevo
     @PostMapping("/citas/nuevo")
     public String nuevaCita(
-            // Captura el ID del paciente seleccionado
             @RequestParam Integer pacienteId,
-            // Captura el ID del medico seleccionado
             @RequestParam Integer medicoId,
-            // Captura la fecha seleccionada en formato texto
             @RequestParam String fecha,
-            // Captura la hora seleccionada en formato texto
             @RequestParam String hora,
-            // Captura el ID del servicio opcional
             @RequestParam(required = false) Integer servicioId,
-            // Captura las observaciones o motivo de la cita
             @RequestParam(required = false) String observaciones) {
         try {
-            // Busca al paciente en la base de datos por su ID
-            Paciente paciente = pacienteRepository.findById(pacienteId).orElse(null);
-            // Busca al medico en la base de datos por su ID
-            Medico medico = medicoRepository.findById(medicoId).orElse(null);
-            // Busca el servicio. Si es nulo, asigna el servicio por defecto (ID 1)
-            Servicio servicio = (servicioId != null) 
-                    ? servicioRepository.findById(servicioId).orElse(servicioRepository.findById(1).orElse(null))
-                    : servicioRepository.findById(1).orElse(null);
+            Paciente paciente = pacienteService.obtenerPacientePorId(pacienteId);
+            Medico medico = medicoService.obtenerMedicoPorId(medicoId);
+            Servicio servicio = (servicioId != null)
+                    ? catalogoService.obtenerServicioPorId(servicioId)
+                    : null;
+            if (servicio == null) {
+                servicio = catalogoService.obtenerServicioPorId(1);
+            }
 
-            // Valida que el paciente, medico y servicio existan en el sistema
             if (paciente != null && medico != null && servicio != null) {
-                // VERIFICACIÓN DE CONFLICTO: Valida si ya existe una cita activa para el médico seleccionado en la fecha y hora indicadas.
-                // Si existe (es true), el sistema impide la reserva para evitar sobreposiciones.
-                boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNot(
-                        medicoId, LocalDate.parse(fecha), hora, "Cancelada"
-                );
-                if (conflicto) {
-                    // Si hay cruce, redirige a la lista con un parámetro de error que activa una alerta en la UI.
+                try {
+                    Cita nuevaCita = citasService.agendarCita(paciente, medico, servicio, LocalDate.parse(fecha), hora, observaciones);
+                    
+                    try {
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                googleCalendarService.crearEventoCita(nuevaCita);
+                            } catch (Exception e) {
+                                log.warn("Error en la sincronización asíncrona de calendar: {}", e.getMessage());
+                            }
+                        });
+                    } catch (Exception e) {
+                        log.warn("Error al iniciar el hilo de sincronización de calendar: {}", e.getMessage());
+                    }
+                    
+                    return "redirect:/recepcionista/citas?fecha=" + fecha + "&success=agendado";
+                } catch (IllegalStateException e) {
                     return "redirect:/recepcionista/citas?fecha=" + fecha + "&error=horario_ocupado";
                 }
-
-                // Construye el objeto Cita con los datos ingresados
-                Cita nuevaCita = Cita.builder()
-                        .paciente(paciente)
-                        .medico(medico)
-                        .servicio(servicio)
-                        // Convierte la fecha de texto a LocalDate
-                        .fechaCita(LocalDate.parse(fecha))
-                        .horaCita(hora)
-                        // Define el estado inicial de la cita como Pendiente
-                        .estado("Pendiente")
-                        .motivo(observaciones)
-                        // Registra la fecha y hora de creacion de la cita
-                        .fechaRegistro(LocalDateTime.now())
-                        .build();
-                // Guarda la nueva cita en la base de datos
-                citaRepository.save(nuevaCita);
-                try {
-                    // Intenta sincronizar de manera asíncrona en segundo plano para evitar bloquear el hilo de ejecución y la base de datos
-                    CompletableFuture.runAsync(() -> {
-                        try {
-                            googleCalendarService.crearEventoCita(nuevaCita);
-                        } catch (Exception e) {
-                            log.warn("Error en la sincronización asíncrona de calendar: {}", e.getMessage());
-                        }
-                    });
-                } catch (Exception e) {
-                    log.warn("Error al iniciar el hilo de sincronización de calendar: {}", e.getMessage());
-                }
-                // EXPOSICIÓN MIGUEL: Explicar el patrón POST-REDIRECT-GET. Hacemos un redirect en vez de cargar la vista directamente para evitar que, si el usuario presiona F5, la cita se vuelva a guardar duplicada.
-                return "redirect:/recepcionista/citas?fecha=" + fecha + "&success=agendado";
             }
         } catch (Exception e) {
-            // Registra cualquier error inesperado en la consola del servidor
             log.error("Error agendando cita", e);
         }
-        // Redirige indicando que hubo un error interno
         return "redirect:/recepcionista/citas?error=internal_error";
     }
 
-    // EXPOSICIÓN MIGUEL: Lógica de Reagendamiento de Citas con Validación.
-    // Antes de guardar (UPDATE) la nueva hora, el sistema consulta en la Base de Datos si el médico ya tiene otra cita en esa hora exacta.
     @PostMapping("/citas/editar")
     public String editarCita(@RequestParam Integer idCita,
-                            @RequestParam String fecha,
-                            @RequestParam String hora,
-                            @RequestParam String estado,
-                            @RequestParam(required = false) String observaciones) {
-        Cita cita = citaRepository.findById(idCita).orElse(null);
-        if (cita != null) {
-            // VERIFICACIÓN DE CONFLICTO EN REAGENDAMIENTO: Valida si el nuevo horario colisiona con otra cita activa del doctor,
-            // pero excluyendo la cita actual (idCita) para evitar falsos positivos con sus propios datos pasados.
-            boolean conflicto = citaRepository.existsByMedicoIdAndFechaCitaAndHoraCitaAndEstadoNotAndIdCitaNot(
-                    cita.getMedico().getId(), LocalDate.parse(fecha), hora, "Cancelada", idCita
-            );
-            if (conflicto) {
-                // Si hay conflicto, cancela la actualización y devuelve un parámetro de alerta a la vista.
-                return "redirect:/recepcionista/citas?fecha=" + fecha + "&error=horario_ocupado";
-            }
-
-            cita.setFechaCita(LocalDate.parse(fecha));
-            cita.setHoraCita(hora);
-            cita.setEstado(estado);
-            if (observaciones != null) cita.setMotivo(observaciones);
-            citaRepository.save(cita);
+                             @RequestParam String fecha,
+                             @RequestParam String hora,
+                             @RequestParam String estado,
+                             @RequestParam(required = false) String observaciones) {
+        try {
+            citasService.editarCita(idCita, LocalDate.parse(fecha), hora, estado, observaciones);
+        } catch (IllegalStateException e) {
+            return "redirect:/recepcionista/citas?fecha=" + fecha + "&error=horario_ocupado";
         }
         return "redirect:/recepcionista/citas?fecha=" + fecha;
     }
 
     @GetMapping("/pacientes")
-    public String listarPacientes(Model model) {
-        List<Paciente> pacientes = pacienteRepository.findAll();
+    public String pacientesDashboard(Model model) {
+        List<Paciente> pacientes = pacienteService.listarTodosLosPacientes();
         long pacientesActivos = pacientes.stream().filter(p -> "Activo".equals(p.getEstado()) || p.getEstado() == null).count();
         long pacientesInactivos = pacientes.stream().filter(p -> "Inactivo".equals(p.getEstado())).count();
         
@@ -261,10 +204,10 @@ public class RecepcionistaController {
 
     @GetMapping("/medicos")
     public String listarMedicos(Model model) {
-        List<Medico> medicos = medicoRepository.findAll();
+        List<Medico> medicos = medicoService.listarMedicos();
         long medicosActivos = medicos.stream().filter(m -> "Activo".equals(m.getEstado()) || m.getEstado() == null).count();
-        long totalSedes = sedeRepository.count();
-        long citasHoy = citaRepository.countByFechaCita(LocalDate.now());
+        long totalSedes = medicoService.contarSedes();
+        long citasHoy = citasService.contarCitasHoy();
 
         model.addAttribute("medicos", medicos);
         model.addAttribute("totalMedicos", medicos.size());
@@ -294,7 +237,7 @@ public class RecepcionistaController {
                     .direccion(direccion)
                     .estado("Activo")
                     .build();
-            pacienteRepository.save(nuevoPaciente);
+            pacienteService.guardarPaciente(nuevoPaciente);
             return "redirect:/recepcionista/pacientes?exito";
         } catch (Exception e) {
             return "redirect:/recepcionista/pacientes?error=duplicado";
@@ -303,7 +246,7 @@ public class RecepcionistaController {
 
     @GetMapping("/pagos")
     public String listarPagos(Model model) {
-        List<Pago> pagos = pagoRepository.findAll();
+        List<Pago> pagos = pagoService.listarTodos();
         BigDecimal totalRecaudado = pagos.stream()
                 .filter(p -> "Completado".equals(p.getEstado()))
                 .map(p -> p.getMonto() != null ? p.getMonto() : BigDecimal.ZERO)
@@ -313,7 +256,7 @@ public class RecepcionistaController {
         long pagosPendientes = pagos.stream().filter(p -> "Pendiente".equals(p.getEstado())).count();
         long pagosAnulados = pagos.stream().filter(p -> "Anulado".equals(p.getEstado())).count();
 
-        List<Pedido> pedidos = pedidoRepository.findAll();
+        List<Pedido> pedidos = pedidoService.listarTodos();
         pedidos.sort((p1, p2) -> p2.getFechaPedido().compareTo(p1.getFechaPedido()));
 
         model.addAttribute("pagos", pagos);
@@ -322,8 +265,8 @@ public class RecepcionistaController {
         model.addAttribute("pagosPendientes", pagosPendientes);
         model.addAttribute("pagosAnulados", pagosAnulados);
         model.addAttribute("pedidos", pedidos);
-        model.addAttribute("pacientes", pacienteRepository.findAll());
-        model.addAttribute("servicios", servicioRepository.findAll());
+        model.addAttribute("pacientes", pacienteService.listarTodosLosPacientes());
+        model.addAttribute("servicios", catalogoService.listarServicios());
         model.addAttribute("pageTitle", "Pagos");
         model.addAttribute("view", "recepcionista/pagos");
         return LAYOUT;
@@ -336,11 +279,10 @@ public class RecepcionistaController {
                            @RequestParam String metodoPago,
                            @RequestParam(defaultValue = "Boleta") String tipoComprobante,
                            @RequestParam(required = false) String observaciones) {
-        Paciente paciente = pacienteRepository.findById(pacienteId).orElse(null);
-        Servicio servicio = servicioId != null ? servicioRepository.findById(servicioId).orElse(null) : null;
+        Paciente paciente = pacienteService.obtenerPacientePorId(pacienteId);
+        Servicio servicio = servicioId != null ? catalogoService.obtenerServicioPorId(servicioId) : null;
         
         if (paciente != null) {
-            // EXPOSICIÓN JHOAN: Explicar que la lógica de negocio pesada (generar el correlativo F001-XXXX) está separada en PagoService, cumpliendo con las buenas prácticas de arquitectura.
             String numeroComprobante = pagoService.generarNumeroComprobante(tipoComprobante);
             Pago nuevoPago = Pago.builder()
                     .paciente(paciente)
@@ -353,7 +295,7 @@ public class RecepcionistaController {
                     .estado("Completado")
                     .observaciones(observaciones)
                     .build();
-            pagoRepository.save(nuevoPago);
+            pagoService.guardar(nuevoPago);
             return "redirect:/recepcionista/pagos?exito";
         }
         return "redirect:/recepcionista/pagos?error";
@@ -366,13 +308,10 @@ public class RecepcionistaController {
         return LAYOUT;
     }
 
-    // EXPOSICIÓN MIGUEL: Consumo Asíncrono de Historial.
-    // En lugar de devolver una vista de Thymeleaf, este endpoint devuelve puro JSON (@ResponseBody). 
-    // Es consumido vía AJAX (fetch) desde el Dashboard de la recepcionista para cargar historiales dinámicamente sin recargar la página.
     @GetMapping("/pacientes/historial")
     @ResponseBody
     public ResponseEntity<List<Map<String, Object>>> getPacienteHistorial(@RequestParam Integer id) {
-        List<Cita> citas = citaRepository.findByPacienteIdOrderByFechaCitaDesc(id);
+        List<Cita> citas = citasService.listarCitasPorPaciente(id);
         List<Map<String, Object>> responseList = citas.stream().map(c -> {
             Map<String, Object> map = new HashMap<>();
             map.put("fecha", c.getFechaCita().toString());
@@ -383,17 +322,16 @@ public class RecepcionistaController {
             String estado = c.getEstado() != null ? c.getEstado() : "Pendiente";
             map.put("estado", estado);
             
-            // Definición de colores según el estado
-            String color = "#FEF3C7"; // Amarillo/Ámbar para Pendiente
+            String color = "#FEF3C7";
             String textColor = "#D97706";
             if ("Confirmada".equals(estado)) {
-                color = "#DBEAFE"; // Azul
+                color = "#DBEAFE";
                 textColor = "#2563EB";
             } else if ("Completada".equals(estado)) {
-                color = "#D1FAE5"; // Verde
+                color = "#D1FAE5";
                 textColor = "#059669";
             } else if ("Cancelada".equals(estado)) {
-                color = "#FEE2E2"; // Rojo
+                color = "#FEE2E2";
                 textColor = "#DC2626";
             }
             
@@ -407,7 +345,7 @@ public class RecepcionistaController {
     @GetMapping("/triaje")
     public String verTriaje(@RequestParam(required = false) Integer citaId, Model model) {
         LocalDate hoy = LocalDate.now();
-        List<Cita> citasConfirmadasSinTriaje = citaRepository.findByFechaCitaOrderByHoraCitaAsc(hoy).stream()
+        List<Cita> citasConfirmadasSinTriaje = citasService.listarCitasPorFecha(hoy).stream()
                 .filter(c -> "Confirmada".equals(c.getEstado()))
                 .filter(c -> c.getTriaje() == null)
                 .collect(Collectors.toList());
@@ -420,7 +358,6 @@ public class RecepcionistaController {
     }
 
     @PostMapping("/triaje/guardar")
-    @org.springframework.transaction.annotation.Transactional
     public String guardarTriaje(@RequestParam Integer idCita,
                                 @RequestParam BigDecimal peso,
                                 @RequestParam BigDecimal talla,
@@ -428,22 +365,8 @@ public class RecepcionistaController {
                                 @RequestParam BigDecimal temperatura,
                                 @RequestParam Integer frecuenciaCardiaca,
                                 @RequestParam Integer saturacionOxigeno) {
-        Cita cita = citaRepository.findById(idCita).orElse(null);
-        if (cita != null) {
-            Triaje triaje = Triaje.builder()
-                    .cita(cita)
-                    .peso(peso)
-                    .talla(talla)
-                    .presionArterial(presionArterial)
-                    .temperatura(temperatura)
-                    .frecuenciaCardiaca(frecuenciaCardiaca)
-                    .saturacionOxigeno(saturacionOxigeno)
-                    .fechaRegistro(LocalDateTime.now())
-                    .build();
-            triajeRepository.save(triaje);
-
-            cita.setTriaje(triaje);
-            citaRepository.save(cita);
+        Cita cita = citasService.obtenerPorId(idCita).orElse(null);
+        if (triajeService.registrarTriaje(cita, peso, talla, presionArterial, temperatura, frecuenciaCardiaca, saturacionOxigeno)) {
             return "redirect:/recepcionista/triaje?exito";
         }
         return "redirect:/recepcionista/triaje?error";

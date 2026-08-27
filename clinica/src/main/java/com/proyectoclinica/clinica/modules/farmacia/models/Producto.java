@@ -28,6 +28,19 @@ public class Producto {
     private BigDecimal precioDescuento;
     @Column(length = 100)
     private String categoria;
+    
+    @Column(name = "fecha_vencimiento")
+    private java.time.LocalDate fechaVencimiento;
+    
+    @Column(length = 50)
+    private String lote;
+    
+    @Column(name = "stock_minimo")
+    @Builder.Default
+    private Integer stockMinimo = 10;
+    
+    @Column(length = 150)
+    private String proveedor;
     @Column(length = 50)
     private String estado;
     @Column(name = "imagen_url", length = 255)

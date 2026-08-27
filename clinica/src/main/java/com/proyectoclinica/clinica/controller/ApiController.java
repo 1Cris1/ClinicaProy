@@ -2,7 +2,7 @@ package com.proyectoclinica.clinica.controller;
 
 import com.proyectoclinica.clinica.modules.citas.models.Cita;
 import com.proyectoclinica.clinica.modules.paciente.models.Paciente;
-import com.proyectoclinica.clinica.modules.laboratorio.models.ResultadoLaboratorio;
+
 import com.proyectoclinica.clinica.modules.consultas.models.HistorialClinico;
 import com.proyectoclinica.clinica.modules.consultas.service.HistorialClinicoService;
 import com.proyectoclinica.clinica.modules.farmacia.models.Producto;
@@ -20,6 +20,8 @@ import com.proyectoclinica.clinica.modules.farmacia.repository.ProductoRepositor
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.proyectoclinica.clinica.modules.seguridad.repository.UsuarioRepository;
+import com.proyectoclinica.clinica.modules.seguridad.models.Usuario;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -37,6 +39,7 @@ public class ApiController {
     private final IcdService icdService;
     private final FarmaciaTedefRepository farmaciaTedefRepository;
     private final MedicamentoService medicamentoService;
+    private final UsuarioRepository usuarioRepository;
 
     @GetMapping("/citas/hoy")
     public List<Cita> getCitasHoy() {
@@ -57,8 +60,8 @@ public class ApiController {
     }
 
     @GetMapping("/pacientes/{id}/resultados")
-    public List<ResultadoLaboratorio> getResultadosPaciente(@PathVariable Integer id) {
-        return laboratorioService.listarPorPaciente(id);
+    public ResponseEntity<?> getResultadosPaciente(@PathVariable Integer id) {
+        return ResponseEntity.ok(laboratorioService.listarResultadosPorPaciente(id));
     }
 
     @GetMapping("/pacientes/dni/{dni}")
@@ -128,5 +131,28 @@ public class ApiController {
             Map.of("name", "farmacia-service", "status", "UP")
         ));
         return health;
+    }
+
+    @PostMapping("/seguridad/toggle-2fa")
+    public ResponseEntity<?> toggle2Fa(@RequestBody Map<String, Integer> body, java.security.Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "No autenticado"));
+        }
+        Integer usuarioId = body.get("usuarioId");
+        if (usuarioId == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "ID de usuario requerido"));
+        }
+        Optional<Usuario> optUser = usuarioRepository.findById(usuarioId);
+        if (optUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Usuario u = optUser.get();
+        if (!u.getUsername().equals(principal.getName())) {
+            return ResponseEntity.status(403).body(Map.of("error", "No autorizado para modificar este usuario"));
+        }
+        boolean current = u.getMfaEnabled() != null && u.getMfaEnabled();
+        u.setMfaEnabled(!current);
+        usuarioRepository.save(u);
+        return ResponseEntity.ok(Map.of("success", true, "mfaEnabled", !current));
     }
 }

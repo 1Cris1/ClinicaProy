@@ -152,6 +152,22 @@
                                 </button>
                             </div>
                         </form>
+
+                        <!-- SECCIÓN 2FA -->
+                        <div class="mt-4 pt-4 border-top">
+                            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-phone-vibrate-fill text-primary me-2"></i>Verificación de Doble Factor (2FA)</h6>
+                            <div class="form-check form-switch my-2">
+                                <input class="form-check-input" type="checkbox" id="mfaTogglePaciente" style="cursor: pointer; height: 1.5rem; width: 3rem;"
+                                       th:checked="${#authentication.principal.usuario.mfaEnabled != null ? #authentication.principal.usuario.mfaEnabled : false}" 
+                                       th:onchange="'toggleMfaPaciente(this, ' + ${#authentication.principal.usuario.id} + ')'">
+                                <label class="form-check-label fw-bold text-dark ms-3 mt-1" for="mfaTogglePaciente" style="cursor: pointer;">
+                                    Exigir código por correo al iniciar sesión desde dispositivos nuevos
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                Recomendado para mayor seguridad. Al activarlo, te enviaremos un código de seguridad a tu correo cuando ingreses desde un navegador o equipo no reconocido.
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -182,6 +198,30 @@
                 if (!isEditing) {
                     fields[0].focus();
                 }
+            }
+
+            function toggleMfaPaciente(checkbox, usuarioId) {
+                checkbox.disabled = true;
+                fetch('/api/v1/seguridad/toggle-2fa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuarioId: usuarioId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    checkbox.disabled = false;
+                    if(data.success) {
+                        alert(data.mfaEnabled ? 'Verificación de doble factor activada exitosamente.' : 'Verificación de doble factor desactivada.');
+                    } else {
+                        alert('Error al actualizar la configuración de seguridad.');
+                        checkbox.checked = !checkbox.checked;
+                    }
+                })
+                .catch(err => {
+                    checkbox.disabled = false;
+                    checkbox.checked = !checkbox.checked;
+                    alert('Error de conexión al servidor.');
+                });
             }
         </script>
     </div>

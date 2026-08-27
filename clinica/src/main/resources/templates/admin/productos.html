@@ -71,10 +71,14 @@
                                     <div class="progress flex-grow-1" style="height: 4px; min-width: 50px; max-width: 80px;">
                                         <div class="progress-bar" role="progressbar" 
                                              th:style="'width: ' + (${p.stock > 100 ? 100 : p.stock}) + '%'"
-                                             th:classappend="${p.stock < 10 ? 'bg-danger' : (p.stock < 30 ? 'bg-warning' : 'bg-success')}"></div>
+                                             th:classappend="${p.stock <= (p.stockMinimo != null ? p.stockMinimo : 10) ? 'bg-danger' : (p.stock <= ((p.stockMinimo != null ? p.stockMinimo : 10) * 2) ? 'bg-warning' : 'bg-success')}"></div>
                                     </div>
                                 </div>
-                                <span th:if="${p.stock < 10}" class="text-danger small fw-bold" style="font-size: .6rem;">STOCK BAJO</span>
+                                <span th:if="${p.stock <= (p.stockMinimo != null ? p.stockMinimo : 10)}" class="text-danger small fw-bold" style="font-size: .6rem;"><i class="bi bi-exclamation-triangle-fill me-1"></i>STOCK BAJO</span>
+                                <div class="text-muted" style="font-size: 0.75rem;" th:if="${p.fechaVencimiento != null}">
+                                    Vence: <span th:text="${#temporals.format(p.fechaVencimiento, 'dd/MM/yyyy')}"
+                                          th:classappend="${p.fechaVencimiento.isBefore(#temporals.createNow())} ? 'text-danger fw-bold' : ''"></span>
+                                </div>
                             </td>
                             <td>
                                 <span th:if="${p.estado == 'Activo'}" class="app-badge" style="background:#D1FAE5;color:#059669;">Activo</span>
@@ -92,6 +96,10 @@
                                             th:data-stock="${p.stock}"
                                             th:data-estado="${p.estado}"
                                             th:data-img="${p.imagenUrl}"
+                                            th:data-stockminimo="${p.stockMinimo}"
+                                            th:data-lote="${p.lote}"
+                                            th:data-vencimiento="${p.fechaVencimiento}"
+                                            th:data-proveedor="${p.proveedor}"
                                             onclick="abrirEditar(this)">
                                         <i class="bi bi-pencil text-primary"></i>
                                     </button>
@@ -150,15 +158,30 @@
                                     <label class="form-label small fw-bold">Precio Descuento (S/)</label>
                                     <input type="number" name="precioDescuento" step="0.1" class="form-control">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label small fw-bold">Stock Inicial</label>
                                     <input type="number" name="stock" class="form-control" value="0" required>
                                 </div>
-                                <div class="col-12">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Stock Mínimo</label>
+                                    <input type="number" name="stockMinimo" class="form-control" value="10">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Lote</label>
+                                    <input type="text" name="lote" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Vencimiento</label>
+                                    <input type="date" name="fechaVencimiento" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Proveedor</label>
+                                    <input type="text" name="proveedor" class="form-control">
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label small fw-bold">Imagen del Producto</label>
                                     <input type="file" class="form-control" accept="image/*" onchange="uploadFile(this, 'new-imagen-url')">
                                     <input type="hidden" name="imagenUrl" id="new-imagen-url">
-                                    <div class="form-text small text-muted">Haz clic para subir una imagen desde tu ordenador</div>
                                 </div>
                             </div>
                         </div>
@@ -215,17 +238,32 @@
                                     <input type="number" name="stock" id="edit-stock" class="form-control" required>
                                 </div>
                                 <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Stock Mín.</label>
+                                    <input type="number" name="stockMinimo" id="edit-stockMinimo" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Lote</label>
+                                    <input type="text" name="lote" id="edit-lote" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Vencimiento</label>
+                                    <input type="date" name="fechaVencimiento" id="edit-vencimiento" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Proveedor</label>
+                                    <input type="text" name="proveedor" id="edit-proveedor" class="form-control">
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label small fw-bold">Estado</label>
                                     <select name="estado" id="edit-estado" class="form-select">
                                         <option value="Activo">Activo</option>
                                         <option value="Inactivo">Inactivo</option>
                                     </select>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-bold">Imagen del Producto</label>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Imagen</label>
                                     <input type="file" class="form-control" accept="image/*" onchange="uploadFile(this, 'edit-img')">
                                     <input type="hidden" name="imagenUrl" id="edit-img">
-                                    <div class="form-text small text-muted">Haz clic para subir una nueva imagen</div>
                                 </div>
                             </div>
                         </div>
@@ -250,6 +288,10 @@
                 document.getElementById('edit-cat').value = btn.getAttribute('data-cat');
                 document.getElementById('edit-stock').value = btn.getAttribute('data-stock');
                 document.getElementById('edit-estado').value = btn.getAttribute('data-estado');
+                document.getElementById('edit-stockMinimo').value = btn.getAttribute('data-stockminimo');
+                document.getElementById('edit-lote').value = btn.getAttribute('data-lote');
+                document.getElementById('edit-vencimiento').value = btn.getAttribute('data-vencimiento');
+                document.getElementById('edit-proveedor').value = btn.getAttribute('data-proveedor');
                 
                 const imgUrl = btn.getAttribute('data-img');
                 document.getElementById('edit-img').value = imgUrl;

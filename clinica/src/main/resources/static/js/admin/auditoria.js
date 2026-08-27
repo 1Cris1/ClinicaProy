@@ -26,4 +26,32 @@ function mostrarDetalle(btn) {
     modal.show();
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('filtroAuditoriaForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const url = new URL(form.action);
+            const formData = new FormData(form);
+            const searchParams = new URLSearchParams(formData);
+            url.search = searchParams.toString();
+
+            const tbody = document.getElementById('tablaAuditoriaBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Cargando...</p></td></tr>';
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'Fetch'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                tbody.outerHTML = html;
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        });
+    }
+});
+
 

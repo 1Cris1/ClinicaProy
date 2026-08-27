@@ -1,25 +1,60 @@
 
 /* =========================================
+   Barra lateral: colapsable en escritorio (persistente vía localStorage)
+   y tipo "drawer" en móvil. Compartido por todos los layouts.
+   ========================================= */
+function initSidebarToggle(ref, watch) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.getElementById('sidebarToggle');
+    if (!sidebar || !overlay || !toggle) return;
+
+    var STORAGE_KEY = 'cx-sidebar-collapsed';
+    var isDesktop = function() { return window.innerWidth >= 992; };
+    var sidebarOpen = ref(isDesktop() ? localStorage.getItem(STORAGE_KEY) !== '1' : false);
+
+    watch(sidebarOpen, function(val) {
+        if (isDesktop()) {
+            document.body.classList.toggle('sidebar-collapsed', !val);
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+            localStorage.setItem(STORAGE_KEY, val ? '0' : '1');
+        } else {
+            sidebar.classList.toggle('show', val);
+            overlay.classList.toggle('show', val);
+            document.body.classList.remove('sidebar-collapsed');
+        }
+    });
+
+    if (isDesktop()) {
+        document.body.classList.toggle('sidebar-collapsed', !sidebarOpen.value);
+    }
+
+    toggle.addEventListener('click', function() {
+        sidebarOpen.value = !sidebarOpen.value;
+    });
+    overlay.addEventListener('click', function() {
+        sidebarOpen.value = false;
+    });
+    window.addEventListener('resize', function() {
+        if (isDesktop()) {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        } else {
+            document.body.classList.remove('sidebar-collapsed');
+        }
+    });
+}
+
+/* =========================================
    FILE: layout-admin.html
    ========================================= */
 (function() {
         const { ref, watch } = Vue;
 
         if (!document.querySelector('.ad-sidebar')) return;
-        /* --- SIDEBAR TOGGLE --- */
-        const sidebarOpen = ref(false);
-
-        watch(sidebarOpen, function(val) {
-            document.getElementById('sidebar').classList.toggle('show', val);
-            document.getElementById('sidebarOverlay').classList.toggle('show', val);
-        });
-
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            sidebarOpen.value = !sidebarOpen.value;
-        });
-        document.getElementById('sidebarOverlay').addEventListener('click', function() {
-            sidebarOpen.value = false;
-        });
+        /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+        initSidebarToggle(ref, watch);
 
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
@@ -85,20 +120,8 @@
         const { ref, watch } = Vue;
 
         if (!document.querySelector('.doc-sidebar')) return;
-        /* --- SIDEBAR TOGGLE --- */
-        const sidebarOpen = ref(false);
-
-        watch(sidebarOpen, function(val) {
-            document.getElementById('sidebar').classList.toggle('show', val);
-            document.getElementById('sidebarOverlay').classList.toggle('show', val);
-        });
-
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            sidebarOpen.value = !sidebarOpen.value;
-        });
-        document.getElementById('sidebarOverlay').addEventListener('click', function() {
-            sidebarOpen.value = false;
-        });
+        /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+        initSidebarToggle(ref, watch);
 
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
@@ -153,28 +176,9 @@
 (function() {
         const { ref, watch } = Vue;
 
-        if (!document.querySelector('.cx-sidebar')) return;
-        /* --- SIDEBAR TOGGLE --- */
-        const sidebarOpen = ref(false);
-
-        watch(sidebarOpen, function(val) {
-            document.getElementById('sidebar').classList.toggle('show', val);
-            document.getElementById('sidebarOverlay').classList.toggle('show', val);
-        });
-
-        const toggle = document.getElementById('sidebarToggle');
-        if (toggle) {
-            toggle.addEventListener('click', function() {
-                sidebarOpen.value = !sidebarOpen.value;
-            });
-        }
-        
-        const overlay = document.getElementById('sidebarOverlay');
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebarOpen.value = false;
-            });
-        }
+        if (!document.querySelector('.pa-sidebar')) return;
+        /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+        initSidebarToggle(ref, watch);
 
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
@@ -992,52 +996,8 @@ window.selectServiceTab = function(btn, category) {
     const { ref, watch } = Vue || { ref: (v) => ({value: v}), watch: () => {} };
 
     if (!document.querySelector('.rc-sidebar')) return;
-    
-    /* --- SIDEBAR TOGGLE --- */
-    const sidebarOpen = ref(false);
-
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const toggle = document.getElementById('sidebarToggle');
-
-    if (toggle && sidebar && overlay) {
-        watch(sidebarOpen, function(val) {
-            if (window.innerWidth < 992) {
-                // Mobile behavior: Drawer
-                sidebar.classList.toggle('show', val);
-                overlay.classList.toggle('show', val);
-                document.body.classList.remove('sidebar-collapsed');
-            } else {
-                // Desktop behavior: Collapse
-                document.body.classList.toggle('sidebar-collapsed', !val);
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            }
-        });
-
-        // Sync initial state on desktop
-        if (window.innerWidth >= 992) {
-            sidebarOpen.value = !document.body.classList.contains('sidebar-collapsed');
-        }
-
-        toggle.addEventListener('click', function() {
-            sidebarOpen.value = !sidebarOpen.value;
-        });
-
-        overlay.addEventListener('click', function() {
-            sidebarOpen.value = false;
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth >= 992) {
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            } else {
-                document.body.classList.remove('sidebar-collapsed');
-            }
-        });
-    }
+    /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+    initSidebarToggle(ref, watch);
 
     /* --- ACTIVE PAGE & TITLE --- */
     var path = window.location.pathname;

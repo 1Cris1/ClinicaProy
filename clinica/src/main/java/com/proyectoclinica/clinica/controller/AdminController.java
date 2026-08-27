@@ -2,22 +2,17 @@ package com.proyectoclinica.clinica.controller;
 
 import com.proyectoclinica.clinica.modules.seguridad.models.Usuario;
 import com.proyectoclinica.clinica.modules.seguridad.models.Rol;
-import com.proyectoclinica.clinica.modules.recursos.models.Especialidad;
 import com.proyectoclinica.clinica.modules.recursos.models.Medico;
 import com.proyectoclinica.clinica.modules.recursos.models.Sede;
-import com.proyectoclinica.clinica.modules.recursos.models.Servicio;
-import com.proyectoclinica.clinica.modules.recursos.models.Promocion;
 import com.proyectoclinica.clinica.modules.citas.repository.CitaRepository;
-import com.proyectoclinica.clinica.modules.paciente.models.Paciente;
 import com.proyectoclinica.clinica.modules.paciente.repository.PacienteRepository;
-import com.proyectoclinica.clinica.modules.farmacia.models.Producto;
-import com.proyectoclinica.clinica.modules.farmacia.repository.ProductoRepository;
+import com.proyectoclinica.clinica.modules.paciente.service.PacienteService;
+import com.proyectoclinica.clinica.modules.recursos.service.MedicoService;
 import com.proyectoclinica.clinica.modules.seguridad.repository.UsuarioRepository;
 import com.proyectoclinica.clinica.modules.recursos.repository.MedicoRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.EspecialidadRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.SedeRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.ServicioRepository;
-import com.proyectoclinica.clinica.modules.recursos.repository.PromocionRepository;
+import com.proyectoclinica.clinica.modules.recursos.service.CatalogoService;
+import com.proyectoclinica.clinica.modules.farmacia.service.ProductoService;
+import com.proyectoclinica.clinica.modules.recursos.service.PromocionService;
 import com.proyectoclinica.clinica.config.PowerBiProperties;
 import com.proyectoclinica.clinica.modules.seguridad.models.AuditoriaUsuario;
 import com.proyectoclinica.clinica.modules.seguridad.repository.AuditoriaUsuarioRepository;
@@ -25,7 +20,6 @@ import com.proyectoclinica.clinica.modules.seguridad.repository.AuditoriaUsuario
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,14 +46,14 @@ public class AdminController {
     private final MedicoRepository medicoRepository;
     private final PacienteRepository pacienteRepository;
     private final CitaRepository citaRepository;
-    private final EspecialidadRepository especialidadRepository;
-    private final SedeRepository sedeRepository;
-    private final ServicioRepository servicioRepository;
-    private final ProductoRepository productoRepository;
-    private final PromocionRepository promocionRepository;
+    private final CatalogoService catalogoService;
+    private final ProductoService productoService;
+    private final PromocionService promocionService;
     private final PasswordEncoder passwordEncoder;
     private final PowerBiProperties powerBiProperties;
     private final AuditoriaUsuarioRepository auditoriaUsuarioRepository;
+    private final PacienteService pacienteService;
+    private final MedicoService medicoService;
 
     //  - INICIO CÓDIGO BACKEND DASHBOARD (Métricas en tiempo real e inyección de URL de Power BI)
     @GetMapping({"", "/", "/dashboard", "/inicio"})
@@ -97,10 +91,7 @@ public class AdminController {
     @GetMapping("/pacientes")
     public String listarPacientes(Model model) {
         log.info("[Admin] Acceso a Gestión de Pacientes");
-        List<Usuario> usuariosPacientes = usuarioRepository.findAll().stream()
-            .filter(u -> u.getIdRol() == 3)
-            .collect(Collectors.toList());
-        
+        List<Usuario> usuariosPacientes = pacienteService.listarUsuariosPacientes();
         model.addAttribute("usuarios", usuariosPacientes);
         model.addAttribute("totalPacientes", usuariosPacientes.size());
         model.addAttribute("pageTitle", "Pacientes");
@@ -115,32 +106,10 @@ public class AdminController {
                                    @RequestParam String password,
                                    @RequestParam(required = false) String email,
                                    @RequestParam(required = false) String telefono) {
-        log.info("Creando nuevo paciente: {}", dni);
-        Usuario nuevoUsuario = Usuario.builder()
-                .username(dni)
-                .password(passwordEncoder.encode(password))
-                .email(email != null && !email.isBlank() ? email : dni + "@paciente.com")
-                .idRol(3)
-                .rol(Rol.ROLE_PACIENTE)
-                .build();
-        try {
-            usuarioRepository.save(nuevoUsuario);
-            
-            Paciente nuevoPaciente = Paciente.builder()
-                    .usuario(nuevoUsuario)
-                    .nombres(nombres)
-                    .apellidos(apellidos)
-                    .dni(dni)
-                    .email(email)
-                    .telefono(telefono)
-                    .estado("Activo")
-                    .build();
-            pacienteRepository.save(nuevoPaciente);
+        if (pacienteService.registrarPaciente(nombres, apellidos, dni, password, email, telefono)) {
             return "redirect:/admin/pacientes?exito";
-        } catch (DataIntegrityViolationException e) {
-            log.error("Error al registrar paciente: {}", e.getMessage());
-            return "redirect:/admin/pacientes?error=duplicado";
         }
+        return "redirect:/admin/pacientes?error=duplicado";
     }
 
     @PostMapping("/pacientes/editar")
@@ -148,35 +117,18 @@ public class AdminController {
                                 @RequestParam String username,
                                 @RequestParam(required = false) String nueva_password,
                                 @RequestParam(required = false) String email) {
-        log.info("Editando paciente ID: {}", id_usuario);
-        try {
-            Usuario usuario = usuarioRepository.findById(id_usuario).orElse(null);
-            if (usuario != null) {
-                usuario.setUsername(username);
-                if (email != null && !email.isBlank()) {
-                    usuario.setEmail(email);
-                }
-                if (nueva_password != null && !nueva_password.isBlank()) {
-                    usuario.setPassword(passwordEncoder.encode(nueva_password));
-                }
-                usuarioRepository.save(usuario);
-                return "redirect:/admin/pacientes?editado";
-            }
-        } catch (Exception e) {
-            log.error("Error editando paciente", e);
+        if (pacienteService.editarPaciente(id_usuario, username, nueva_password, email)) {
+            return "redirect:/admin/pacientes?editado";
         }
         return "redirect:/admin/pacientes?error";
     }
 
     @GetMapping("/pacientes/eliminar")
     public String eliminarPaciente(@RequestParam Integer id) {
-        try {
-            usuarioRepository.deleteById(id);
+        if (pacienteService.eliminarPaciente(id)) {
             return "redirect:/admin/pacientes?eliminado";
-        } catch (Exception e) {
-            log.error("Error eliminando paciente", e);
-            return "redirect:/admin/pacientes?error";
         }
+        return "redirect:/admin/pacientes?error";
     }
 
     // ========== RECEPCIONISTAS ==========
@@ -256,22 +208,18 @@ public class AdminController {
     @GetMapping("/medicos")
     public String listarMedicos(Model model) {
         log.info("[Admin] Acceso a Gestión de Médicos");
-        List<Usuario> usuariosMedicos = usuarioRepository.findAll().stream()
-            .filter(u -> u.getIdRol() == 2)
-            .collect(Collectors.toList());
-        
+        List<Usuario> usuariosMedicos = medicoService.listarUsuariosMedicos();
         model.addAttribute("usuarios", usuariosMedicos);
         model.addAttribute("totalMedicos", usuariosMedicos.size());
-        model.addAttribute("medicos", medicoRepository.findAll());
-        model.addAttribute("especialidades", especialidadRepository.findAll());
-        model.addAttribute("sedes", sedeRepository.findAll());
+        model.addAttribute("medicos", medicoService.listarMedicos());
+        model.addAttribute("especialidades", catalogoService.listarEspecialidades());
+        model.addAttribute("sedes", catalogoService.listarSedes());
         model.addAttribute("pageTitle", "Médicos");
         model.addAttribute("view", "admin/medicos");
         return LAYOUT;
     }
 
     @PostMapping("/medicos/editar")
-    @Transactional
     public String editarMedico(@RequestParam Integer id_usuario,
                                 @RequestParam String username,
                                 @RequestParam(required = false) String nueva_password,
@@ -287,49 +235,12 @@ public class AdminController {
                                 @RequestParam(required = false) String horarioLv,
                                 @RequestParam(required = false) String horarioSabado,
                                 @RequestParam(required = false) Integer duracionCita) {
-        
-        try {
-            Usuario usuario = usuarioRepository.findById(id_usuario).orElse(null);
-            if (usuario != null) {
-                usuario.setUsername(username);
-                if (email != null && !email.isBlank()) {
-                    usuario.setEmail(email);
-                }
-                if (nueva_password != null && !nueva_password.isBlank()) {
-                    usuario.setPassword(passwordEncoder.encode(nueva_password));
-                }
-                usuarioRepository.save(usuario);
-
-                Medico medico = medicoRepository.findByUsuarioId(usuario.getId()).orElse(null);
-                if (medico != null) {
-                    if (nombres != null) medico.setNombres(nombres);
-                    if (apellidos != null) medico.setApellidos(apellidos);
-                    if (cmp != null) medico.setCmp(cmp);
-                    if (especialidadId != null) {
-                        medico.setEspecialidad(especialidadRepository.findById(especialidadId).orElse(null));
-                    }
-                    if (sedeId != null) {
-                        medico.setSede(sedeRepository.findById(sedeId).orElse(null));
-                    }
-                    if (telefono != null) medico.setTelefono(telefono);
-                    if (consultorio != null) medico.setConsultorio(consultorio);
-                    if (estado != null) medico.setEstado(estado);
-                    if (horarioLv != null) medico.setHorarioLv(horarioLv);
-                    if (horarioSabado != null) medico.setHorarioSabado(horarioSabado);
-                    if (duracionCita != null) medico.setDuracionCita(duracionCita);
-                    medicoRepository.save(medico);
-                }
-                return "redirect:/admin/medicos?editado";
-            }
-        } catch (Exception e) {
-            log.error("Error editando medico", e);
+        if (medicoService.editarMedico(id_usuario, username, nueva_password, email, nombres, apellidos, cmp, especialidadId, sedeId, telefono, consultorio, estado, horarioLv, horarioSabado, duracionCita)) {
+            return "redirect:/admin/medicos?editado";
         }
         return "redirect:/admin/medicos?error";
     }
 
-    /**  *HISTORIA DE USUARIO: Registro de Nuevo Personal Médico*/
-    
-     
     @PostMapping("/medicos/nuevo")
     public String registrarMedico(@RequestParam String nombres,
                                   @RequestParam String apellidos,
@@ -344,50 +255,18 @@ public class AdminController {
                                   @RequestParam(required = false) String horarioLv,
                                   @RequestParam(required = false) String horarioSabado,
                                   @RequestParam(required = false, defaultValue = "30") Integer duracionCita) {
-        try {
-            Usuario nuevoUsuario = Usuario.builder()
-                    .username(dni)
-                    // EXPOSICIÓN CRISTIAN: Aquí explicamos cómo usamos BCryptPasswordEncoder para encriptar la clave y garantizar la seguridad
-                    .password(passwordEncoder.encode(password))
-                    .email(email != null && !email.isBlank() ? email : dni + "@medico.com")
-                    .idRol(2)
-                    .rol(Rol.ROLE_MEDICO)
-                    .build();
-            nuevoUsuario = usuarioRepository.save(nuevoUsuario);
-
-            Medico med = Medico.builder()
-                    .usuario(nuevoUsuario)
-                    .nombres(nombres)
-                    .apellidos(apellidos)
-                    .dni(dni)
-                    .cmp(cmp)
-                    .especialidad(especialidadId != null ? especialidadRepository.findById(especialidadId).orElse(null) : null)
-                    .sede(sedeId != null ? sedeRepository.findById(sedeId).orElse(null) : null)
-                    .telefono(telefono)
-                    .email(email)
-                    .consultorio(consultorio)
-                    .horarioLv(horarioLv)
-                    .horarioSabado(horarioSabado)
-                    .duracionCita(duracionCita != null ? duracionCita : 30)
-                    .estado("Activo")
-                    .build();
-            medicoRepository.save(med);
+        if (medicoService.registrarMedico(nombres, apellidos, dni, password, cmp, especialidadId, sedeId, telefono, email, consultorio, horarioLv, horarioSabado, duracionCita)) {
             return "redirect:/admin/medicos?exito";
-        } catch (Exception e) {
-            log.error("Error al registrar médico", e);
-            return "redirect:/admin/medicos?nuevoError";
         }
+        return "redirect:/admin/medicos?nuevoError";
     }
 
     @GetMapping("/medicos/eliminar")
     public String eliminarMedico(@RequestParam Integer id) {
-        try {
-            usuarioRepository.deleteById(id);
+        if (medicoService.eliminarMedico(id)) {
             return "redirect:/admin/medicos?eliminado";
-        } catch (Exception e) {
-            log.error("Error eliminando medico", e);
-            return "redirect:/admin/medicos?error";
         }
+        return "redirect:/admin/medicos?error";
     }
 
     // ========== CITAS ==========
@@ -406,8 +285,8 @@ public class AdminController {
     @GetMapping("/especialidades")
     public String listarEspecialidades(Model model) {
         log.info("[Admin] Acceso a Especialidades");
-        model.addAttribute("especialidades", especialidadRepository.findAll());
-        model.addAttribute("totalEspecialidades", especialidadRepository.count());
+        model.addAttribute("especialidades", catalogoService.listarEspecialidades());
+        model.addAttribute("totalEspecialidades", catalogoService.contarEspecialidades());
         model.addAttribute("pageTitle", "Especialidades");
         model.addAttribute("view", "admin/especialidades");
         return LAYOUT;
@@ -420,16 +299,7 @@ public class AdminController {
                                         @RequestParam(required = false) String color,
                                         @RequestParam(defaultValue = "true") Boolean estado,
                                         @RequestParam(required = false) String imagenUrl) {
-        // CRISTIAN: Aquí mostramos cómo instanciamos el objeto limpiamente usando el patrón @Builder de Lombok
-        Especialidad nuevaEspecialidad = Especialidad.builder()
-                .nombre(nombre)
-                .descripcion(descripcion)
-                .icono(icono != null && !icono.isBlank() ? icono : "bi bi-stethoscope")
-                .color(color)
-                .estado(estado)
-                .imagenUrl(imagenUrl)
-                .build();
-        especialidadRepository.save(nuevaEspecialidad);
+        catalogoService.registrarEspecialidad(nombre, descripcion, icono, color, estado, imagenUrl);
         return "redirect:/admin/especialidades?exito";
     }
 
@@ -441,16 +311,7 @@ public class AdminController {
                                      @RequestParam(required = false) String color,
                                      @RequestParam Boolean estado,
                                      @RequestParam(required = false) String imagenUrl) {
-        Especialidad especialidad = especialidadRepository.findById(id).orElseThrow();
-        especialidad.setNombre(nombre);
-        especialidad.setDescripcion(descripcion);
-        especialidad.setIcono(icono != null && !icono.isBlank() ? icono : "bi bi-stethoscope");
-        especialidad.setColor(color);
-        especialidad.setEstado(estado);
-        if (imagenUrl != null && !imagenUrl.isBlank()) {
-            especialidad.setImagenUrl(imagenUrl);
-        }
-        especialidadRepository.save(especialidad);
+        catalogoService.editarEspecialidad(id, nombre, descripcion, icono, color, estado, imagenUrl);
         return "redirect:/admin/especialidades?editado";
     }
 
@@ -459,9 +320,9 @@ public class AdminController {
     @GetMapping("/servicios")
     public String listarServicios(Model model) {
         log.info("[Admin] Acceso a Servicios");
-        model.addAttribute("servicios", servicioRepository.findAll());
-        model.addAttribute("especialidades", especialidadRepository.findAll());
-        model.addAttribute("totalServicios", servicioRepository.count());
+        model.addAttribute("servicios", catalogoService.listarServicios());
+        model.addAttribute("especialidades", catalogoService.listarEspecialidades());
+        model.addAttribute("totalServicios", catalogoService.contarServicios());
         model.addAttribute("pageTitle", "Servicios");
         model.addAttribute("view", "admin/servicios");
         return LAYOUT;
@@ -474,15 +335,7 @@ public class AdminController {
                                    @RequestParam BigDecimal precio,
                                    @RequestParam Integer especialidadId,
                                    @RequestParam(defaultValue = "Activo") String estado) {
-        Especialidad especialidad = especialidadRepository.findById(especialidadId).orElse(null);
-        Servicio nuevoServicio = Servicio.builder()
-                .nombre(nombre)
-                .descripcion(descripcion)
-                .precio(precio)
-                .especialidad(especialidad)
-                .estado(estado)
-                .build();
-        servicioRepository.save(nuevoServicio);
+        catalogoService.registrarServicio(nombre, descripcion, precio, especialidadId, estado);
         return "redirect:/admin/servicios?exito";
     }
 
@@ -493,32 +346,24 @@ public class AdminController {
                                  @RequestParam BigDecimal precio,
                                  @RequestParam Integer especialidadId,
                                  @RequestParam String estado) {
-        Servicio servicio = servicioRepository.findById(id).orElseThrow();
-        servicio.setNombre(nombre);
-        servicio.setDescripcion(descripcion);
-        servicio.setPrecio(precio);
-        servicio.setEspecialidad(especialidadRepository.findById(especialidadId).orElse(null));
-        servicio.setEstado(estado);
-        servicioRepository.save(servicio);
+        catalogoService.editarServicio(id, nombre, descripcion, precio, especialidadId, estado);
         return "redirect:/admin/servicios?editado";
     }
 
     @GetMapping("/servicios/eliminar")
     public String eliminarServicio(@RequestParam Integer id) {
-        try {
-            servicioRepository.deleteById(id);
+        if (catalogoService.eliminarServicio(id)) {
             return "redirect:/admin/servicios?eliminado";
-        } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            return "redirect:/admin/servicios?error=en_uso";
         }
+        return "redirect:/admin/servicios?error=en_uso";
     }
 
     // ========== SEDES ==========
     @GetMapping("/sedes")
     public String listarSedes(Model model) {
         log.info("[Admin] Acceso a Sedes");
-        model.addAttribute("sedes", sedeRepository.findAll());
-        model.addAttribute("totalSedes", sedeRepository.count());
+        model.addAttribute("sedes", catalogoService.listarSedes());
+        model.addAttribute("totalSedes", catalogoService.contarSedes());
         model.addAttribute("pageTitle", "Sedes");
         model.addAttribute("view", "admin/sedes");
         return LAYOUT;
@@ -526,30 +371,17 @@ public class AdminController {
 
     @PostMapping("/sedes/nuevo")
     public String registrarSede(@RequestParam String nombre,
-                               @RequestParam String direccion,
-                               @RequestParam(required = false) String distrito,
-                               @RequestParam(required = false) String ciudad,
-                               @RequestParam(required = false) String telefono,
-                               @RequestParam(required = false) String email,
-                               @RequestParam(required = false) String horarioLv,
-                               @RequestParam(required = false) String horarioSabado,
-                               @RequestParam(required = false) String horarioDomingo,
-                               @RequestParam(required = false) Integer numConsultorios,
-                               @RequestParam(defaultValue = "Activo") String estado) {
-        Sede nuevaSede = Sede.builder()
-                .nombre(nombre)
-                .direccion(direccion)
-                .distrito(distrito)
-                .ciudad(ciudad)
-                .telefono(telefono)
-                .email(email)
-                .horarioLv(horarioLv)
-                .horarioSabado(horarioSabado)
-                .horarioDomingo(horarioDomingo)
-                .numConsultorios(numConsultorios)
-                .estado(estado)
-                .build();
-        sedeRepository.save(nuevaSede);
+                                @RequestParam String direccion,
+                                @RequestParam(required = false) String distrito,
+                                @RequestParam(required = false) String ciudad,
+                                @RequestParam(required = false) String telefono,
+                                @RequestParam(required = false) String email,
+                                @RequestParam(required = false) String horarioLv,
+                                @RequestParam(required = false) String horarioSabado,
+                                @RequestParam(required = false) String horarioDomingo,
+                                @RequestParam(required = false) Integer numConsultorios,
+                                @RequestParam(defaultValue = "Activo") String estado) {
+        catalogoService.registrarSede(nombre, direccion, distrito, ciudad, telefono, email, horarioLv, horarioSabado, horarioDomingo, numConsultorios, estado);
         return "redirect:/admin/sedes?exito";
     }
 
@@ -566,25 +398,13 @@ public class AdminController {
                              @RequestParam(required = false) String horarioDomingo,
                              @RequestParam(required = false) Integer numConsultorios,
                              @RequestParam String estado) {
-        Sede sede = sedeRepository.findById(id).orElseThrow();
-        sede.setNombre(nombre);
-        sede.setDireccion(direccion);
-        sede.setDistrito(distrito);
-        sede.setCiudad(ciudad);
-        sede.setTelefono(telefono);
-        sede.setEmail(email);
-        sede.setHorarioLv(horarioLv);
-        sede.setHorarioSabado(horarioSabado);
-        sede.setHorarioDomingo(horarioDomingo);
-        sede.setNumConsultorios(numConsultorios);
-        sede.setEstado(estado);
-        sedeRepository.save(sede);
+        catalogoService.editarSede(id, nombre, direccion, distrito, ciudad, telefono, email, horarioLv, horarioSabado, horarioDomingo, numConsultorios, estado);
         return "redirect:/admin/sedes?editado";
     }
 
     @GetMapping("/sedes/eliminar")
     public String eliminarSede(@RequestParam Integer id) {
-        sedeRepository.deleteById(id);
+        catalogoService.eliminarSede(id);
         return "redirect:/admin/sedes?eliminado";
     }
 
@@ -592,8 +412,8 @@ public class AdminController {
     @GetMapping("/promociones")
     public String listarPromociones(Model model) {
         log.info("[Admin] Acceso a Promociones");
-        model.addAttribute("promociones", promocionRepository.findAll());
-        model.addAttribute("totalPromociones", promocionRepository.count());
+        model.addAttribute("promociones", promocionService.listarPromociones());
+        model.addAttribute("totalPromociones", promocionService.contarPromociones());
         model.addAttribute("pageTitle", "Promociones");
         model.addAttribute("view", "admin/promociones");
         return LAYOUT;
@@ -607,24 +427,15 @@ public class AdminController {
                                      @RequestParam(required = false) LocalDate fechaFin,
                                      @RequestParam(defaultValue = "Activo") String estado,
                                      @RequestParam(required = false) String imagenUrl) {
-        Promocion nuevaPromocion = Promocion.builder()
-                .titulo(titulo)
-                .descripcion(descripcion)
-                .descuentoPorcentaje(descuentoPorcentaje)
-                .fechaInicio(fechaInicio)
-                .fechaFin(fechaFin)
-                .estado(estado)
-                .imagenUrl(imagenUrl)
-                .build();
-        promocionRepository.save(nuevaPromocion);
+        promocionService.registrarPromocion(titulo, descripcion, descuentoPorcentaje, fechaInicio, fechaFin, estado, imagenUrl);
         return "redirect:/admin/promociones?exito";
     }
 
     @GetMapping("/productos")
     public String listarProductos(Model model) {
         log.info("[Admin] Acceso a Gestión de Productos");
-        model.addAttribute("productos", productoRepository.findAll());
-        model.addAttribute("totalProductos", productoRepository.count());
+        model.addAttribute("productos", productoService.listarProductos());
+        model.addAttribute("totalProductos", productoService.contarProductos());
         model.addAttribute("pageTitle", "Catálogo de Farmacia");
         model.addAttribute("view", "admin/productos");
         return LAYOUT;
@@ -632,24 +443,18 @@ public class AdminController {
 
     @PostMapping("/productos/nuevo")
     public String registrarProducto(@RequestParam String nombre,
-                                   @RequestParam(required = false) String descripcion,
-                                   @RequestParam BigDecimal precio,
-                                   @RequestParam(required = false) BigDecimal precioDescuento,
-                                   @RequestParam String categoria,
-                                   @RequestParam Integer stock,
-                                   @RequestParam(defaultValue = "Activo") String estado,
-                                   @RequestParam(required = false) String imagenUrl) {
-        Producto producto = Producto.builder()
-                .nombre(nombre)
-                .descripcion(descripcion)
-                .precio(precio)
-                .precioDescuento(precioDescuento)
-                .categoria(categoria)
-                .stock(stock)
-                .estado(estado)
-                .imagenUrl(imagenUrl)
-                .build();
-        productoRepository.save(producto);
+                                    @RequestParam(required = false) String descripcion,
+                                    @RequestParam BigDecimal precio,
+                                    @RequestParam(required = false) BigDecimal precioDescuento,
+                                    @RequestParam String categoria,
+                                    @RequestParam Integer stock,
+                                    @RequestParam String estado,
+                                    @RequestParam(required = false) String imagenUrl,
+                                    @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fechaVencimiento,
+                                    @RequestParam(required = false) String lote,
+                                    @RequestParam(required = false) Integer stockMinimo,
+                                    @RequestParam(required = false) String proveedor) {
+        productoService.registrarProducto(nombre, descripcion, precio, precioDescuento, categoria, stock, estado, imagenUrl, fechaVencimiento, lote, stockMinimo, proveedor);
         return "redirect:/admin/productos?exito";
     }
 
@@ -662,36 +467,21 @@ public class AdminController {
                                  @RequestParam String categoria,
                                  @RequestParam Integer stock,
                                  @RequestParam String estado,
-                                 @RequestParam(required = false) String imagenUrl) {
-        Producto producto = productoRepository.findById(id).orElseThrow();
-        producto.setNombre(nombre);
-        producto.setDescripcion(descripcion);
-        producto.setPrecio(precio);
-        producto.setPrecioDescuento(precioDescuento);
-        producto.setCategoria(categoria);
-        producto.setStock(stock);
-        producto.setEstado(estado);
-        producto.setImagenUrl(imagenUrl);
-        productoRepository.save(producto);
+                                 @RequestParam(required = false) String imagenUrl,
+                                 @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate fechaVencimiento,
+                                 @RequestParam(required = false) String lote,
+                                 @RequestParam(required = false) Integer stockMinimo,
+                                 @RequestParam(required = false) String proveedor) {
+        productoService.editarProducto(id, nombre, descripcion, precio, precioDescuento, categoria, stock, estado, imagenUrl, fechaVencimiento, lote, stockMinimo, proveedor);
         return "redirect:/admin/productos?editado";
     }
 
     @GetMapping("/productos/eliminar")
     public String eliminarProducto(@RequestParam Integer id) {
-        try {
-            productoRepository.deleteById(id);
+        if (productoService.eliminarProducto(id)) {
             return "redirect:/admin/productos?eliminado";
-        } catch (Exception e) {
-            log.warn("[Admin] No se puede eliminar el producto {} debido a historial de pedidos. Aplicando desactivación lógica.", id);
-            Producto p = productoRepository.findById(id).orElse(null);
-            if (p != null) {
-                p.setEstado("Inactivo");
-                p.setStock(0);
-                productoRepository.save(p);
-                return "redirect:/admin/productos?descontinuado";
-            }
-            return "redirect:/admin/productos?error";
         }
+        return "redirect:/admin/productos?descontinuado";
     }
 
     // ========== USUARIOS ==========
@@ -746,6 +536,8 @@ public class AdminController {
     @GetMapping("/reportes/desempeno-clinico")
     public String reporteDesempenoClinico(Model model) {
         log.info("[Admin] Acceso al Dashboard de Gestión de Atención y Desempeño Clínico");
+        String powerBiUrl = powerBiProperties.getBase().getUrl() + "&pageName=" + powerBiProperties.getPage().getAdmin();
+        model.addAttribute("powerBiUrl", powerBiUrl);
         model.addAttribute("pageTitle", "Gestión de Atención y Desempeño Clínico");
         model.addAttribute("view", "admin/reportes-desempeno");
         return LAYOUT;
@@ -762,7 +554,8 @@ public class AdminController {
     @GetMapping("/auditoria")
     public String verAuditoria(Model model,
                                @RequestParam(required = false) String usuario,
-                               @RequestParam(required = false) String tipo) {
+                               @RequestParam(required = false) String tipo,
+                               @RequestHeader(value = "X-Requested-With", required = false) String requestedWith) {
         log.info("[Admin] Acceso a Auditoría de Seguridad");
         List<AuditoriaUsuario> logs;
         if (usuario != null && !usuario.isBlank() && tipo != null && !tipo.isBlank()) {
@@ -807,6 +600,11 @@ public class AdminController {
         model.addAttribute("usuarioFiltro", usuario);
         model.addAttribute("tipoFiltro", tipo);
         model.addAttribute("pageTitle", "Auditoría de Seguridad");
+        
+        if ("Fetch".equals(requestedWith) || "XMLHttpRequest".equals(requestedWith)) {
+            return "admin/auditoria :: resultados";
+        }
+        
         model.addAttribute("view", "admin/auditoria");
         return LAYOUT;
     }
@@ -814,8 +612,8 @@ public class AdminController {
     @GetMapping("/consultorios")
     public String verConsultorios(Model model, @RequestParam(required = false) Integer idSede) {
         log.info("[Admin] Acceso a Gestión de Consultorios");
-        List<Sede> sedes = sedeRepository.findAll();
-        List<Medico> medicos = medicoRepository.findAll();
+        List<Sede> sedes = catalogoService.listarSedes();
+        List<Medico> medicos = medicoService.listarMedicos();
 
         Integer sedeSeleccionadaId = idSede;
         if (sedeSeleccionadaId == null && !sedes.isEmpty()) {
@@ -892,12 +690,12 @@ public class AdminController {
                                        @RequestParam String consultorio,
                                        @RequestParam Integer idSede) {
         log.info("[Admin] Reasignando médico {} al consultorio {} de la sede {}", idMedico, consultorio, idSede);
-        Medico medico = medicoRepository.findById(idMedico).orElse(null);
-        Sede sede = sedeRepository.findById(idSede).orElse(null);
+        Medico medico = medicoService.obtenerMedicoPorId(idMedico);
+        Sede sede = catalogoService.obtenerSedePorId(idSede);
         if (medico != null && sede != null) {
             medico.setConsultorio(consultorio);
             medico.setSede(sede);
-            medicoRepository.save(medico);
+            medicoService.guardar(medico);
         }
         return "redirect:/admin/consultorios?idSede=" + idSede;
     }
