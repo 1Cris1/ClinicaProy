@@ -71,6 +71,10 @@ public class Usuario {
     @Column(name = "estado_registro")
     private EstadoRegistro estadoRegistro = EstadoRegistro.PENDIENTE;
 
+    @Builder.Default
+    @Column(name = "mfa_enabled")
+    private Boolean mfaEnabled = false;
+
     @Column(name = "ultimo_acceso")
     private LocalDateTime ultimoAcceso;
 

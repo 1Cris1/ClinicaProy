@@ -33,11 +33,7 @@ public class PacienteGlobalController {
                 // Cantidad de citas pendientes o confirmadas
                 long citasPendientes = citaRepository.findByPacienteIdOrderByFechaCitaDesc(paciente.getId())
                         .stream()
-                        .filter(c ->
-                                "Programada".equals(c.getEstado()) ||
-                                "Pendiente".equals(c.getEstado()) ||
-                                "Confirmada".equals(c.getEstado())
-                                )
+                        .filter(c -> "Pendiente".equals(c.getEstado()) || "Confirmada".equals(c.getEstado()))
                         .count();
                 
                 model.addAttribute("citasPendientesCount", citasPendientes);
@@ -45,16 +41,10 @@ public class PacienteGlobalController {
                 // Buscar la cita más próxima
                 var proximaCita = citaRepository.findByPacienteIdOrderByFechaCitaDesc(paciente.getId())
                         .stream()
-                        .filter(c ->
-                                ("Programada".equals(c.getEstado()) ||
-                                "Pendiente".equals(c.getEstado()) ||
-                                "Confirmada".equals(c.getEstado()))
-                                &&
-                                (c.getFechaCita().isEqual(LocalDate.now())
-                                || c.getFechaCita().isAfter(LocalDate.now()))
-                                )
-                        .min(Comparator.comparing(com.proyectoclinica.clinica.modules.citas.models.Cita::getFechaCita)
-                                .thenComparing(com.proyectoclinica.clinica.modules.citas.models.Cita::getHoraCita))
+                        .filter(c -> ("Pendiente".equals(c.getEstado()) || "Confirmada".equals(c.getEstado())) 
+                                && (c.getFechaCita().isEqual(LocalDate.now()) || c.getFechaCita().isAfter(LocalDate.now())))
+                        .min(Comparator.comparing((com.proyectoclinica.clinica.modules.citas.models.Cita c) -> c.getFechaCita())
+                                .thenComparing((com.proyectoclinica.clinica.modules.citas.models.Cita c) -> c.getHoraCita()))
                         .orElse(null);
                 
                 model.addAttribute("proximaCita", proximaCita);

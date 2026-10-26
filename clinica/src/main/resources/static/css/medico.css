@@ -27,7 +27,7 @@
     width: var(--doc-sidebar-w); height: 100vh;
     background: var(--doc-gradient); color: var(--doc-text);
     display: flex; flex-direction: column; overflow-y: auto;
-    z-index: 1040; transition: transform var(--doc-transition);
+    z-index: 1040;
 }
 
 .doc-nav-link {

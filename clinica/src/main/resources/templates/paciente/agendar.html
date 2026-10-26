@@ -16,7 +16,7 @@
         </div>
         <div>
             <h6 class="mb-0 fw-bold text-danger">Horario No Disponible</h6>
-            <p class="mb-0 small opacity-75">El médico ya tiene una cita reservada a la hora solicitada. Por favor, elige otro horario.</p>
+            <p class="mb-0 small opacity-75">No se puede agendar porque el médico ya tiene una cita reservada con otra persona. Por favor, elige otro horario.</p>
         </div>
         <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
     </div>
@@ -50,7 +50,7 @@
                         <div class="col-md-4 col-sm-6" th:each="esp : ${especialidades}">
                             <div class="app-card border-0 bg-light shadow-sm-hover transition-all text-center p-4 specialty-option cursor-pointer" th:data-specialty="${esp.nombre}" onclick="selectSpecialty(this)">
                                 <div class="rounded-circle bg-white d-flex align-items-center justify-content-center mx-auto mb-3 shadow-sm" style="width:60px;height:60px;color:#8B5CF6;">
-                                    <i th:class="'bi ' + ${esp.icono} + ' fs-3'"></i>
+                                    <i class="bi bi-heart-pulse-fill fs-3"></i>
                                 </div>
                                 <h6 class="fw-bold mb-1" th:text="${esp.nombre}">Especialidad</h6>
                                 <p class="text-muted small mb-0">Ver médicos disponibles</p>
@@ -170,6 +170,31 @@
                         <p class="small mb-0">Recuerda llegar 15 minutos antes de tu hora programada portando tu DNI físico para el registro en recepción.</p>
                     </div>
 
+                    <!-- Método de Pago Selector (Premium Bootstrap Style) -->
+                    <div class="mt-4 border-top pt-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase letter-spacing-1 mb-3">Método de Pago</label>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="p-3 bg-light rounded-4 border d-flex align-items-center gap-3 cursor-pointer" onclick="document.getElementById('payClinica').checked = true;" style="transition: all 0.2s ease;">
+                                    <input class="form-check-input" type="radio" name="metodoPagoChoice" id="payClinica" value="clinica" checked style="cursor:pointer; width: 1.25rem; height: 1.25rem;">
+                                    <div>
+                                        <label class="form-check-label fw-bold small mb-0 d-block" for="payClinica" style="cursor:pointer;">Pagar en Recepción</label>
+                                        <span class="text-muted" style="font-size: 0.7rem;">Paga en ventanilla al llegar a tu cita.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-3 bg-light rounded-4 border d-flex align-items-center gap-3 cursor-pointer" onclick="document.getElementById('payOnline').checked = true;" style="transition: all 0.2s ease;">
+                                    <input class="form-check-input" type="radio" name="metodoPagoChoice" id="payOnline" value="online" style="cursor:pointer; width: 1.25rem; height: 1.25rem;">
+                                    <div>
+                                        <label class="form-check-label fw-bold small mb-0 d-block" for="payOnline" style="cursor:pointer;">Pagar ahora por Internet</label>
+                                        <span class="text-muted" style="font-size: 0.7rem;">Paga de forma segura con tarjeta o Yape/Plin.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-check mt-5">
                         <input class="form-check-input" type="checkbox" id="confirmCheck" style="cursor:pointer; width:20px; height:20px;">
                         <label class="form-check-label small ms-2 pt-1 cursor-pointer" for="confirmCheck">
@@ -198,6 +223,7 @@
         <input type="hidden" name="id_medico" id="hidden_id_medico">
         <input type="hidden" name="fecha" id="hidden_fecha">
         <input type="hidden" name="hora" id="hidden_hora">
+        <input type="hidden" name="metodoPago" id="hidden_metodoPago" value="clinica">
         <input type="hidden" name="id_cita" th:if="${citaReagendar != null}" th:value="${citaReagendar.idCita}">
     </form>
 </div>

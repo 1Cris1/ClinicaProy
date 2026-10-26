@@ -17,7 +17,7 @@
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <aside class="app-sidebar rc-sidebar shadow-lg" id="sidebar">
+    <aside class="app-sidebar rc-sidebar glass-panel" id="sidebar">
         <div class="app-sidebar-brand">
             <div class="brand-icon">C</div>
             <div>
@@ -45,6 +45,9 @@
                 <i class="bi bi-calendar-event-fill"></i> Agenda Hoy
                 <span class="badge rounded-pill bg-danger ms-auto animate-pulse" style="font-size: 0.6rem; padding: 0.35em 0.65em;" th:if="${citasHoyGlobalCount != null and citasHoyGlobalCount > 0}" th:text="${citasHoyGlobalCount}">5</span>
             </a>
+            <a th:href="@{/recepcionista/triaje}" th:class="${#strings.contains(view, 'triaje')} ? 'app-nav-link active' : 'app-nav-link'" data-page="triaje">
+                <i class="bi bi-heart-pulse-fill"></i> Registro de Triaje
+            </a>
             <a th:href="@{/recepcionista/pacientes}" th:class="${#strings.contains(view, 'pacientes')} ? 'app-nav-link active' : 'app-nav-link'" data-page="pacientes">
                 <i class="bi bi-people-fill"></i> Directorio Pacientes
             </a>
@@ -71,8 +74,8 @@
     <div class="app-main">
         <header class="app-topbar px-4">
             <div class="d-flex align-items-center gap-3">
-                <button class="sidebar-toggle shadow-sm" id="sidebarToggle" style="background: #fff; border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                    <i class="bi bi-list text-dark" style="font-size: 1.2rem;"></i>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
                 </button>
                 <div class="d-flex flex-column">
                     <h1 class="page-title mb-0 fw-800" style="font-size: 1.25rem; color: #1E293B; letter-spacing: -0.5px;" th:text="${pageTitle}">Panel</h1>

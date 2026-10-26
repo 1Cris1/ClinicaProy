@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head><title>Mis Pacientes - Médico</title></head>
 <body>
@@ -24,6 +25,7 @@
                         <th>Teléfono</th>
                         <th>Correo</th>
                         <th>Estado</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,6 +49,13 @@
                                   th:text="${pac.estado != null ? pac.estado : 'Activo'}"
                                   style="background:#D1FAE5;color:#059669;"></span>
                         </td>
+                        <td>
+                            <a th:href="@{/medico/pacientes/{id}/historial(id=${pac.id})}"
+                            class="btn btn-sm btn-primary">
+                            <i class="bi bi-file-medical me-1"></i>
+                            Ver historial
+                        </a>
+                    </td>
                     </tr>
                 </tbody>
             </table>

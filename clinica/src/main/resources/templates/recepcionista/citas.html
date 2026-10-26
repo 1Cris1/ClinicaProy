@@ -23,7 +23,7 @@
             </div>
             <div>
                 <h6 class="mb-0 fw-bold text-danger">Error al procesar la cita</h6>
-                <p class="mb-0 small opacity-75" th:text="${param.error[0] == 'horario_ocupado' ? 'El médico ya tiene una cita agendada en la fecha y hora seleccionadas.' : (param.error[0] == 'data_not_found' ? 'Médico o paciente no disponible.' : 'Ocurrió un error en el servidor. Inténtelo de nuevo.')}"></p>
+                <p class="mb-0 small opacity-75" th:text="${param.error[0] == 'horario_ocupado' ? 'No se puede agendar porque el médico ya tiene una cita reservada con otra persona.' : (param.error[0] == 'data_not_found' ? 'Médico o paciente no disponible.' : 'Ocurrió un error en el servidor. Inténtelo de nuevo.')}"></p>
             </div>
             <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>
@@ -131,7 +131,7 @@
                                 <span th:if="${c.estado == 'Cancelada'}" class="app-badge badge-danger-premium">Cancelada</span>
                             </td>
                             <td>
-                                <div class="d-flex gap-1">
+                                <div class="d-flex gap-1 align-items-center">
                                     <button class="rc-btn-action" style="background: #D1FAE5; color: #065F46;" 
                                             th:attr="data-dni=${c.paciente.dni}" onclick="acreditarSeguro(this)">
                                         <i class="bi bi-shield-fill-check me-1"></i> Acreditar
@@ -139,7 +139,10 @@
                                     <button th:if="${c.estado == 'Pendiente'}" class="rc-btn-action" th:attr="data-id=${c.idCita}" onclick="checkIn(this)">
                                         <i class="bi bi-check-circle"></i>
                                     </button>
-                                    <button class="rc-btn-action" th:attr="data-id=${c.idCita}, data-fecha=${c.fechaCita}, data-hora=${c.horaCita}, data-estado=${c.estado}" onclick="editarCita(this)">
+                                    <a th:if="${c.estado == 'Confirmada' and c.triaje == null}" th:href="@{/recepcionista/triaje(citaId=${c.idCita})}" class="rc-btn-action text-decoration-none d-inline-flex align-items-center justify-content-center" style="background: #FEF3C7; color: #D97706; padding: 4px 8px; font-size: 0.75rem;" title="Registrar Triaje">
+                                        <i class="bi bi-heart-pulse me-1"></i> Triaje
+                                    </a>
+                                    <button class="rc-btn-action" th:attr="data-id=${c.idCita}, data-fecha=${c.fechaCita}, data-hora=${c.horaCita}, data-estado=${c.estado}" onclick="editarCita(this)" title="Reagendar Cita">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                 </div>
@@ -213,7 +216,7 @@
         <!-- Modal Editar Cita -->
         <div class="modal fade" id="modalEditarCita" tabindex="-1">
             <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
-                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Editar Cita</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Reagendar Cita</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <form th:action="@{/recepcionista/citas/editar}" method="post">
                         <input type="hidden" name="idCita" id="editIdCita">
@@ -243,7 +246,7 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button class="btn btn-outline-secondary rounded-pill px-3 btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Guardar Cambios</button>
+                    <button type="submit" class="btn rounded-pill px-4 fw-bold btn-sm" style="background:#8B5CF6;color:#fff;">Reagendar</button>
                 </div>
                     </form>
             </div></div>

@@ -5,8 +5,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.6</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>4.1.0</version>
+		<relativePath/> 
 	</parent>
 	<groupId>com.proyectoclinica</groupId>
 	<artifactId>clinica</artifactId>
@@ -112,7 +112,7 @@
 		<dependency>
 			<groupId>com.github.librepdf</groupId>
 			<artifactId>openpdf</artifactId>
-			<version>1.3.30</version>
+			<version>3.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -153,6 +153,12 @@
 			<artifactId>google-api-services-calendar</artifactId>
 			<version>v3-rev20220715-2.0.0</version>
 		</dependency>
+    <!-- Mercado Pago SDK -->
+    <dependency>
+        <groupId>com.mercadopago</groupId>
+        <artifactId>sdk-java</artifactId>
+        <version>3.1.0</version>
+    </dependency>
 	</dependencies>
 
 	<build>

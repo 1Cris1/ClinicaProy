@@ -1,40 +1,81 @@
 
 /* =========================================
+   Barra lateral: colapsable en escritorio (persistente vía localStorage)
+   y tipo "drawer" en móvil. Compartido por todos los layouts.
+   ========================================= */
+function initSidebarToggle(ref, watch) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.getElementById('sidebarToggle');
+    if (!sidebar || !overlay || !toggle) return;
+
+    var STORAGE_KEY = 'cx-sidebar-collapsed';
+    var isDesktop = function() { return window.innerWidth >= 992; };
+    var sidebarOpen = ref(isDesktop() ? localStorage.getItem(STORAGE_KEY) !== '1' : false);
+
+    watch(sidebarOpen, function(val) {
+        if (isDesktop()) {
+            document.body.classList.toggle('sidebar-collapsed', !val);
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+            localStorage.setItem(STORAGE_KEY, val ? '0' : '1');
+        } else {
+            sidebar.classList.toggle('show', val);
+            overlay.classList.toggle('show', val);
+            document.body.classList.remove('sidebar-collapsed');
+        }
+    });
+
+    if (isDesktop()) {
+        document.body.classList.toggle('sidebar-collapsed', !sidebarOpen.value);
+    }
+
+    toggle.addEventListener('click', function() {
+        sidebarOpen.value = !sidebarOpen.value;
+    });
+    overlay.addEventListener('click', function() {
+        sidebarOpen.value = false;
+    });
+    window.addEventListener('resize', function() {
+        if (isDesktop()) {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        } else {
+            document.body.classList.remove('sidebar-collapsed');
+        }
+    });
+}
+
+/* =========================================
    FILE: layout-admin.html
    ========================================= */
 (function() {
         const { ref, watch } = Vue;
 
         if (!document.querySelector('.ad-sidebar')) return;
-        /* --- SIDEBAR TOGGLE --- */
-        const sidebarOpen = ref(false);
-
-        watch(sidebarOpen, function(val) {
-            document.getElementById('sidebar').classList.toggle('show', val);
-            document.getElementById('sidebarOverlay').classList.toggle('show', val);
-        });
-
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            sidebarOpen.value = !sidebarOpen.value;
-        });
-        document.getElementById('sidebarOverlay').addEventListener('click', function() {
-            sidebarOpen.value = false;
-        });
+        /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+        initSidebarToggle(ref, watch);
 
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
         var titles = {
-            dashboard: 'Dashboard', pacientes: 'Pacientes', medicos: 'Médicos',
+            dashboard: 'Dashboard', usuarios: 'Centro de Control', pacientes: 'Pacientes', medicos: 'Médicos',
             recepcionistas: 'Recepcionistas', citas: 'Citas', especialidades: 'Especialidades',
-            servicios: 'Servicios', sedes: 'Sedes', promociones: 'Promociones',
-            reportes: 'Reportes', configuracion: 'Configuración'
+            servicios: 'Servicios', productos: 'Farmacia', susalud: 'Catálogo SUSALUD', sedes: 'Sedes',
+            promociones: 'Promociones', reportes: 'Reportes', 'reportes-desempeno': 'Desempeño Clínico',
+            auditoria: 'Auditoría', consultorios: 'Consultorios', configuracion: 'Configuración'
         };
         var isRoot = (path === '/admin' || path === '/admin/');
-        var activePage = isRoot
-            ? 'dashboard'
-            : (Object.keys(titles).find(function(p) {
-                return p !== 'dashboard' && path.includes('/admin/' + p);
-              }) || 'dashboard');
+        var activePage = 'dashboard';
+        if (!isRoot) {
+            if (path.includes('/admin/reportes/desempeno-clinico')) {
+                activePage = 'reportes-desempeno';
+            } else {
+                activePage = Object.keys(titles).find(function(p) {
+                    return p !== 'dashboard' && path.includes('/admin/' + p);
+                }) || 'dashboard';
+            }
+        }
 
         var titleEl = document.getElementById('pageTitle');
         if (titleEl) titleEl.textContent = titles[activePage] || 'Dashboard';
@@ -79,20 +120,8 @@
         const { ref, watch } = Vue;
 
         if (!document.querySelector('.doc-sidebar')) return;
-        /* --- SIDEBAR TOGGLE --- */
-        const sidebarOpen = ref(false);
-
-        watch(sidebarOpen, function(val) {
-            document.getElementById('sidebar').classList.toggle('show', val);
-            document.getElementById('sidebarOverlay').classList.toggle('show', val);
-        });
-
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            sidebarOpen.value = !sidebarOpen.value;
-        });
-        document.getElementById('sidebarOverlay').addEventListener('click', function() {
-            sidebarOpen.value = false;
-        });
+        /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+        initSidebarToggle(ref, watch);
 
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
@@ -147,28 +176,9 @@
 (function() {
         const { ref, watch } = Vue;
 
-        if (!document.querySelector('.cx-sidebar')) return;
-        /* --- SIDEBAR TOGGLE --- */
-        const sidebarOpen = ref(false);
-
-        watch(sidebarOpen, function(val) {
-            document.getElementById('sidebar').classList.toggle('show', val);
-            document.getElementById('sidebarOverlay').classList.toggle('show', val);
-        });
-
-        const toggle = document.getElementById('sidebarToggle');
-        if (toggle) {
-            toggle.addEventListener('click', function() {
-                sidebarOpen.value = !sidebarOpen.value;
-            });
-        }
-        
-        const overlay = document.getElementById('sidebarOverlay');
-        if (overlay) {
-            overlay.addEventListener('click', function() {
-                sidebarOpen.value = false;
-            });
-        }
+        if (!document.querySelector('.pa-sidebar')) return;
+        /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+        initSidebarToggle(ref, watch);
 
         /* --- ACTIVE PAGE & TITLE --- */
         var path = window.location.pathname;
@@ -446,151 +456,156 @@
 
     let agendarStep = 1;
     let goingBack = false;
-    const agendarData = { specialty:'', doctor:'', id_medico:'', sede:'', date:'', time:'' };
+    const agendarData = { 
+        specialty: '', 
+        doctor: '', 
+        id_medico: '', 
+        sede: '', 
+        date: '', 
+        time: '',
+        horariolv: '',
+        horariosab: '',
+        duracion: 30
+    };
 
     /* ===== Selecciones ===== */
     window.selectSpecialty = function(el) {
         document.querySelectorAll('.specialty-option').forEach(function(o) { o.classList.remove('selected'); });
         el.classList.add('selected');
         agendarData.specialty = el.dataset.specialty;
+
+        // Filtro rápido de médicos
+        var visibleCount = 0;
+        document.querySelectorAll('.doctor-item').forEach(function(item) {
+            if (item.dataset.docSpecialty === agendarData.specialty) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+            var opt = item.querySelector('.doctor-option');
+            if (opt) opt.classList.remove('selected');
+        });
+        agendarData.doctor = ''; 
+        var noDocMsg = document.getElementById('noDoctorsMsg');
+        if (noDocMsg) noDocMsg.style.display = visibleCount === 0 ? '' : 'none';
+
+        setTimeout(function() {
+            if (agendarStep === 1) agendarNextAction();
+        }, 350);
     };
 
     window.selectDoctor = function(el) {
-    document.querySelectorAll('.doctor-option').forEach(function(o) {
-        o.classList.remove('selected');
-    });
+        document.querySelectorAll('.doctor-option').forEach(function(o) { o.classList.remove('selected'); });
+        el.classList.add('selected');
+        agendarData.doctor = el.dataset.doctor;
+        agendarData.sede = el.dataset.sede;
+        agendarData.id_medico = el.dataset.idMedico;
+        agendarData.horariolv = el.dataset.horariolv;
+        agendarData.horariosab = el.dataset.horariosab;
+        agendarData.duracion = parseInt(el.dataset.duracion) || 30;
 
-    el.classList.add('selected');
+        document.getElementById('citaSede').value = agendarData.sede;
+        document.getElementById('hidden_id_medico').value = agendarData.id_medico;
 
-    agendarData.doctor = el.dataset.doctor;
-    agendarData.sede = el.dataset.sede;
-    agendarData.id_medico = el.dataset.idMedico;
+        // Si ya hay fecha, generar horarios
+        var dateVal = document.getElementById('citaFecha')?.value;
+        if (dateVal) {
+            generateTimeSlots(dateVal);
+        }
 
-    // NUEVO
-    agendarData.horarioLv = el.dataset.horariolv;
-    agendarData.horarioSab = el.dataset.horariosab;
-    agendarData.duracion = parseInt(el.dataset.duracion) || 30;
-
-    document.getElementById("citaSede").value = agendarData.sede;
-
-    if (document.getElementById("citaFecha").value) {
-        generateTimeSlots(document.getElementById("citaFecha").value);
-    }
-};
+        setTimeout(function() {
+            if (agendarStep === 2) agendarNextAction();
+        }, 350);
+    };
 
     window.selectTime = function(el) {
         document.querySelectorAll('.time-slot').forEach(function(b) { b.classList.remove('selected'); });
         el.classList.add('selected');
         agendarData.time = el.textContent.trim();
+        document.getElementById('hidden_hora').value = agendarData.time;
     };
 
-    const fecha = document.getElementById("citaFecha");
-
-if (fecha) {
-
-    fecha.addEventListener("change", function () {
-
-        generateTimeSlots(this.value);
-
-    });
-
-}
-
-
     function generateTimeSlots(dateString) {
-
-    const grid = document.getElementById("horariosGrid");
-    if (!grid) return;
-
-    grid.innerHTML = "";
-
-    if (!dateString || !agendarData.id_medico) {
-        grid.innerHTML =
-            '<p class="text-muted small">Selecciona un médico y una fecha para ver los horarios disponibles.</p>';
-        return;
+        const grid = document.getElementById('horariosGrid');
+        if (!grid) return;
+        
+        grid.innerHTML = '';
+        
+        if (!dateString || !agendarData.id_medico) {
+            grid.innerHTML = '<p class="text-muted small">Selecciona un médico y una fecha para ver los horarios disponibles.</p>';
+            return;
+        }
+        
+        const parts = dateString.split('-');
+        if (parts.length !== 3) return;
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        const day = d.getDay(); 
+        
+        if (day === 0) {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-calendar-x"></i> No hay atención los domingos.</p>';
+            return;
+        }
+        
+        let scheduleStr = (day === 6) ? agendarData.horariosab : agendarData.horariolv;
+        
+        if (!scheduleStr || scheduleStr === 'No disponible' || scheduleStr === 'null') {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-calendar-x"></i> Doctor no disponible en este día.</p>';
+            return;
+        }
+        
+        const times = scheduleStr.split('-');
+        if (times.length !== 2) {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-exclamation-triangle"></i> Horario mal configurado.</p>';
+            return;
+        }
+        
+        const startStr = times[0].trim();
+        const endStr = times[1].trim();
+        
+        const startParts = startStr.split(':');
+        const endParts = endStr.split(':');
+        
+        if (startParts.length < 2 || endParts.length < 2) return;
+        
+        let startMins = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+        let endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+        let dur = agendarData.duracion > 0 ? agendarData.duracion : 30;
+        
+        let currentMins = startMins;
+        let html = '';
+        
+        while (currentMins + dur <= endMins) {
+            let h = Math.floor(currentMins / 60);
+            let m = currentMins % 60;
+            let ampm = h >= 12 ? 'PM' : 'AM';
+            let h12 = h % 12;
+            if (h12 === 0) h12 = 12;
+            let timeFmt = (h12 < 10 ? '0' : '') + h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+            
+            html += '<button class="app-btn py-2 px-3 bg-white text-dark border shadow-sm-hover time-slot" style="font-size:.85rem;" onclick="selectTime(this)">' + timeFmt + '</button>';
+            
+            currentMins += dur;
+        }
+        
+        if (html === '') {
+            grid.innerHTML = '<p class="text-danger small fw-bold mb-0 mt-2"><i class="bi bi-calendar-x"></i> No hay horarios disponibles en este rango.</p>';
+        } else {
+            grid.innerHTML = html;
+        }
+        
+        agendarData.time = '';
     }
 
-    const parts = dateString.split("-");
-    if (parts.length !== 3) return;
-
-    const d = new Date(parts[0], parts[1]-1, parts[2]);
-    const day = d.getDay();
-
-    if (day === 0) {
-        grid.innerHTML =
-            '<p class="text-danger small fw-bold">No hay atención los domingos.</p>';
-        return;
-    }
-
-    let horario =
-        day === 6
-            ? agendarData.horarioSab
-            : agendarData.horarioLv;
-
-    if (!horario) {
-        grid.innerHTML =
-            '<p class="text-danger small">Doctor no disponible.</p>';
-        return;
-    }
-
-    let horas = horario.split("-");
-
-    if (horas.length !== 2) {
-        grid.innerHTML =
-            '<p class="text-danger small">Horario mal configurado.</p>';
-        return;
-    }
-
-    let inicio = horas[0].trim().split(":");
-    let fin = horas[1].trim().split(":");
-
-    let inicioMin =
-        parseInt(inicio[0]) * 60 +
-        parseInt(inicio[1]);
-
-    let finMin =
-        parseInt(fin[0]) * 60 +
-        parseInt(fin[1]);
-
-    let duracion =
-        agendarData.duracion || 30;
-
-    let html = "";
-
-    while (inicioMin + duracion <= finMin) {
-
-        let h = Math.floor(inicioMin / 60);
-        let m = inicioMin % 60;
-
-        let ampm = h >= 12 ? "PM" : "AM";
-        let h12 = h % 12;
-        if (h12 === 0) h12 = 12;
-
-        let texto =
-            (h12 < 10 ? "0" : "") +
-            h12 +
-            ":" +
-            (m < 10 ? "0" : "") +
-            m +
-            " " +
-            ampm;
-
-        html +=
-            '<button type="button" class="time-slot app-btn py-2 px-3 bg-white border" onclick="selectTime(this)">' +
-            texto +
-            "</button>";
-
-        inicioMin += duracion;
-    }
-
-    grid.innerHTML = html;
-
-    agendarData.time = "";
-
-    if (document.getElementById("hidden_hora")) {
-        document.getElementById("hidden_hora").value = "";
-    }
-}
+    // Escucha de cambios de fecha
+    document.addEventListener('DOMContentLoaded', function() {
+        var citaFechaInput = document.getElementById('citaFecha');
+        if (citaFechaInput) {
+            citaFechaInput.addEventListener('change', function() {
+                generateTimeSlots(this.value);
+            });
+        }
+    });
 
     /* ===== HU04: Slide Animation entre pasos ===== */
     function slideToStep(fromStep, toStep, backwards) {
@@ -973,6 +988,40 @@ window.selectServiceTab = function(btn, category) {
             });
         };
 
+
+/* =========================================
+   FILE: layout-recepcionista.html
+   ========================================= */
+(function() {
+    const { ref, watch } = Vue || { ref: (v) => ({value: v}), watch: () => {} };
+
+    if (!document.querySelector('.rc-sidebar')) return;
+    /* --- SIDEBAR TOGGLE (colapsable en escritorio, drawer en móvil) --- */
+    initSidebarToggle(ref, watch);
+
+    /* --- ACTIVE PAGE & TITLE --- */
+    var path = window.location.pathname;
+    var titles = {
+        inicio: 'Panel de Recepción',
+        citas: 'Agenda de Consultas',
+        triaje: 'Registro de Triaje',
+        pacientes: 'Directorio de Pacientes',
+        medicos: 'Cuerpo Médico',
+        pagos: 'Facturación y Pagos',
+        perfil: 'Mi Perfil Profesional'
+    };
+    
+    var activePage = Object.keys(titles).find(function(p) {
+        return path.includes('/recepcionista/' + p);
+    }) || 'inicio';
+
+    document.querySelectorAll('[data-page]').forEach(function(link) {
+        if (link.dataset.page === activePage) link.classList.add('active');
+        else link.classList.remove('active');
+    });
+
+})();
+
 /* =========================================
    FUNCIONES POWER BI - Dashboard
    ========================================= */
@@ -1032,84 +1081,5 @@ function toggleFullscreen(btn) {
     }
 }
 
-/* =========================================
-   FILE: layout-recepcionista.html
-   ========================================= */
-(function() {
-    const { ref, watch } = Vue || { ref: (v) => ({value: v}), watch: () => {} };
 
-    if (!document.querySelector('.rc-sidebar')) return;
-    
-    /* --- SIDEBAR TOGGLE --- */
-    const sidebarOpen = ref(false);
-
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const toggle = document.getElementById('sidebarToggle');
-
-    if (toggle && sidebar && overlay) {
-        watch(sidebarOpen, function(val) {
-            if (window.innerWidth < 992) {
-                // Mobile behavior: Drawer
-                sidebar.classList.toggle('show', val);
-                overlay.classList.toggle('show', val);
-                document.body.classList.remove('sidebar-collapsed');
-            } else {
-                // Desktop behavior: Collapse
-                document.body.classList.toggle('sidebar-collapsed', !val);
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            }
-        });
-
-        // Sync initial state on desktop
-        if (window.innerWidth >= 992) {
-            sidebarOpen.value = !document.body.classList.contains('sidebar-collapsed');
-        }
-
-        toggle.addEventListener('click', function() {
-            sidebarOpen.value = !sidebarOpen.value;
-        });
-
-        overlay.addEventListener('click', function() {
-            sidebarOpen.value = false;
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            if (window.innerWidth >= 992) {
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-            } else {
-                document.body.classList.remove('sidebar-collapsed');
-            }
-        });
-    }
-
-    /* --- ACTIVE PAGE & TITLE --- */
-    var path = window.location.pathname;
-    var titles = {
-        inicio: 'Panel de Recepción',
-        citas: 'Agenda de Consultas',
-        pacientes: 'Directorio de Pacientes',
-        medicos: 'Cuerpo Médico',
-        pagos: 'Facturación y Pagos',
-        perfil: 'Mi Perfil Profesional'
-    };
-    
-    var activePage = Object.keys(titles).find(function(p) {
-        return path.includes('/recepcionista/' + p);
-    }) || 'inicio';
-
-    document.querySelectorAll('[data-page]').forEach(function(link) {
-        if (link.dataset.page === activePage) link.classList.add('active');
-        else link.classList.remove('active');
-
-
-        
-    });
-
-                
-
-})();
 

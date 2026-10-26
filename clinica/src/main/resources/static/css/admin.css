@@ -27,7 +27,7 @@
     width: var(--admin-sidebar-w); height: 100vh;
     background: var(--ad-gradient); color: var(--ad-text);
     display: flex; flex-direction: column; overflow-y: auto;
-    z-index: 1040; transition: transform var(--ad-transition);
+    z-index: 1040;
     box-shadow: 4px 0 24px rgba(0,0,0,.3);
 }
 
@@ -89,4 +89,250 @@
 .bar-chart .bar span {
     position: absolute; bottom: -20px; left: 50%;
     transform: translateX(-50%); font-size: .6rem; color: var(--ad-muted); font-weight: 600;
+}
+
+/* =========================================
+   EXPOSICIÓN CRISTIAN (US-27) - ESTILOS INFRAESTRUCTURA Y PLANO 3D ISOMÉTRICO
+   ========================================= */
+.consultorio-card {
+    border-radius: 18px;
+    border: 1px solid #edf2f7;
+    background: white;
+    transition: all 0.2s ease;
+}
+.consultorio-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+.conflict-border {
+    border-left: 5px solid #ef4444 !important;
+    border-color: #fecaca !important;
+    background-color: #fff5f5 !important;
+}
+.normal-border {
+    border-left: 5px solid #3b82f6 !important;
+}
+.empty-border {
+    border-left: 5px solid #94a3b8 !important;
+}
+
+/* Plano Arquitectónico 3D Isométrico Lateral */
+.floor-plan-wrapper {
+    perspective: 1000px;
+    padding: 20px 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #f1f5f9;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+.floor-plan {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 8px;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #cbd5e1;
+    transform: rotateX(55deg) rotateZ(-25deg);
+    transform-style: preserve-3d;
+    box-shadow: -6px 6px 15px rgba(0, 0, 0, 0.06), 
+                -12px 12px 25px rgba(0, 0, 0, 0.04);
+    transition: all 0.5s ease;
+    width: 100%;
+    max-width: 380px;
+}
+.floor-room {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-bottom: 5px solid #cbd5e1; /* Extrusión 3D */
+    border-radius: 8px;
+    padding: 8px 2px;
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    user-select: none;
+    color: #475569;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transform: translateZ(0px);
+    transform-style: preserve-3d;
+}
+.floor-room i {
+    font-size: 1rem;
+    transition: transform 0.3s;
+}
+.floor-room:hover:not(.non-selectable) {
+    border-color: #3b82f6;
+    border-bottom: 10px solid #2563eb;
+    background: #eff6ff;
+    color: #1e3a8a;
+    transform: translateZ(10px);
+    box-shadow: -4px 4px 8px rgba(59, 130, 246, 0.2);
+}
+.floor-room.selected {
+    border-color: #2563eb !important;
+    border-bottom: 12px solid #1d4ed8 !important;
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    transform: translateZ(12px);
+    box-shadow: -6px 6px 12px rgba(37, 99, 235, 0.3);
+}
+.floor-room.non-selectable {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-color: #cbd5e1;
+    border-bottom: 3px solid #94a3b8;
+}
+.floor-corridor {
+    grid-column: span 4;
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 4px;
+    text-align: center;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    user-select: none;
+}
+.pulse-target:not(.non-selectable) {
+    animation: mapPulse 1.5s infinite;
+    border-color: #3b82f6 !important;
+}
+@keyframes mapPulse {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+/* =========================================
+   EXPOSICIÓN CRISTIAN (US-27) - FIN ESTILOS INFRAESTRUCTURA
+   ========================================= */
+
+/* ==================================================
+   SUBMENÚ DE REPORTES
+   ================================================== */
+
+.app-nav-dropdown {
+    width: 100%;
+}
+
+.app-sidebar .app-nav-dropdown-toggle {
+    width: calc(100% - 24px);
+    min-height: 48px;
+    margin: 3px 12px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.app-nav-dropdown-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.app-nav-dropdown-arrow {
+    margin-left: auto;
+    transition: transform 0.25s ease;
+}
+
+.app-nav-dropdown.open > .app-nav-dropdown-toggle {
+    background: rgba(59, 130, 246, 0.28);
+    color: #ffffff;
+}
+
+.app-nav-dropdown.open .app-nav-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.app-nav-submenu {
+    display: none;
+    padding: 5px 12px 6px 34px;
+}
+
+.app-nav-dropdown.open .app-nav-submenu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ad-sidebar .app-nav-submenu > a.app-nav-sublink,
+.ad-sidebar .app-nav-submenu > a.app-nav-sublink:link,
+.ad-sidebar .app-nav-submenu > a.app-nav-sublink:visited {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 9px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    color: rgba(255, 255, 255, 0.68) !important;
+    background: transparent !important;
+    text-decoration: none !important;
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    transform-origin: left center;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.ad-sidebar .app-nav-submenu > a.app-nav-sublink:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #ffffff !important;
+    transform: scale(1.03) translateX(3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.ad-sidebar .app-nav-submenu > a.app-nav-sublink.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+/* ==================================================
+   POWER BI: OCULTAR VISUALMENTE EL PIE
+   ================================================== */
+
+.powerbi-crop {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 245px);
+    min-height: 720px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.powerbi-crop iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 100% !important;
+    height: calc(100% + 60px) !important;
+    border: 0;
+    margin: 0;
+    padding: 0;
 }

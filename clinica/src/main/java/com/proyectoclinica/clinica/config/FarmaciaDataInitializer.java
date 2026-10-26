@@ -3,16 +3,13 @@ package com.proyectoclinica.clinica.config;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import com.proyectoclinica.clinica.modules.farmacia.repository.ProductoRepository;
-import com.proyectoclinica.clinica.modules.seguridad.models.Usuario;
-import com.proyectoclinica.clinica.modules.seguridad.repository.UsuarioRepository;
 import com.proyectoclinica.clinica.modules.farmacia.models.Producto;
 import java.math.BigDecimal;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 @Configuration
 public class FarmaciaDataInitializer {
     private static final Logger log = LoggerFactory.getLogger(FarmaciaDataInitializer.class);

@@ -27,7 +27,7 @@ public class FeedbackPaciente {
     @Column(name = "puntuacion")
     private Integer puntuacion;
 
-    @Column(name = "comentario", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String comentario;
 
     @Column(name = "fecha_envio")

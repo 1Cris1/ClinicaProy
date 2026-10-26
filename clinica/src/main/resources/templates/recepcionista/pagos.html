@@ -59,57 +59,158 @@
             </div>
         </div>
 
-        <div class="app-card shadow-sm border-0 overflow-hidden">
-            <div class="p-3 border-bottom bg-light">
-                <div class="row g-2">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" placeholder="Buscar por paciente o N° comprobante..." id="buscarPago" oninput="searchTable()">
+        <!-- CSS adicional para Premium Tabs -->
+        <style>
+            .nav-tabs .nav-link {
+                border: none;
+                border-bottom: 3px solid transparent;
+                color: #64748B;
+                font-size: 0.9rem;
+                padding: 0.75rem 1.5rem;
+                transition: all 0.2s ease;
+            }
+            .nav-tabs .nav-link.active {
+                border: none;
+                border-bottom: 3px solid #8B5CF6 !important;
+                color: #8B5CF6 !important;
+                background-color: transparent !important;
+            }
+            .nav-tabs .nav-link:hover {
+                color: #475569;
+                border-bottom: 3px solid #E2E8F0;
+            }
+        </style>
+
+        <!-- Tabs de navegación -->
+        <ul class="nav nav-tabs mb-4 border-bottom" id="pagosTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" id="consultas-tab" data-bs-toggle="tab" data-bs-target="#consultas" type="button" role="tab" aria-controls="consultas" aria-selected="true">
+                    <i class="bi bi-journal-medical me-2"></i>Pagos de Consultas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold" id="farmacia-tab" data-bs-toggle="tab" data-bs-target="#farmacia" type="button" role="tab" aria-controls="farmacia" aria-selected="false">
+                    <i class="bi bi-cart3 me-2"></i>Compras de Farmacia
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pagosTabsContent">
+            <!-- Tab 1: Pagos de Consultas -->
+            <div class="tab-pane fade show active" id="consultas" role="tabpanel" aria-labelledby="consultas-tab">
+                <div class="app-card shadow-sm border-0 overflow-hidden">
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" placeholder="Buscar por paciente o N° comprobante..." id="buscarPago" oninput="searchTable()">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="filtroEstado" onchange="searchTable()">
+                                    <option value="">Todos los estados</option>
+                                    <option value="Completado">Completado</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Anulado">Anulado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" id="filtroFecha" onchange="searchTable()">
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <select class="form-select" id="filtroEstado" onchange="searchTable()">
-                            <option value="">Todos los estados</option>
-                            <option value="Completado">Completado</option>
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="Anulado">Anulado</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="date" class="form-control" id="filtroFecha" onchange="searchTable()">
+                    <div class="p-0">
+                        <table class="app-table align-middle" id="tablaPagos">
+                            <thead><tr><th>N° Comprobante</th><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Método</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
+                            <tbody>
+                                <tr th:if="${pagos.isEmpty()}">
+                                    <td colspan="8" class="text-center text-muted py-4">No hay pagos registrados.</td>
+                                </tr>
+                                <tr th:each="p : ${pagos}">
+                                    <td class="fw-bold" th:text="${p.numeroComprobante}">--</td>
+                                    <td th:text="${#temporals.format(p.fechaPago, 'dd/MM/yyyy HH:mm')}">--</td>
+                                    <td th:text="${p.paciente != null} ? ${p.paciente.nombres + ' ' + p.paciente.apellidos} : '-'">--</td>
+                                    <td th:text="${p.servicio != null} ? ${p.servicio.nombre} : '-'">--</td>
+                                    <td th:text="${p.metodoPago}">--</td>
+                                    <td class="fw-bold text-success" th:text="'S/ ' + ${#numbers.formatDecimal(p.monto, 1, 2)}">--</td>
+                                    <td>
+                                        <span th:if="${p.estado == 'Completado'}" class="app-badge badge-success-premium">Completado</span>
+                                        <span th:if="${p.estado == 'Pendiente'}" class="app-badge badge-warning-premium">Pendiente</span>
+                                        <span th:if="${p.estado == 'Anulado'}" class="app-badge badge-danger-premium">Anulado</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a class="rc-btn-action" th:href="@{/recepcionista/pagos/comprobante/{id}(id=${p.id})}" target="_blank">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+                                            <button th:if="${p.estado == 'Completado'}" class="rc-btn-action text-danger" th:attr="data-id=${p.id}" onclick="anularPago(this)">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-            <div class="p-0">
-                <table class="app-table align-middle" id="tablaPagos">
-                    <thead><tr><th>N° Comprobante</th><th>Fecha</th><th>Paciente</th><th>Servicio</th><th>Método</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
-                    <tbody>
-                        <tr th:if="${pagos.isEmpty()}">
-                            <td colspan="8" class="text-center text-muted py-4">No hay pagos registrados.</td>
-                        </tr>
-                        <tr th:each="p : ${pagos}">
-                            <td class="fw-bold" th:text="${p.numeroComprobante}">--</td>
-                            <td th:text="${#temporals.format(p.fechaPago, 'dd/MM/yyyy HH:mm')}">--</td>
-                            <td th:text="${p.paciente != null} ? ${p.paciente.nombres + ' ' + p.paciente.apellidos} : '-'">--</td>
-                            <td th:text="${p.servicio != null} ? ${p.servicio.nombre} : '-'">--</td>
-                            <td th:text="${p.metodoPago}">--</td>
-                            <td class="fw-bold text-success" th:text="'S/ ' + ${#numbers.formatDecimal(p.monto, 1, 2)}">--</td>
-                                <td>
-                                    <span th:if="${p.estado == 'Completado'}" class="app-badge badge-success-premium">Completado</span>
-                                    <span th:if="${p.estado == 'Pendiente'}" class="app-badge badge-warning-premium">Pendiente</span>
-                                    <span th:if="${p.estado == 'Anulado'}" class="app-badge badge-danger-premium">Anulado</span>
-                                </td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a class="rc-btn-action" th:href="@{/recepcionista/pagos/comprobante/{id}(id=${p.id})}" target="_blank">
-                                        <i class="bi bi-printer"></i>
-                                    </a>
-                                    <button th:if="${p.estado == 'Completado'}" class="rc-btn-action text-danger" th:attr="data-id=${p.id}" onclick="anularPago(this)">
-                                        <i class="bi bi-x-circle"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+
+            <!-- Tab 2: Compras de Farmacia -->
+            <div class="tab-pane fade" id="farmacia" role="tabpanel" aria-labelledby="farmacia-tab">
+                <div class="app-card shadow-sm border-0 overflow-hidden">
+                    <div class="p-3 border-bottom bg-light">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" placeholder="Buscar por paciente o medicamento..." id="buscarPedido" oninput="searchPedidosTable()">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="filtroEstadoPedido" onchange="searchPedidosTable()">
+                                    <option value="">Todos los estados</option>
+                                    <option value="Pagado">Pagado</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Entregado">Entregado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-0">
+                        <table class="app-table align-middle" id="tablaPedidos">
+                            <thead>
+                                <tr>
+                                    <th>ID Pedido</th>
+                                    <th>Fecha y Hora</th>
+                                    <th>Paciente</th>
+                                    <th>Productos / Medicamentos</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Notas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${pedidos == null or pedidos.isEmpty()}">
+                                    <td colspan="7" class="text-center text-muted py-4">No hay pedidos de farmacia registrados.</td>
+                                </tr>
+                                <tr th:each="ped : ${pedidos}">
+                                    <td class="fw-bold text-primary" th:text="'#PED-' + ${ped.id}">#PED-1</td>
+                                    <td th:text="${#temporals.format(ped.fechaPedido, 'dd/MM/yyyy HH:mm')}">--:--</td>
+                                    <td th:text="${ped.paciente != null} ? ${ped.paciente.nombres + ' ' + ped.paciente.apellidos} : '-'">Paciente</td>
+                                    <td>
+                                        <div th:each="det : ${ped.detalles}" class="small mb-1">
+                                            <span class="fw-bold text-dark" th:text="${det.producto.nombre}">Medicamento</span>
+                                            <span class="text-muted" th:text="' x' + ${det.cantidad}">x1</span>
+                                            <span class="badge bg-light text-dark border ms-1" style="font-size: 0.65rem;" th:text="${det.precioUnitario != null} ? 'S/ ' + ${#numbers.formatDecimal(det.precioUnitario, 1, 2)} : ''">S/ 0.00</span>
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold text-success" th:text="'S/ ' + ${#numbers.formatDecimal(ped.total, 1, 2)}">S/ 0.00</td>
+                                    <td>
+                                        <span th:if="${ped.estado == 'Pagado' or ped.estado == 'Entregado'}" class="app-badge badge-success-premium" th:text="${ped.estado}">Pagado</span>
+                                        <span th:if="${ped.estado == 'Pendiente'}" class="app-badge badge-warning-premium">Pendiente</span>
+                                        <span th:if="${ped.estado != 'Pagado' and ped.estado != 'Entregado' and ped.estado != 'Pendiente'}" class="app-badge bg-secondary text-white" th:text="${ped.estado}">Otro</span>
+                                    </td>
+                                    <td class="small text-muted fst-italic" th:text="${ped.notas != null and !ped.notas.isEmpty()} ? ${ped.notas} : 'Sin notas'">Notas</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -118,7 +219,6 @@
             <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--rc-radius);border:none;">
                 <div class="modal-header border-0 pb-0"><h5 class="modal-title fw-bold">Registrar Pago</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <!-- EXPOSICIÓN JHOAN: Este formulario agrupa el monto, método y servicio para mandarlo seguro por POST al Backend y registrar la ganancia. -->
                     <form th:action="@{/recepcionista/pagos/nuevo}" method="post">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -172,8 +272,36 @@
             </div></div>
         </div>
 
-        
     </div>
+
+    <!-- Scripts específicos para el comportamiento de búsquedas -->
+    <th:block th:fragment="scripts">
+        <script>
+            function searchPedidosTable() {
+                const query = document.getElementById('buscarPedido').value.toLowerCase();
+                const estado = document.getElementById('filtroEstadoPedido').value;
+                const rows = document.querySelectorAll('#tablaPedidos tbody tr');
+
+                rows.forEach(row => {
+                    if (row.cells.length < 2) return;
+
+                    const idText = row.cells[0].textContent.toLowerCase();
+                    const pacienteText = row.cells[2].textContent.toLowerCase();
+                    const productosText = row.cells[3].textContent.toLowerCase();
+                    const estadoText = row.cells[5].textContent.trim();
+
+                    const matchesQuery = idText.includes(query) || pacienteText.includes(query) || productosText.includes(query);
+                    const matchesEstado = estado === "" || estadoText === estado;
+
+                    if (matchesQuery && matchesEstado) {
+                        row.style.display = "";
+                    } else {
+                        row.style.display = "none";
+                    }
+                });
+            }
+        </script>
+    </th:block>
 </body>
 </html>
 

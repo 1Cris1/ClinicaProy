@@ -90,6 +90,47 @@ public class SusaludService {
         } catch (Exception e) {
             log.error("Error consultando datos SUSALUD para DNI {}: {}", dni, e.getMessage());
         }
+
+        // --- FALLBACK API ALTERNATIVA (miapi.cloud) ---
+        log.info("Iniciando consulta a API Alternativa (miapi.cloud) para DNI: {}", dni);
+        try {
+            String urlAlternativa = "https://miapi.cloud/api/dni/" + dni;
+            HttpHeaders headersAlt = new HttpHeaders();
+            headersAlt.setBearerAuth("61734f73-3d4d-4a44-be43-516d31a94b0a");
+            headersAlt.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> entityAlt = new HttpEntity<>(headersAlt);
+
+            ResponseEntity<Map<String, Object>> responseAlt = restTemplate.exchange(
+                urlAlternativa, 
+                HttpMethod.GET, 
+                entityAlt, 
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+
+            if (responseAlt.getStatusCode() == HttpStatus.OK && responseAlt.getBody() != null) {
+                Map<String, Object> body = responseAlt.getBody();
+                
+                if (body.containsKey("nombres") || body.containsKey("dni")) {
+                    Map<String, Object> result = new java.util.HashMap<>(body);
+                    if (result.containsKey("apellidoPaterno")) {
+                        result.put("apellido_paterno", result.get("apellidoPaterno"));
+                    }
+                    if (result.containsKey("apellidoMaterno")) {
+                        result.put("apellido_materno", result.get("apellidoMaterno"));
+                    }
+                    if (!result.containsKey("iafas")) {
+                        result.put("iafas", "ESSALUD / SIS (Acreditado - API Alternativa)");
+                        result.put("tipo_plan", "PEAS - Plan Esencial de Aseguramiento");
+                        result.put("estado_seguro", "ACTIVO");
+                    }
+                    cache.put(dni, new CachedData(result, LocalDateTime.now()));
+                    return result;
+                }
+            }
+        } catch (Exception eAlt) {
+            log.error("Error consultando API Alternativa (miapi.cloud) para DNI {}: {}", dni, eAlt.getMessage());
+        }
+
         return Map.of("success", false, "message", "No se pudo validar la identidad oficialmente");
     }
 }

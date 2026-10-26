@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Registro de Triaje - Recepción - ClinicX</title>
+</head>
+<body>
+    <div th:fragment="cuerpo">
+        
+        <!-- Alertas de Feedback -->
+        <div th:if="${param.exito != null}" class="alert alert-success border-0 shadow-sm d-flex align-items-center gap-3 py-3 px-4 mb-4 rounded-4 animate__animated animate__fadeInDown">
+            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-check-lg fs-5"></i>
+            </div>
+            <div>
+                <h6 class="mb-0 fw-bold text-success">Triaje Registrado Exitosamente</h6>
+                <p class="mb-0 small opacity-75">Los signos vitales del paciente se guardaron y están listos para la consulta.</p>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${param.error != null}" class="alert alert-danger border-0 shadow-sm d-flex align-items-center gap-3 py-3 px-4 mb-4 rounded-4 animate__animated animate__shakeX">
+            <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-exclamation-triangle fs-5"></i>
+            </div>
+            <div>
+                <h6 class="mb-0 fw-bold text-danger">Error al registrar el triaje</h6>
+                <p class="mb-0 small opacity-75">No se pudo encontrar la cita seleccionada o los datos son inválidos.</p>
+            </div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h4 class="fw-800 mb-0" style="color: var(--sidebar-bg); letter-spacing: -0.5px;">Registro de Triaje Inicial</h4>
+                <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i> Capture y registre los signos vitales y datos antropométricos del paciente.</p>
+            </div>
+            <a href="/recepcionista/inicio" class="btn btn-outline-secondary rounded-pill px-3 btn-sm d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Volver al Panel
+            </a>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="app-card shadow-sm border-0 p-4 rounded-4 bg-white">
+                    <form th:action="@{/recepcionista/triaje/guardar}" method="post">
+                        
+                        <!-- Selección de la Cita -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 1px;">Seleccionar Cita / Paciente</label>
+                            <select name="idCita" id="citaSelector" class="form-select py-2" required>
+                                <option value="">Seleccione un paciente en sala de espera...</option>
+                                <option th:each="c : ${citas}" 
+                                        th:value="${c.idCita}" 
+                                        th:text="${c.paciente.nombres + ' ' + c.paciente.apellidos + ' - DNI: ' + c.paciente.dni + ' (Dr. ' + c.medico.apellidos + ' - ' + c.horaCita + ')'}"
+                                        th:selected="${c.idCita == citaSeleccionadaId}">
+                                </option>
+                            </select>
+                            <div th:if="${citas.isEmpty()}" class="form-text text-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> No hay pacientes en estado "Confirmada" (sala de espera) pendientes de triaje hoy.
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            
+                            <!-- Peso -->
+                            <div class="col-md-4">
+                                <div class="info-box p-3 border rounded-3 bg-light-subtle">
+                                    <label class="form-label small fw-bold text-uppercase text-muted mb-2" style="font-size: 0.65rem;">Peso (kg)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-speedometer text-primary opacity-50"></i></span>
+                                        <input type="number" step="0.1" min="1" max="300" name="peso" id="pesoInput" class="form-control border-start-0" placeholder="Ej: 70.5" required>
+                                    </div>
+                                    <div class="form-text small" style="font-size: 0.65rem;">Rango normal: 40 - 120 kg</div>
+                                </div>
+                            </div>
+
+                            <!-- Talla -->
+                            <div class="col-md-4">
+                                <div class="info-box p-3 border rounded-3 bg-light-subtle">
+                                    <label class="form-label small fw-bold text-uppercase text-muted mb-2" style="font-size: 0.65rem;">Talla (m)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-rulers text-primary opacity-50"></i></span>
+                                        <input type="number" step="0.01" min="0.3" max="2.5" name="talla" id="tallaInput" class="form-control border-start-0" placeholder="Ej: 1.72" required>
+                                    </div>
+                                    <div class="form-text small" style="font-size: 0.65rem;">Rango normal: 1.20 - 2.00 m</div>
+                                </div>
+                            </div>
+
+                            <!-- Temperatura -->
+                            <div class="col-md-4">
+                                <div class="info-box p-3 border rounded-3 bg-light-subtle" id="boxTemperatura">
+                                    <label class="form-label small fw-bold text-uppercase text-muted mb-2" style="font-size: 0.65rem;">Temperatura (°C)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-thermometer-half text-primary opacity-50"></i></span>
+                                        <input type="number" step="0.1" min="30" max="45" name="temperatura" id="tempInput" class="form-control border-start-0" placeholder="Ej: 36.5" required oninput="validarTemperatura()">
+                                    </div>
+                                    <div class="form-text small text-muted" id="tempHint" style="font-size: 0.65rem;">Rango normal: 36.0 - 37.2 °C</div>
+                                </div>
+                            </div>
+
+                            <!-- Presion Arterial -->
+                            <div class="col-md-4">
+                                <div class="info-box p-3 border rounded-3 bg-light-subtle">
+                                    <label class="form-label small fw-bold text-uppercase text-muted mb-2" style="font-size: 0.65rem;">Presión Arterial (mmHg)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-heart-pulse text-primary opacity-50"></i></span>
+                                        <input type="text" name="presionArterial" class="form-control border-start-0" placeholder="Ej: 120/80" required>
+                                    </div>
+                                    <div class="form-text small" style="font-size: 0.65rem;">Sistólica / Diastólica</div>
+                                </div>
+                            </div>
+
+                            <!-- Frecuencia Cardiaca -->
+                            <div class="col-md-4">
+                                <div class="info-box p-3 border rounded-3 bg-light-subtle">
+                                    <label class="form-label small fw-bold text-uppercase text-muted mb-2" style="font-size: 0.65rem;">Frecuencia Cardíaca (bpm)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-activity text-primary opacity-50"></i></span>
+                                        <input type="number" min="20" max="250" name="frecuenciaCardiaca" class="form-control border-start-0" placeholder="Ej: 75" required>
+                                    </div>
+                                    <div class="form-text small" style="font-size: 0.65rem;">Pulso por minuto</div>
+                                </div>
+                            </div>
+
+                            <!-- Saturacion de Oxigeno -->
+                            <div class="col-md-4">
+                                <div class="info-box p-3 border rounded-3 bg-light-subtle" id="boxOxigeno">
+                                    <label class="form-label small fw-bold text-uppercase text-muted mb-2" style="font-size: 0.65rem;">Saturación de Oxígeno (%)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-wind text-primary opacity-50"></i></span>
+                                        <input type="number" min="50" max="100" name="saturacionOxigeno" id="satInput" class="form-control border-start-0" placeholder="Ej: 98" required oninput="validarSaturacion()">
+                                    </div>
+                                    <div class="form-text small text-muted" id="satHint" style="font-size: 0.65rem;">Óptimo: 95% - 100%</div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-4 text-end">
+                                <button type="reset" class="btn btn-outline-secondary rounded-pill px-4 me-2">Limpiar</button>
+                                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold" style="background:#8B5CF6; border-color:#8B5CF6;">
+                                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> Guardar Triaje
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scripts del Triaje para Micro-animaciones y Alertas de Rangos Vitales -->
+        <th:block th:fragment="scripts">
+            <script>
+                function validarTemperatura() {
+                    const temp = parseFloat(document.getElementById('tempInput').value);
+                    const box = document.getElementById('boxTemperatura');
+                    const hint = document.getElementById('tempHint');
+                    if (isNaN(temp)) {
+                        box.style.borderColor = '';
+                        hint.className = 'form-text small text-muted';
+                        hint.innerHTML = 'Rango normal: 36.0 - 37.2 °C';
+                    } else if (temp >= 38.0) {
+                        box.style.borderColor = '#dc2626'; // Borde rojo
+                        hint.className = 'form-text small text-danger fw-bold';
+                        hint.innerHTML = '⚠️ Alerta: El paciente presenta Fiebre.';
+                    } else if (temp < 35.5) {
+                        box.style.borderColor = '#2563eb'; // Borde azul
+                        hint.className = 'form-text small text-primary fw-bold';
+                        hint.innerHTML = '⚠️ Alerta: El paciente presenta Hipotermia.';
+                    } else {
+                        box.style.borderColor = '#10b981'; // Borde verde
+                        hint.className = 'form-text small text-success fw-bold';
+                        hint.innerHTML = '✓ Temperatura dentro del rango normal.';
+                    }
+                }
+
+                function validarSaturacion() {
+                    const sat = parseInt(document.getElementById('satInput').value);
+                    const box = document.getElementById('boxOxigeno');
+                    const hint = document.getElementById('satHint');
+                    if (isNaN(sat)) {
+                        box.style.borderColor = '';
+                        hint.className = 'form-text small text-muted';
+                        hint.innerHTML = 'Óptimo: 95% - 100%';
+                    } else if (sat < 95) {
+                        box.style.borderColor = '#dc2626'; // Borde rojo
+                        hint.className = 'form-text small text-danger fw-bold';
+                        hint.innerHTML = '⚠️ Alerta: Nivel de oxígeno bajo (Hipoxia).';
+                    } else {
+                        box.style.borderColor = '#10b981'; // Borde verde
+                        hint.className = 'form-text small text-success fw-bold';
+                        hint.innerHTML = '✓ Nivel de oxígeno óptimo.';
+                    }
+                }
+            </script>
+        </th:block>
+
+    </div>
+</body>
+</html>

@@ -1,13 +1,14 @@
 package com.proyectoclinica.clinica.modules.consultas.service;
 
+import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.FontFactory;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
-import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
@@ -21,464 +22,548 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
+import com.proyectoclinica.clinica.modules.consultas.repository.MedicamentoPrescritoRepository;
 
 @Service
 @RequiredArgsConstructor
 public class RecetaService {
 
     private final RecetaRepository recetaRepository;
+    private final MedicamentoPrescritoRepository medicamentoPrescritoRepository;
 
-    private static final DateTimeFormatter FORMATO_FECHA =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    @Transactional
+    public Receta guardar(Receta receta) {
+        return recetaRepository.save(receta);
+    }
+
+    @Transactional
+    public MedicamentoPrescrito guardarMedicamento(MedicamentoPrescrito med) {
+        return medicamentoPrescritoRepository.save(med);
+    }
 
     public List<Receta> obtenerRecetasPorPaciente(Integer idPaciente) {
-        return recetaRepository.findByPacienteIdOrderByFechaEmisionDesc(idPaciente);
+        return recetaRepository
+                .findByPacienteIdOrderByFechaEmisionDesc(idPaciente);
+    }
+
+    public List<Receta> obtenerRecetasPorMedico(Integer idMedico) {
+        return recetaRepository
+                .findByMedicoIdOrderByFechaEmisionDesc(idMedico);
     }
 
     public List<Receta> obtenerRecetasActivas(Integer idPaciente) {
-        return recetaRepository.findByPacienteIdAndEstadoOrderByFechaEmisionDesc(
-                idPaciente,
-                "Activa"
-        );
+        return recetaRepository
+                .findByPacienteIdAndEstadoOrderByFechaEmisionDesc(
+                        idPaciente,
+                        "Activa"
+                );
     }
 
     public List<Receta> obtenerHistorialRecetas(Integer idPaciente) {
-        return recetaRepository.findByPacienteIdAndEstadoOrderByFechaEmisionDesc(
-                idPaciente,
-                "Finalizada"
-        );
+        return recetaRepository
+                .findByPacienteIdAndEstadoOrderByFechaEmisionDesc(
+                        idPaciente,
+                        "Finalizada"
+                );
     }
 
     public byte[] generarPdfReceta(Integer idReceta) throws Exception {
 
         Receta receta = recetaRepository.findById(idReceta)
-                .orElseThrow(() -> new RuntimeException("Receta no encontrada"));
+                .orElseThrow(
+                        () -> new RuntimeException("Receta no encontrada")
+                );
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream salida = new ByteArrayOutputStream();
 
-        Document document = new Document(
+        Document documento = new Document(
                 PageSize.A4,
-                40,
-                40,
+                45,
+                45,
                 35,
                 35
         );
 
-        PdfWriter.getInstance(document, baos);
+        PdfWriter.getInstance(documento, salida);
+        documento.open();
 
-        document.open();
+        Color azulPrincipal = new Color(13, 110, 253);
+        Color grisClaro = new Color(241, 245, 249);
+        Color grisBorde = new Color(226, 232, 240);
+        Color grisTexto = new Color(71, 85, 105);
 
-        Font titulo = FontFactory.getFont(
+        Font fuenteTitulo = FontFactory.getFont(
                 FontFactory.HELVETICA_BOLD,
                 22,
-                new Color(0,102,204)
+                azulPrincipal
         );
 
-        Font subtitulo = FontFactory.getFont(
+        Font fuenteSubtitulo = FontFactory.getFont(
                 FontFactory.HELVETICA_BOLD,
-                14,
-                new Color(80,80,80)
+                13,
+                Color.DARK_GRAY
         );
 
-        Font seccion = FontFactory.getFont(
+        Font fuenteSeccion = FontFactory.getFont(
                 FontFactory.HELVETICA_BOLD,
                 11,
-                Color.WHITE
+                azulPrincipal
         );
 
-        Font bold = FontFactory.getFont(
+        Font fuenteNormal = FontFactory.getFont(
+                FontFactory.HELVETICA,
+                10,
+                Color.BLACK
+        );
+
+        Font fuenteNegrita = FontFactory.getFont(
                 FontFactory.HELVETICA_BOLD,
                 10,
                 Color.BLACK
         );
 
-        Font normal = FontFactory.getFont(
-                FontFactory.HELVETICA,
-                10,
-                Color.BLACK
-        );
-
-        Font pequena = FontFactory.getFont(
+        Font fuentePequena = FontFactory.getFont(
                 FontFactory.HELVETICA,
                 8,
-                Color.GRAY
-        );
-            //====================================================
-        // ENCABEZADO
-        //====================================================
-
-        Paragraph pTitulo = new Paragraph("CLINICX", titulo);
-        pTitulo.setAlignment(Element.ALIGN_CENTER);
-        pTitulo.setSpacingAfter(5);
-        document.add(pTitulo);
-
-        Paragraph pSubtitulo = new Paragraph(
-                "RECETA MÉDICA ELECTRÓNICA",
-                subtitulo
+                grisTexto
         );
 
-        pSubtitulo.setAlignment(Element.ALIGN_CENTER);
-        pSubtitulo.setSpacingAfter(20);
+        // Encabezado
+        Paragraph tituloClinica = new Paragraph(
+                "CLINICX",
+                fuenteTitulo
+        );
 
-        document.add(pSubtitulo);
+        tituloClinica.setAlignment(Element.ALIGN_CENTER);
+        documento.add(tituloClinica);
 
-        PdfPTable tablaCabecera = new PdfPTable(2);
-        tablaCabecera.setWidthPercentage(100);
-        tablaCabecera.setWidths(new float[]{50,50});
-        tablaCabecera.setSpacingAfter(20);
+        Paragraph lema = new Paragraph(
+                "Tu salud, nuestra prioridad",
+                fuentePequena
+        );
 
-        PdfPCell celdaCodigo = new PdfPCell(
-                new Phrase(
-                        "Código: " + receta.getCodigo(),
-                        bold
+        lema.setAlignment(Element.ALIGN_CENTER);
+        lema.setSpacingAfter(5);
+        documento.add(lema);
+
+        Paragraph tipoDocumento = new Paragraph(
+                "RECETA MÉDICA",
+                fuenteSubtitulo
+        );
+
+        tipoDocumento.setAlignment(Element.ALIGN_CENTER);
+        tipoDocumento.setSpacingAfter(20);
+        documento.add(tipoDocumento);
+
+        // Código y fecha
+        PdfPTable tablaGeneral = new PdfPTable(
+                new float[]{1, 1}
+        );
+
+        tablaGeneral.setWidthPercentage(100);
+        tablaGeneral.setSpacingAfter(15);
+
+        tablaGeneral.addCell(
+                crearCeldaInformacion(
+                        "Código",
+                        valorSeguro(receta.getCodigo()),
+                        grisClaro,
+                        grisBorde,
+                        fuenteNegrita,
+                        fuenteNormal
                 )
         );
 
-        celdaCodigo.setPadding(8);
-        celdaCodigo.setBackgroundColor(new Color(230,240,255));
+        String fecha = receta.getFechaEmision() != null
+                ? receta.getFechaEmision().format(
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                )
+                : "No registrada";
 
-        PdfPCell celdaFecha = new PdfPCell(
-                new Phrase(
-                        "Fecha: " + receta.getFechaEmision().format(FORMATO_FECHA),
-                        bold
+        tablaGeneral.addCell(
+                crearCeldaInformacion(
+                        "Fecha de emisión",
+                        fecha,
+                        grisClaro,
+                        grisBorde,
+                        fuenteNegrita,
+                        fuenteNormal
                 )
         );
 
-        celdaFecha.setPadding(8);
-        celdaFecha.setBackgroundColor(new Color(230,240,255));
+        documento.add(tablaGeneral);
 
-        PdfPCell celdaMedico = new PdfPCell(
-                new Phrase(
-                        "Médico: Dr(a). "
-                                + receta.getMedico().getNombres()
-                                + " "
-                                + receta.getMedico().getApellidos(),
-                        normal
-                )
+        // Datos del médico
+        agregarTituloSeccion(
+                documento,
+                "DATOS DEL MÉDICO",
+                fuenteSeccion
         );
 
-        celdaMedico.setPadding(8);
+        PdfPTable tablaMedico = crearTablaDatos();
 
-        PdfPCell celdaEspecialidad = new PdfPCell(
-                new Phrase(
-                        "Especialidad: "
-                                + receta.getMedico()
-                                        .getEspecialidad()
-                                        .getNombre(),
-                        normal
-                )
+        String nombreMedico = "Dr(a). "
+                + receta.getMedico().getNombres()
+                + " "
+                + receta.getMedico().getApellidos();
+
+        agregarFila(
+                tablaMedico,
+                "Médico",
+                nombreMedico,
+                grisClaro,
+                grisBorde,
+                fuenteNegrita,
+                fuenteNormal
         );
 
-        celdaEspecialidad.setPadding(8);
+        String especialidad =
+                receta.getMedico().getEspecialidad() != null
+                        ? receta.getMedico()
+                                .getEspecialidad()
+                                .getNombre()
+                        : "No registrada";
 
-        tablaCabecera.addCell(celdaCodigo);
-        tablaCabecera.addCell(celdaFecha);
-        tablaCabecera.addCell(celdaMedico);
-        tablaCabecera.addCell(celdaEspecialidad);
-
-        document.add(tablaCabecera);
-
-        //====================================================
-        // DATOS DEL PACIENTE
-        //====================================================
-
-        PdfPCell tituloPaciente = new PdfPCell(
-                new Phrase("DATOS DEL PACIENTE", seccion)
+        agregarFila(
+                tablaMedico,
+                "Especialidad",
+                especialidad,
+                grisClaro,
+                grisBorde,
+                fuenteNegrita,
+                fuenteNormal
         );
 
-        tituloPaciente.setColspan(2);
-        tituloPaciente.setPadding(8);
-        tituloPaciente.setHorizontalAlignment(Element.ALIGN_CENTER);
-        tituloPaciente.setBackgroundColor(new Color(0,102,204));
-        tituloPaciente.setBorder(Rectangle.NO_BORDER);
-
-        PdfPTable tablaPaciente = new PdfPTable(2);
-        tablaPaciente.setWidthPercentage(100);
-        tablaPaciente.setWidths(new float[]{30,70});
-        tablaPaciente.setSpacingAfter(20);
-
-        tablaPaciente.addCell(tituloPaciente);
-
-        PdfPCell lblNombre = new PdfPCell(new Phrase("Nombre", bold));
-        lblNombre.setBackgroundColor(new Color(245,245,245));
-        lblNombre.setPadding(7);
-
-        PdfPCell txtNombre = new PdfPCell(
-                new Phrase(
-                        receta.getPaciente().getNombres()
-                                + " "
-                                + receta.getPaciente().getApellidos(),
-                        normal
-                )
+        String cmp = valorSeguro(
+                receta.getMedico().getCmp()
         );
 
-        txtNombre.setPadding(7);
-
-        PdfPCell lblDni = new PdfPCell(new Phrase("DNI", bold));
-        lblDni.setBackgroundColor(new Color(245,245,245));
-        lblDni.setPadding(7);
-
-        PdfPCell txtDni = new PdfPCell(
-                new Phrase(
-                        receta.getPaciente().getDni(),
-                        normal
-                )
+        agregarFila(
+                tablaMedico,
+                "CMP",
+                cmp,
+                grisClaro,
+                grisBorde,
+                fuenteNegrita,
+                fuenteNormal
         );
 
-        txtDni.setPadding(7);
+        documento.add(tablaMedico);
 
-        PdfPCell lblEstado = new PdfPCell(new Phrase("Estado", bold));
-        lblEstado.setBackgroundColor(new Color(245,245,245));
-        lblEstado.setPadding(7);
-
-        PdfPCell txtEstado = new PdfPCell(
-                new Phrase(
-                        receta.getEstado(),
-                        normal
-                )
+        // Datos del paciente
+        agregarTituloSeccion(
+                documento,
+                "DATOS DEL PACIENTE",
+                fuenteSeccion
         );
 
-        txtEstado.setPadding(7);
+        PdfPTable tablaPaciente = crearTablaDatos();
 
-        tablaPaciente.addCell(lblNombre);
-        tablaPaciente.addCell(txtNombre);
+        String nombrePaciente =
+                receta.getPaciente().getNombres()
+                        + " "
+                        + receta.getPaciente().getApellidos();
 
-        tablaPaciente.addCell(lblDni);
-        tablaPaciente.addCell(txtDni);
-
-        tablaPaciente.addCell(lblEstado);
-        tablaPaciente.addCell(txtEstado);
-
-        document.add(tablaPaciente);
-            //====================================================
-        // MEDICAMENTOS 
-        //====================================================
-
-        PdfPCell tituloMedicamentos = new PdfPCell(
-                new Phrase("MEDICAMENTOS", seccion)
+        agregarFila(
+                tablaPaciente,
+                "Paciente",
+                nombrePaciente,
+                grisClaro,
+                grisBorde,
+                fuenteNegrita,
+                fuenteNormal
         );
 
-        tituloMedicamentos.setColspan(5);
-        tituloMedicamentos.setPadding(8);
-        tituloMedicamentos.setHorizontalAlignment(Element.ALIGN_CENTER);
-        tituloMedicamentos.setBackgroundColor(new Color(0,102,204));
-        tituloMedicamentos.setBorder(Rectangle.NO_BORDER);
+        agregarFila(
+                tablaPaciente,
+                "DNI",
+                valorSeguro(receta.getPaciente().getDni()),
+                grisClaro,
+                grisBorde,
+                fuenteNegrita,
+                fuenteNormal
+        );
 
-        PdfPTable tablaMedicamentos = new PdfPTable(5);
+        documento.add(tablaPaciente);
+
+        // Medicamentos
+        agregarTituloSeccion(
+                documento,
+                "PRESCRIPCIÓN MÉDICA",
+                fuenteSeccion
+        );
+
+        PdfPTable tablaMedicamentos = new PdfPTable(
+                new float[]{2.2f, 1.3f, 1.3f, 2.2f}
+        );
 
         tablaMedicamentos.setWidthPercentage(100);
+        tablaMedicamentos.setSpacingAfter(20);
+        tablaMedicamentos.setHeaderRows(1);
 
-        tablaMedicamentos.setWidths(
-                new float[]{28,14,18,15,25}
+        agregarEncabezado(
+                tablaMedicamentos,
+                "Medicamento",
+                azulPrincipal
         );
 
-        tablaMedicamentos.setSpacingAfter(20);
+        agregarEncabezado(
+                tablaMedicamentos,
+                "Dosis",
+                azulPrincipal
+        );
 
-        tablaMedicamentos.addCell(tituloMedicamentos);
+        agregarEncabezado(
+                tablaMedicamentos,
+                "Duración",
+                azulPrincipal
+        );
 
-        Color colorCabecera = new Color(225,238,255);
+        agregarEncabezado(
+                tablaMedicamentos,
+                "Indicaciones",
+                azulPrincipal
+        );
 
-        PdfPCell hMedicamento = new PdfPCell(new Phrase("Medicamento", bold));
-        hMedicamento.setHorizontalAlignment(Element.ALIGN_CENTER);
-        hMedicamento.setBackgroundColor(colorCabecera);
-        hMedicamento.setPadding(6);
+        if (receta.getMedicamentos() != null
+                && !receta.getMedicamentos().isEmpty()) {
 
-        PdfPCell hDosis = new PdfPCell(new Phrase("Dosis", bold));
-        hDosis.setHorizontalAlignment(Element.ALIGN_CENTER);
-        hDosis.setBackgroundColor(colorCabecera);
-        hDosis.setPadding(6);
+            for (MedicamentoPrescrito medicamento
+                    : receta.getMedicamentos()) {
 
-        PdfPCell hFrecuencia = new PdfPCell(new Phrase("Frecuencia", bold));
-        hFrecuencia.setHorizontalAlignment(Element.ALIGN_CENTER);
-        hFrecuencia.setBackgroundColor(colorCabecera);
-        hFrecuencia.setPadding(6);
+                agregarCeldaMedicamento(
+                        tablaMedicamentos,
+                        medicamento.getNombre(),
+                        fuenteNormal,
+                        grisBorde
+                );
 
-        PdfPCell hDuracion = new PdfPCell(new Phrase("Duración", bold));
-        hDuracion.setHorizontalAlignment(Element.ALIGN_CENTER);
-        hDuracion.setBackgroundColor(colorCabecera);
-        hDuracion.setPadding(6);
+                agregarCeldaMedicamento(
+                        tablaMedicamentos,
+                        medicamento.getDosis(),
+                        fuenteNormal,
+                        grisBorde
+                );
 
-        PdfPCell hIndicaciones = new PdfPCell(new Phrase("Indicaciones", bold));
-        hIndicaciones.setHorizontalAlignment(Element.ALIGN_CENTER);
-        hIndicaciones.setBackgroundColor(colorCabecera);
-        hIndicaciones.setPadding(6);
+                agregarCeldaMedicamento(
+                        tablaMedicamentos,
+                        medicamento.getDuracion(),
+                        fuenteNormal,
+                        grisBorde
+                );
 
-        tablaMedicamentos.addCell(hMedicamento);
-        tablaMedicamentos.addCell(hDosis);
-        tablaMedicamentos.addCell(hFrecuencia);
-        tablaMedicamentos.addCell(hDuracion);
-        tablaMedicamentos.addCell(hIndicaciones);
+                agregarCeldaMedicamento(
+                        tablaMedicamentos,
+                        medicamento.getInstrucciones(),
+                        fuenteNormal,
+                        grisBorde
+                );
+            }
 
-        boolean alternarColor = false;
+        } else {
 
-        for (MedicamentoPrescrito med : receta.getMedicamentos()) {
-
-            Color colorFila = alternarColor
-                    ? new Color(248,248,248)
-                    : Color.WHITE;
-
-            PdfPCell cMedicamento = new PdfPCell(
+            PdfPCell sinMedicamentos = new PdfPCell(
                     new Phrase(
-                            med.getNombre(),
-                            normal
+                            "No se registraron medicamentos.",
+                            fuenteNormal
                     )
             );
 
-            cMedicamento.setPadding(6);
-            cMedicamento.setBackgroundColor(colorFila);
-
-            PdfPCell cDosis = new PdfPCell(
-                    new Phrase(
-                            med.getDosis(),
-                            normal
-                    )
+            sinMedicamentos.setColspan(4);
+            sinMedicamentos.setPadding(10);
+            sinMedicamentos.setHorizontalAlignment(
+                    Element.ALIGN_CENTER
             );
+            sinMedicamentos.setBorderColor(grisBorde);
 
-            cDosis.setPadding(6);
-            cDosis.setBackgroundColor(colorFila);
-
-            PdfPCell cFrecuencia = new PdfPCell(
-                    new Phrase(
-                            med.getFrecuencia(),
-                            normal
-                    )
-            );
-
-            cFrecuencia.setPadding(6);
-            cFrecuencia.setBackgroundColor(colorFila);
-
-            PdfPCell cDuracion = new PdfPCell(
-                    new Phrase(
-                            med.getDuracion(),
-                            normal
-                    )
-            );
-
-            cDuracion.setPadding(6);
-            cDuracion.setBackgroundColor(colorFila);
-
-            PdfPCell cIndicaciones = new PdfPCell(
-                    new Phrase(
-                            med.getInstrucciones(),
-                            normal
-                    )
-            );
-
-            cIndicaciones.setPadding(6);
-            cIndicaciones.setBackgroundColor(colorFila);
-
-            tablaMedicamentos.addCell(cMedicamento);
-            tablaMedicamentos.addCell(cDosis);
-            tablaMedicamentos.addCell(cFrecuencia);
-            tablaMedicamentos.addCell(cDuracion);
-            tablaMedicamentos.addCell(cIndicaciones);
-
-            alternarColor = !alternarColor;
+            tablaMedicamentos.addCell(sinMedicamentos);
         }
 
-        document.add(tablaMedicamentos);
-            //====================================================
-        // INDICACIONES GENERALES
-        //====================================================
+        documento.add(tablaMedicamentos);
 
-        PdfPCell tituloIndicaciones = new PdfPCell(
-                new Phrase("INDICACIONES GENERALES", seccion)
+        // Recomendaciones
+        Paragraph recomendacion = new Paragraph(
+                "Indicaciones generales: cumplir el tratamiento "
+                        + "según las instrucciones del médico y no "
+                        + "suspenderlo sin una evaluación profesional.",
+                fuentePequena
         );
 
-        tituloIndicaciones.setBackgroundColor(new Color(0,102,204));
-        tituloIndicaciones.setHorizontalAlignment(Element.ALIGN_CENTER);
-        tituloIndicaciones.setPadding(8);
-        tituloIndicaciones.setBorder(Rectangle.NO_BORDER);
+        recomendacion.setSpacingAfter(40);
+        documento.add(recomendacion);
 
-        PdfPTable tablaIndicaciones = new PdfPTable(1);
-        tablaIndicaciones.setWidthPercentage(100);
-        tablaIndicaciones.setSpacingAfter(30);
-
-        tablaIndicaciones.addCell(tituloIndicaciones);
-
-        PdfPCell contenidoIndicaciones = new PdfPCell(
-                new Phrase(
-                        "• Siga estrictamente la dosis y frecuencia indicada por el médico.\n\n"
-                      + "• No suspenda el tratamiento sin autorización médica.\n\n"
-                      + "• Si presenta alguna reacción adversa, comuníquese con la clínica.\n\n"
-                      + "• Mantenga los medicamentos fuera del alcance de los niños.\n\n"
-                      + "• Conserve este documento para futuros controles.",
-                        normal
-                )
+        // Firma
+        Paragraph firma = new Paragraph(
+                "________________________________________\n"
+                        + nombreMedico
+                        + "\nCMP: "
+                        + cmp
+                        + "\nFirma y sello del médico",
+                fuentePequena
         );
 
-        contenidoIndicaciones.setPadding(12);
+        firma.setAlignment(Element.ALIGN_CENTER);
+        firma.setSpacingAfter(25);
+        documento.add(firma);
 
-        tablaIndicaciones.addCell(contenidoIndicaciones);
-
-        document.add(tablaIndicaciones);
-
-        //====================================================
-        // FIRMA
-        //====================================================
-
-        Paragraph lineaFirma = new Paragraph(
-                "____________________________________________"
-        );
-
-        lineaFirma.setAlignment(Element.ALIGN_CENTER);
-
-        document.add(lineaFirma);
-
-        Paragraph medicoFirma = new Paragraph(
-                "Dr(a). "
-                        + receta.getMedico().getNombres()
-                        + " "
-                        + receta.getMedico().getApellidos(),
-                bold
-        );
-
-        medicoFirma.setAlignment(Element.ALIGN_CENTER);
-
-        document.add(medicoFirma);
-
-        Paragraph especialidadFirma = new Paragraph(
-                receta.getMedico()
-                        .getEspecialidad()
-                        .getNombre(),
-                normal
-        );
-
-        especialidadFirma.setAlignment(Element.ALIGN_CENTER);
-
-        document.add(especialidadFirma);
-
-        Paragraph fechaDocumento = new Paragraph(
-                "Fecha de emisión: "
-                        + receta.getFechaEmision().format(FORMATO_FECHA),
-                normal
-        );
-
-        fechaDocumento.setAlignment(Element.ALIGN_CENTER);
-
-        fechaDocumento.setSpacingAfter(25);
-
-        document.add(fechaDocumento);
-
-        //====================================================
-        // PIE DE PÁGINA
-        //====================================================
-
+        // Pie del documento
         Paragraph pie = new Paragraph(
-                "CLINICX - Sistema Integral de Gestión Clínica\n"
-              + "Documento generado electrónicamente.\n"
-              + "La información contenida en esta receta es confidencial.",
-                pequena
+                "Documento generado electrónicamente por ClinicX.",
+                fuentePequena
         );
 
         pie.setAlignment(Element.ALIGN_CENTER);
+        documento.add(pie);
 
-        document.add(pie);
+        documento.close();
 
-        document.close();
-
-        return baos.toByteArray();
-
+        return salida.toByteArray();
     }
 
+    private void agregarTituloSeccion(
+            Document documento,
+            String texto,
+            Font fuente
+    ) throws DocumentException {
+
+        Paragraph titulo = new Paragraph(texto, fuente);
+        titulo.setSpacingBefore(8);
+        titulo.setSpacingAfter(7);
+
+        documento.add(titulo);
+    }
+
+    private PdfPTable crearTablaDatos()
+            throws DocumentException {
+
+        PdfPTable tabla = new PdfPTable(
+                new float[]{1.2f, 2.8f}
+        );
+
+        tabla.setWidthPercentage(100);
+        tabla.setSpacingAfter(12);
+
+        return tabla;
+    }
+
+    private PdfPCell crearCeldaInformacion(
+            String etiqueta,
+            String valor,
+            Color fondo,
+            Color borde,
+            Font fuenteEtiqueta,
+            Font fuenteValor
+    ) {
+
+        Paragraph contenido = new Paragraph();
+
+        contenido.add(
+                new Chunk(
+                        etiqueta + ":\n",
+                        fuenteEtiqueta
+                )
+        );
+
+        contenido.add(
+                new Chunk(
+                        valorSeguro(valor),
+                        fuenteValor
+                )
+        );
+
+        PdfPCell celda = new PdfPCell(contenido);
+
+        celda.setPadding(10);
+        celda.setBackgroundColor(fondo);
+        celda.setBorderColor(borde);
+
+        return celda;
+    }
+
+    private void agregarFila(
+            PdfPTable tabla,
+            String etiqueta,
+            String valor,
+            Color fondo,
+            Color borde,
+            Font fuenteEtiqueta,
+            Font fuenteValor
+    ) {
+
+        PdfPCell celdaEtiqueta = new PdfPCell(
+                new Phrase(etiqueta, fuenteEtiqueta)
+        );
+
+        celdaEtiqueta.setPadding(8);
+        celdaEtiqueta.setBackgroundColor(fondo);
+        celdaEtiqueta.setBorderColor(borde);
+
+        PdfPCell celdaValor = new PdfPCell(
+                new Phrase(
+                        valorSeguro(valor),
+                        fuenteValor
+                )
+        );
+
+        celdaValor.setPadding(8);
+        celdaValor.setBorderColor(borde);
+
+        tabla.addCell(celdaEtiqueta);
+        tabla.addCell(celdaValor);
+    }
+
+    private void agregarEncabezado(
+            PdfPTable tabla,
+            String texto,
+            Color fondo
+    ) {
+
+        Font fuente = FontFactory.getFont(
+                FontFactory.HELVETICA_BOLD,
+                9,
+                Color.WHITE
+        );
+
+        PdfPCell celda = new PdfPCell(
+                new Phrase(texto, fuente)
+        );
+
+        celda.setPadding(8);
+        celda.setBackgroundColor(fondo);
+        celda.setHorizontalAlignment(
+                Element.ALIGN_CENTER
+        );
+
+        tabla.addCell(celda);
+    }
+
+    private void agregarCeldaMedicamento(
+            PdfPTable tabla,
+            String texto,
+            Font fuente,
+            Color borde
+    ) {
+
+        PdfPCell celda = new PdfPCell(
+                new Phrase(
+                        valorSeguro(texto),
+                        fuente
+                )
+        );
+
+        celda.setPadding(8);
+        celda.setVerticalAlignment(
+                Element.ALIGN_MIDDLE
+        );
+        celda.setBorderColor(borde);
+
+        tabla.addCell(celda);
+    }
+
+    private String valorSeguro(String valor) {
+        return valor != null && !valor.isBlank()
+                ? valor
+                : "No registrado";
+    }
 }

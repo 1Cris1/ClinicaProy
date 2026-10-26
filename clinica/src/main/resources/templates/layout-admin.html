@@ -17,7 +17,7 @@
 
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <aside class="app-sidebar ad-sidebar" id="sidebar">
+    <aside class="app-sidebar ad-sidebar glass-panel" id="sidebar">
         <div class="app-sidebar-brand">
             <div class="brand-icon">C</div>
             <div>
@@ -40,11 +40,11 @@
                 <i class="bi bi-grid-1x2-fill"></i> Panel
             </a>
 
-            <a th:href="@{/admin/usuarios}" th:class="${#strings.contains(view, 'usuarios')} ? 'app-nav-link active' : 'app-nav-link'">
-                <i class="bi bi-people-fill"></i> Usuarios
+            <a th:href="@{/admin/usuarios}" th:class="${#strings.contains(view, 'usuarios')} ? 'app-nav-link active' : 'app-nav-link'" data-page="usuarios">
+                <i class="bi bi-people-fill"></i> Centro de Control
             </a>
             <a th:href="@{/admin/pacientes}" th:class="${#strings.contains(view, 'pacientes')} ? 'app-nav-link active' : 'app-nav-link'" data-page="pacientes">
-                <i class="bi bi-person-heart-fill"></i> Pacientes
+                <i class="bi bi-person-heart"></i> Pacientes
             </a>
             <a th:href="@{/admin/medicos}" th:class="${#strings.contains(view, 'medicos')} ? 'app-nav-link active' : 'app-nav-link'" data-page="medicos">
                 <i class="bi bi-person-badge-fill"></i> Médicos
@@ -63,11 +63,11 @@
             <a th:href="@{/admin/servicios}" th:class="${#strings.contains(view, 'servicios')} ? 'app-nav-link active' : 'app-nav-link'" data-page="servicios">
                 <i class="bi bi-clipboard2-pulse-fill"></i> Servicios
             </a>
-            <a th:href="@{/admin/productos}" th:class="${#strings.contains(view, 'productos')} ? 'app-nav-link active' : 'app-nav-link'">
+            <a th:href="@{/admin/productos}" th:class="${#strings.contains(view, 'productos')} ? 'app-nav-link active' : 'app-nav-link'" data-page="productos">
                 <i class="bi bi-capsule-pill"></i> Farmacia
             </a>
-            <a th:href="@{/admin/susalud}" th:class="${#strings.contains(view, 'susalud')} ? 'app-nav-link active' : 'app-nav-link'">
-                <i class="bi bi-shield-check-fill"></i> Catálogo SUSALUD
+            <a th:href="@{/admin/susalud}" th:class="${#strings.contains(view, 'susalud')} ? 'app-nav-link active' : 'app-nav-link'" data-page="susalud">
+                <i class="bi bi-shield-fill-check"></i> Catálogo SUSALUD
             </a>
             <a th:href="@{/admin/sedes}" th:class="${#strings.contains(view, 'sedes')} ? 'app-nav-link active' : 'app-nav-link'" data-page="sedes">
                 <i class="bi bi-building-fill"></i> Sedes
@@ -77,8 +77,17 @@
             </a>
 
             <div class="app-sidebar-label mt-2">Sistema</div>
-            <a th:href="@{/admin/reportes}" th:class="${#strings.contains(view, 'reportes')} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes">
-                <i class="bi bi-graph-up-arrow"></i> Reportes
+            <a th:href="@{/admin/reportes}" th:class="${view == 'admin/reportes'} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes">
+                <i class="bi bi-graph-up-arrow"></i> Reportes Servicios
+            </a>
+            <a th:href="@{/admin/reportes/desempeno-clinico}" th:class="${view == 'admin/reportes-desempeno'} ? 'app-nav-link active' : 'app-nav-link'" data-page="reportes-desempeno">
+                <i class="bi bi-bar-chart-line-fill"></i> Desempeño Clínico
+            </a>
+            <a th:href="@{/admin/auditoria}" th:class="${#strings.contains(view, 'auditoria')} ? 'app-nav-link active' : 'app-nav-link'" data-page="auditoria">
+                <i class="bi bi-shield-lock-fill"></i> Auditoría
+            </a>
+            <a th:href="@{/admin/consultorios}" th:class="${#strings.contains(view, 'consultorios')} ? 'app-nav-link active' : 'app-nav-link'" data-page="consultorios">
+                <i class="bi bi-door-open-fill"></i> Consultorios
             </a>
             <a th:href="@{/admin/configuracion}" th:class="${#strings.contains(view, 'configuracion')} ? 'app-nav-link active' : 'app-nav-link'" data-page="configuracion">
                 <i class="bi bi-gear-fill"></i> Configuración
